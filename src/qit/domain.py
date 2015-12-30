@@ -1,0 +1,41 @@
+
+from iterator import Iterator, GeneratingIterator
+
+
+class Domain(object):
+
+    def __init__(self):
+        pass
+
+    def __iter__(self):
+        return self.iterate()
+
+    def __mul__(self, other):
+        return Product((self, other))
+
+    def __add__(self, other):
+        return Join((self, other))
+
+    def iterate(self):
+        raise NotImplementedError()
+
+    def generate_one(self):
+        raise NotImplementedError()
+
+    def generate(self, count=None):
+        g = GeneratingIterator(self.generate_one)
+        if count is None:
+            return g
+        else:
+            return g.take(count)
+
+
+
+
+class DomainIterator(Iterator):
+
+    def __init__(self, domain):
+        self.domain = domain
+
+from product import Product
+from join import Join
