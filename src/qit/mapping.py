@@ -1,9 +1,11 @@
 
 from domain import Domain, DomainIterator
 
+
 class Mapping(Domain):
 
     def __init__(self, key_domain, value_domain):
+        super(Mapping, self).__init__()
         self.key_domain = key_domain
         self.value_domain = value_domain
 

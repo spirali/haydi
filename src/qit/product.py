@@ -6,6 +6,7 @@ from iterator import IteratorFactory
 class Product(Domain):
 
     def __init__(self, domains):
+        super(Product, self).__init__()
         self.domains = tuple(domains)
 
     def iterate(self):
@@ -16,8 +17,8 @@ class Product(Domain):
 
     @property
     def size(self):
-        if not self.domains:
-            return 0
+        if not self.domains or not all([domain.has_size() for domain in self.domains]):
+            return None
         result = 1
         for domain in self.domains:
             result *= domain.size

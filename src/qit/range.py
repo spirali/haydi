@@ -8,6 +8,7 @@ from iterator import IteratorFactory
 class Range(Domain):
 
     def __init__(self, start, end=None, step=None):
+        super(Range, self).__init__()
         if end is None:
             end = start
             start = 0
@@ -23,7 +24,7 @@ class Range(Domain):
 
     @property
     def size(self):
-        return self.end
+        return (self.end - self.start) / self.step
 
     def iterate(self):
         return IteratorFactory(RangeIterator, self)
@@ -41,6 +42,12 @@ class RangeIterator(DomainIterator):
     def __init__(self, domain):
         super(RangeIterator, self).__init__(domain)
         self.value = domain.start
+
+    def skip(self, start_index, count):
+        start = self.domain.start + start_index
+        end = start + count
+
+        return RangeIterator(Range(start, end))
 
     def reset(self):
         self.value = self.domain.start

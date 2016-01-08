@@ -6,6 +6,7 @@ from iterator import IteratorFactory
 class Sequence(Domain):
 
     def __init__(self, domain, length):
+        super(Sequence, self).__init__()
         self.length = length
         self.domain = domain
 

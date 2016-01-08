@@ -1,12 +1,11 @@
-
 from domain import Domain, DomainIterator
 from random import randint
 from iterator import EmptyIterator, IteratorFactory
 
 
 class Join(Domain):
-
     def __init__(self, domains, ratios=None):
+        super(Join, self).__init__()
         self.domains = tuple(domains)
         if ratios is None:
             ratios = (d.size if d.size is not None else 1
@@ -26,18 +25,17 @@ class Join(Domain):
             return IteratorFactory(JoinIterator, self)
 
     def generate_one(self):
-         c = randint(0, self.ratio_sums[-1] - 1)
-         for i, r in enumerate(self.ratio_sums):
-             if c < r:
-                 return self.domains[i].generate_one()
-         assert 0
+        c = randint(0, self.ratio_sums[-1] - 1)
+        for i, r in enumerate(self.ratio_sums):
+            if c < r:
+                return self.domains[i].generate_one()
+        assert 0
 
     def __add__(self, other):
         return Join(self.domains + (other,))
 
 
 class JoinIterator(DomainIterator):
-
 
     def __init__(self, domain):
         super(JoinIterator, self).__init__(domain)

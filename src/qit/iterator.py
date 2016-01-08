@@ -21,8 +21,17 @@ class IteratorFactory(object):
     def filter(self, fn):
         return TransformationFactory(self, FilterTransformation, fn)
 
-    def collect(self, session):
-        return CollectAction(self.create(), session)
+    def show(self, notify_count):
+        return TransformationFactory(self, ShowTransformation, notify_count)
+
+    def split(self):
+        return TransformationFactory(self, SplitTransformation)
+
+    def join(self):
+        return TransformationFactory(self, JoinTransformation)
+
+    def collect(self):
+        return CollectAction(self.create())
 
 
 class TransformationFactory(IteratorFactory):
@@ -35,21 +44,20 @@ class TransformationFactory(IteratorFactory):
 
 
 class Iterator(object):
+    ID_COUNTER = 0
+
+    def __init__(self):
+        self.id = Iterator.ID_COUNTER
+        Iterator.ID_COUNTER += 1
+
+        self.context = None
+        self.size = None
 
     def __iter__(self):
         return self
 
     def create(self):
         return self
-
-    def take(self, count):
-        return IteratorFactory(TakeTransformation, self, count)
-
-    def map(self, fn):
-        return IteratorFactory(MapTransformation, self, fn)
-
-    def filter(self, fn):
-        return IteratorFactory(FilterTransformation, self, fn)
 
     def first(self, default=None):
         try:
@@ -63,12 +71,26 @@ class Iterator(object):
     def reset(self):
         raise NotImplementedError()
 
-    def collect(self, session):
-        return IteratorFactory(CollectAction, self, session)
+    def get_parents(self):
+        return []
+
+    def skip(self, start_index, count):
+        raise NotImplementedError()
+
+    def set_context(self, context):
+        self.context = context
+
+        for parent in self.get_parents():
+            parent.set_context(context)
+
+    def to_list(self):
+        return list(self)
+
 
 class GeneratingIterator(Iterator):
 
     def __init__(self, generator_fn):
+        super(GeneratingIterator, self).__init__()
         self.generator_fn = generator_fn
 
     def next(self):
@@ -80,6 +102,9 @@ class GeneratingIterator(Iterator):
 
 class EmptyIterator(Iterator):
 
+    def __init__(self):
+        super(EmptyIterator, self).__init__()
+
     def next(self):
         raise StopIteration()
 
@@ -87,6 +112,6 @@ class EmptyIterator(Iterator):
         pass
 
 
-from transform import TakeTransformation
+from transform import TakeTransformation, ShowTransformation, SplitTransformation, JoinTransformation
 from transform import MapTransformation
 from transform import FilterTransformation

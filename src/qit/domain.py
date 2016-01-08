@@ -1,5 +1,5 @@
 
-from iterator import Iterator, GeneratingIterator
+from iterator import Iterator, GeneratingIterator, IteratorFactory
 
 
 class Domain(object):
@@ -16,6 +16,10 @@ class Domain(object):
     def __add__(self, other):
         return Join((self, other))
 
+    @property
+    def size(self):
+        return None
+
     def iterate(self):
         raise NotImplementedError()
 
@@ -23,19 +27,19 @@ class Domain(object):
         raise NotImplementedError()
 
     def generate(self, count=None):
-        g = GeneratingIterator(self.generate_one)
+        g = IteratorFactory(GeneratingIterator, self.generate_one)
         if count is None:
             return g
         else:
             return g.take(count)
 
 
-
-
 class DomainIterator(Iterator):
 
     def __init__(self, domain):
+        super(DomainIterator, self).__init__()
         self.domain = domain
+        self.size = domain.size
 
 from product import Product
 from join import Join

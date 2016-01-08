@@ -17,6 +17,7 @@ class System(object):
 class StatesIterator(Iterator):
 
     def __init__(self, system, max_depth, return_depth):
+        super(StatesIterator, self).__init__()
         self.system = system
         self.return_depth = return_depth
         self.depth = 0

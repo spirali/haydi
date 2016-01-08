@@ -8,6 +8,7 @@ from iterator import IteratorFactory
 class Values(Domain):
 
     def __init__(self, values):
+        super(Values, self).__init__()
         self.values = values
 
     def generate_one(self):
