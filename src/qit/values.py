@@ -2,6 +2,9 @@
 from domain import Domain, DomainIterator
 import random
 
+from iterator import IteratorFactory
+
+
 class Values(Domain):
 
     def __init__(self, values):
@@ -10,8 +13,9 @@ class Values(Domain):
     def generate_one(self):
         return random.choice(self.values)
 
+    @property
     def iterate(self):
-        return ValuesIterator(self)
+        return IteratorFactory(ValuesIterator, self)
 
     @property
     def size(self):

@@ -2,6 +2,9 @@
 from domain import Domain, DomainIterator
 from random import randint
 
+from iterator import IteratorFactory
+
+
 class Range(Domain):
 
     def __init__(self, start, end=None, step=None):
@@ -23,7 +26,7 @@ class Range(Domain):
         return self.end
 
     def iterate(self):
-        return RangeIterator(self)
+        return IteratorFactory(RangeIterator, self)
 
     def generate_one(self):
         if self.step == 1:

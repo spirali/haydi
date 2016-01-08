@@ -1,5 +1,5 @@
 
-from iterator import Iterator
+from iterator import Iterator, IteratorFactory
 
 
 class System(object):
@@ -11,7 +11,7 @@ class System(object):
         return None
 
     def iterate_states(self, depth, return_depth=False):
-        return StatesIterator(self, depth, return_depth)
+        return IteratorFactory(StatesIterator, self, depth, return_depth)
 
 
 class StatesIterator(Iterator):

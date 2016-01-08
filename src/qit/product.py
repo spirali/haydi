@@ -1,5 +1,6 @@
 
 from domain import Domain, DomainIterator
+from iterator import IteratorFactory
 
 
 class Product(Domain):
@@ -8,7 +9,7 @@ class Product(Domain):
         self.domains = tuple(domains)
 
     def iterate(self):
-        return ProductIterator(self)
+        return IteratorFactory(ProductIterator, self)
 
     def generate_one(self):
         return tuple(d.generate_one() for d in self.domains)
@@ -30,7 +31,7 @@ class ProductIterator(DomainIterator):
 
     def __init__(self, domain):
         super(ProductIterator, self).__init__(domain)
-        self.iterators = [ d.iterate() for d in domain.domains ]
+        self.iterators = [d.iterate for d in domain.domains]
         self.current = None
 
     def reset(self):

@@ -1,7 +1,7 @@
 
 from domain import Domain, DomainIterator
 from random import randint
-from iterator import EmptyIterator
+from iterator import EmptyIterator, IteratorFactory
 
 
 class Join(Domain):
@@ -21,9 +21,9 @@ class Join(Domain):
 
     def iterate(self):
         if not self.domains:
-            return EmptyIterator()
+            return IteratorFactory(EmptyIterator)
         else:
-            return JoinIterator(self)
+            return IteratorFactory(JoinIterator, self)
 
     def generate_one(self):
          c = randint(0, self.ratio_sums[-1] - 1)
@@ -42,12 +42,11 @@ class JoinIterator(DomainIterator):
     def __init__(self, domain):
         super(JoinIterator, self).__init__(domain)
         self.index = 0
-        self.iterator = self.domain.domains[0].iterate()
-
+        self.iterator = self.domain.domains[0].iterate
 
     def reset(self):
         self.index = 0
-        self.iterator = self.domain.domains[0].iterate()
+        self.iterator = self.domain.domains[0].iterate
 
     def next(self):
         if not self.index < len(self.domain.domains):
@@ -58,6 +57,6 @@ class JoinIterator(DomainIterator):
             except StopIteration:
                 self.index += 1
                 if self.index < len(self.domain.domains):
-                    self.iterator = self.domain.domains[self.index].iterate()
+                    self.iterator = self.domain.domains[self.index].iterate
                 else:
                     raise StopIteration
