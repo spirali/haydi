@@ -1,26 +1,47 @@
 from enum import Enum
 
-from parallel.processcontext import ProcessContext
+from runtime.mpicontext import MpiContext
+from runtime.serialcontext import SerialContext
+from runtime.processcontext import ProcessContext
+from graph import Graph
 
 
-class ParallelType(Enum):
-    Process = 1
-    MPI = 2
+class ContextType(Enum):
+    Serial = 1
+    Process = 2
+    MPI = 3
 
 
 class Session(object):
-    def __init__(self, parallel_type=ParallelType.Process):
-        self.parallel_type = parallel_type
+    PROCESS_MAPPING = {
+        ContextType.Serial: SerialContext,
+        ContextType.Process: ProcessContext,
+        ContextType.MPI: MpiContext
+    }
+
+    def __init__(self, context_type=ContextType.Serial, debug=False):
+        assert context_type in Session.PROCESS_MAPPING
+
+        self.context_type = context_type
         self.visualizers = []
+        self.debug = debug
 
-    def create_context(self):
-        if self.parallel_type == ParallelType.Process:
-            ctx = ProcessContext()
-            ctx.on_message_received(self._handle_message)
+    def create_context(self, iterator):
+        ctx = Session.PROCESS_MAPPING[self.context_type]
 
-            return ctx
-        else:
-            raise NotImplementedError()
+        iterator.set_context(ctx)
+
+        ctx.on_message_received(self._handle_message)
+
+        return ctx
+
+    def create_graph(self, iterator):
+        iterator_graph = Graph(iterator)
+
+        if self.debug:
+                self._draw_graph(iterator_graph)
+
+        return iterator_graph
 
     def add_visualizer(self, visualizer):
         self.visualizers.append(visualizer)
@@ -29,3 +50,24 @@ class Session(object):
         for visualizer in self.visualizers:
             if tag in visualizer.get_tags():
                 visualizer.handle_message(tag, iterator_id, data)
+
+    def _draw_graph(self, graph):
+        import graphviz
+        import string
+
+        dot = graphviz.Digraph(graph_attr={ "rankdir": "LR" })
+
+        name_index = 0
+        node_names = {}
+
+        for node in graph.nodes:
+            name = string.ascii_uppercase[name_index]
+            name_index += 1
+            dot.node(name, label=str(node.iterator))
+            node_names[node] = name
+
+        for node in graph.nodes:
+            for input in node.inputs:
+                dot.edge(node_names[input], node_names[node])
+
+        dot.render("iterator-graph", cleanup=True)

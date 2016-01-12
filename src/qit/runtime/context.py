@@ -2,16 +2,19 @@ from enum import Enum
 
 
 class ProcessMessage(object):
-    def __init__(self, tag, data):
+    def __init__(self, tag, data=None):
         self.tag = tag
         self.data = data
+
+    def __repr__(self):
+        return "[{}]: {}".format(self.tag, self.data)
 
 
 class MessageTag(Enum):
     ITERATOR_PROGRESS = "ITERATOR_PROGRESS"
 
 
-class ParallelContext(object):
+class Context(object):
     def __init__(self):
         self.msg_callbacks = []
 
@@ -22,19 +25,13 @@ class ParallelContext(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.shutdown()
 
-    def run(self, iterator):
+    def run(self, iterator_graph):
         raise NotImplementedError()
 
     def init(self):
         raise NotImplementedError()
 
     def shutdown(self):
-        raise NotImplementedError()
-
-    def create_process(self):
-        raise NotImplementedError()
-
-    def destroy_process(self, process):
         raise NotImplementedError()
 
     def on_message_received(self, callback):
