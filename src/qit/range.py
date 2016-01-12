@@ -36,6 +36,9 @@ class Range(Domain):
             diff = self.end - self.start - 1
             return randint(0, diff / self.step) * self.step
 
+    def __repr__(self):
+        return "Range({},{},{})".format(self.start, self.end, self.step)
+
 
 class RangeIterator(DomainIterator):
 
@@ -58,3 +61,6 @@ class RangeIterator(DomainIterator):
             self.value += self.domain.step
             return v
         raise StopIteration()
+
+    def __repr__(self):
+        return "{} iterator".format(str(self.domain))

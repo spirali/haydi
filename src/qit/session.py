@@ -27,7 +27,7 @@ class Session(object):
         self.debug = debug
 
     def create_context(self, iterator):
-        ctx = Session.PROCESS_MAPPING[self.context_type]
+        ctx = Session.PROCESS_MAPPING[self.context_type]()
 
         iterator.set_context(ctx)
 

@@ -29,10 +29,10 @@ class Context(object):
         raise NotImplementedError()
 
     def init(self):
-        raise NotImplementedError()
+        pass
 
     def shutdown(self):
-        raise NotImplementedError()
+        pass
 
     def on_message_received(self, callback):
         self.msg_callbacks.append(callback)

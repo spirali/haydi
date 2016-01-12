@@ -22,10 +22,14 @@ class IteratorFactory(object):
         return TransformationFactory(self, FilterTransformation, fn)
 
     def show(self, notify_count):
+        assert notify_count > 0
+
         return TransformationFactory(self, ShowTransformation, notify_count)
 
-    def split(self):
-        return TransformationFactory(self, SplitTransformation)
+    def split(self, process_count):
+        assert process_count > 0
+
+        return TransformationFactory(self, SplitTransformation, process_count)
 
     def join(self):
         return TransformationFactory(self, JoinTransformation)

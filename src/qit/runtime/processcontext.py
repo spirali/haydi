@@ -14,11 +14,11 @@ class QueueIterator(Iterator):
         self.tag = tag
 
     def next(self):
-        import os
+        #import os
 
         message = self.queue.get()
 
-        print("Read message {0} on process {1}, {2}".format(message, os.getpid(), self.tag))
+        #print("Read message {0} on process {1}, {2}".format(message, os.getpid(), self.tag))
 
         if message.tag == "stop":
             return self.handle_stop(message)
@@ -90,6 +90,9 @@ class ProcessContext(Context):
         output_queue = mp.Queue()
         parallel_iter_begin = node.iterator.parent
         node.iterator = QueueJoinIterator(output_queue, process_count, "join")
+
+        if node.output:
+            node.output.iterator.parent = node.iterator
 
         processes = []
 
