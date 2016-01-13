@@ -23,7 +23,7 @@ class Session(object):
         assert context_type in Session.PROCESS_MAPPING
 
         self.context_type = context_type
-        self.visualizers = []
+        self.listeners = []
         self.debug = debug
 
     def create_context(self, iterator):
@@ -31,7 +31,7 @@ class Session(object):
 
         iterator.set_context(ctx)
 
-        ctx.on_message_received(self._handle_message)
+        ctx.on_message_received(self._broadcast_message)
 
         return ctx
 
@@ -43,13 +43,12 @@ class Session(object):
 
         return iterator_graph
 
-    def add_visualizer(self, visualizer):
-        self.visualizers.append(visualizer)
+    def add_message_listener(self, listener):
+        self.listeners.append(listener)
 
-    def _handle_message(self, tag, iterator_id, data):
-        for visualizer in self.visualizers:
-            if tag in visualizer.get_tags():
-                visualizer.handle_message(tag, iterator_id, data)
+    def _broadcast_message(self, message):
+        for listener in self.listeners:
+            listener.handle_message(message)
 
     def _draw_graph(self, graph):
         import graphviz

@@ -1,6 +1,5 @@
 
 from iterator import Iterator
-from runtime.context import MessageTag
 
 
 class Transformation(Iterator):
@@ -101,7 +100,7 @@ class SplitTransformation(Transformation):
         return next(self.parent)
 
     def __repr__(self):
-        return "Split"
+        return "Split into {} processes".format(self.process_count)
 
 
 class JoinTransformation(Transformation):

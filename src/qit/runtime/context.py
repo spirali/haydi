@@ -1,19 +1,6 @@
 from enum import Enum
 
 
-class ProcessMessage(object):
-    def __init__(self, tag, data=None):
-        self.tag = tag
-        self.data = data
-
-    def __repr__(self):
-        return "[{}]: {}".format(self.tag, self.data)
-
-
-class MessageTag(Enum):
-    ITERATOR_PROGRESS = "ITERATOR_PROGRESS"
-
-
 class Context(object):
     def __init__(self):
         self.msg_callbacks = []
@@ -37,12 +24,9 @@ class Context(object):
     def on_message_received(self, callback):
         self.msg_callbacks.append(callback)
 
-    def post_message(self, tag, iterator_id, data=None):
+    def post_message(self, message):
         raise NotImplementedError()
 
-    def _notify_message(self, tag, iterator_id, data):
-        if isinstance(tag, MessageTag):
-            tag = tag.value
-
+    def _notify_message(self, message):
         for callback in self.msg_callbacks:
-            callback(tag, iterator_id, data)
+            callback(message)

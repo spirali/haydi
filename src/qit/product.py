@@ -17,7 +17,7 @@ class Product(Domain):
 
     @property
     def size(self):
-        if not self.domains or not all([domain.has_size() for domain in self.domains]):
+        if not self.domains or not all([domain.size is not None for domain in self.domains]):
             return None
         result = 1
         for domain in self.domains:
@@ -32,13 +32,16 @@ class ProductIterator(DomainIterator):
 
     def __init__(self, domain):
         super(ProductIterator, self).__init__(domain)
-        self.iterators = [d.iterate for d in domain.domains]
+        self.iterators = [d.iterate().create() for d in domain.domains]
         self.current = None
 
     def reset(self):
         for it in self.iterators:
             it.reset()
         self.current = None
+
+    def get_parents(self):
+        return list(self.iterators)
 
     def next(self):
         if self.current:
@@ -53,3 +56,6 @@ class ProductIterator(DomainIterator):
         else:
            self.current = [ next(i) for i in self.iterators ]
            return tuple(self.current)
+
+    def __repr__(self):
+        return "Product"

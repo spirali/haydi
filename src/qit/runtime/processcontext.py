@@ -1,6 +1,8 @@
 import multiprocessing as mp
 
-from context import Context, ProcessMessage
+import time
+
+from context import Context
 from process import Process
 from iterator import Iterator
 
@@ -58,19 +60,48 @@ class ProcessContext(Context):
             if isinstance(node.iterator, JoinTransformation):
                 self._paralellize_iterator(node)
 
-        result = list(iterator_graph.nodes[0].iterator)
+        collect_process = Process(self)
+        collect_queue = mp.Queue()
+        collect_process.compute(iterator_graph.nodes[0].iterator, collect_queue)
 
+        result = []
+
+        while True:
+            try:
+                notify_msg = self.notify_queue.get(True, 0.01)
+                self._notify_message(notify_msg)
+            except:
+                pass
+
+            try:
+                stop = False
+                while True:
+                    message = collect_queue.get(True, 0.1)
+                    if message.tag == "stop":
+                        stop = True
+                        break
+                    elif message.tag == "item":
+                        result.append(message.data)
+
+                if stop:
+                    break
+            except:
+                pass
+
+        while not self.notify_queue.empty():
+            self._notify_message(self.notify_queue.get())
+
+        collect_process.stop()
         for p in self.processes:
             p.stop()
 
         return result
 
-    def post_message(self, tag, iterator_id, data=None):  # called in a worker process
-        self.notify_queue.put(ProcessMessage("notify", {
-            "tag": tag,
-            "iterator_id": iterator_id,
-            "data": data
-        }))
+    def post_message(self, message):  # called in a worker process
+        if "timestamp" not in message.data:
+            message.data["timestamp"] = time.time()
+
+        self.notify_queue.put(message)
 
     def init(self):
         pass
@@ -97,7 +128,7 @@ class ProcessContext(Context):
         processes = []
 
         for i in xrange(process_count):
-            processes.append(Process())
+            processes.append(Process(self))
 
         input_queue = mp.Queue()
         input_iterator = QueueIterator(input_queue, "map")
@@ -106,7 +137,7 @@ class ProcessContext(Context):
         for p in processes:
             p.compute(parallel_iter_begin, output_queue)
 
-        split_process = Process()
+        split_process = Process(self)
         split_process.compute(split.iterator.parent, input_queue)
 
         self.processes += processes
