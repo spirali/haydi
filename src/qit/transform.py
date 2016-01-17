@@ -1,5 +1,6 @@
 
 from iterator import Iterator
+from runtime.message import Message, MessageTag
 
 
 class Transformation(Iterator):
@@ -65,11 +66,12 @@ class FilterTransformation(Transformation):
         return "Filter"
 
 
-class ShowTransformation(Transformation):
+class ProgressTransformation(Transformation):
 
-    def __init__(self, parent, notify_count):
-        super(ShowTransformation, self).__init__(parent)
+    def __init__(self, parent, name, notify_count):
+        super(ProgressTransformation, self).__init__(parent)
         self.notify_count = notify_count
+        self.name = name
         self.count = 0
 
     def next(self):
@@ -79,10 +81,16 @@ class ShowTransformation(Transformation):
 
         if self.count % self.notify_count == 0:
             size = self.parent.size
-            if size is None:
-                self.context.post_message(MessageTag.ITERATOR_PROGRESS, self.id, self.count)
-            else:
-                self.context.post_message(MessageTag.ITERATOR_PROGRESS, self.id, (self.count / float(size)) * 100)
+            count = self.count
+
+            if size:
+                count = (self.count / float(size)) * 100
+
+            self.context.post_message(Message(MessageTag.SHOW_ITERATOR_PROGRESS, {
+                "id": self.id,
+                "name": self.name,
+                "count": count
+            }))
 
         return value
 

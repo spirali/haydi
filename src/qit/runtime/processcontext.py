@@ -1,12 +1,11 @@
 import multiprocessing as mp
-
 import time
 
 from context import Context
 from process import Process
-from iterator import Iterator
-
-from transform import JoinTransformation, SplitTransformation
+from message import Message, MessageTag
+from qit.iterator import Iterator
+from qit.transform import JoinTransformation, SplitTransformation
 
 
 class QueueIterator(Iterator):
@@ -16,15 +15,11 @@ class QueueIterator(Iterator):
         self.tag = tag
 
     def next(self):
-        #import os
-
         message = self.queue.get()
 
-        #print("Read message {0} on process {1}, {2}".format(message, os.getpid(), self.tag))
-
-        if message.tag == "stop":
+        if message.tag == MessageTag.PROCESS_ITERATOR_STOP:
             return self.handle_stop(message)
-        elif message.tag == "item":
+        elif message.tag == MessageTag.PROCESS_ITERATOR_ITEM:
             return message.data
         else:
             raise KeyError()
@@ -52,44 +47,39 @@ class QueueJoinIterator(QueueIterator):
 class ProcessContext(Context):
     def __init__(self):
         super(ProcessContext, self).__init__()
-        self.notify_queue = mp.Queue()
+        self.msg_queue = mp.Queue()
         self.processes = []
 
     def run(self, iterator_graph):
         for node in iterator_graph.nodes:
             if isinstance(node.iterator, JoinTransformation):
-                self._paralellize_iterator(node)
+                self._parallelize_iterator(node)
 
         collect_process = Process(self)
-        collect_queue = mp.Queue()
-        collect_process.compute(iterator_graph.nodes[0].iterator, collect_queue)
+        collect_process.compute(iterator_graph.nodes[0].iterator, self.msg_queue)
 
         result = []
 
+        self._notify_message(Message(MessageTag.CONTEXT_START))
+
+        # collect notify messages and results
         while True:
-            try:
-                notify_msg = self.notify_queue.get(True, 0.01)
-                self._notify_message(notify_msg)
-            except:
-                pass
+            msg = self.msg_queue.get(True)
+            if msg.tag == MessageTag.NOTIFICATION_MESSAGE:
+                msg.data["message"].data["timestamp"] = msg.data["timestamp"]
+                self._notify_message(msg.data["message"])
+            elif msg.tag == MessageTag.PROCESS_ITERATOR_ITEM:
+                result.append(msg.data)
+            elif msg.tag == MessageTag.PROCESS_ITERATOR_STOP:
+                break
 
-            try:
-                stop = False
-                while True:
-                    message = collect_queue.get(True, 0.1)
-                    if message.tag == "stop":
-                        stop = True
-                        break
-                    elif message.tag == "item":
-                        result.append(message.data)
+        while not self.msg_queue.empty():  # collect remaining notify messages
+            msg = self.msg_queue.get()
+            assert msg.tag == MessageTag.NOTIFICATION_MESSAGE
+            msg.data["message"].data["timestamp"] = msg.data["timestamp"]
+            self._notify_message(msg.data["message"])
 
-                if stop:
-                    break
-            except:
-                pass
-
-        while not self.notify_queue.empty():
-            self._notify_message(self.notify_queue.get())
+        self._notify_message(Message(MessageTag.CONTEXT_STOP))
 
         collect_process.stop()
         for p in self.processes:
@@ -98,10 +88,12 @@ class ProcessContext(Context):
         return result
 
     def post_message(self, message):  # called in a worker process
-        if "timestamp" not in message.data:
-            message.data["timestamp"] = time.time()
-
-        self.notify_queue.put(message)
+        self.msg_queue.put(
+            Message(MessageTag.NOTIFICATION_MESSAGE, {
+                "timestamp" : time.time(),
+                "message": message
+            }
+        ))
 
     def init(self):
         pass
@@ -109,7 +101,7 @@ class ProcessContext(Context):
     def shutdown(self):
         pass
 
-    def _paralellize_iterator(self, node):
+    def _parallelize_iterator(self, node):
         split = node
 
         # assumes that the graph is correct with respect to split-join pairing and we deal only with transformations
@@ -121,6 +113,7 @@ class ProcessContext(Context):
         output_queue = mp.Queue()
         parallel_iter_begin = node.iterator.parent
         node.iterator = QueueJoinIterator(output_queue, process_count, "join")
+        node.iterator.size = parallel_iter_begin.size
 
         if node.output:
             node.output.iterator.parent = node.iterator
@@ -132,6 +125,7 @@ class ProcessContext(Context):
 
         input_queue = mp.Queue()
         input_iterator = QueueIterator(input_queue, "map")
+        input_iterator.size = split.iterator.size
         split.output.iterator.parent = input_iterator
 
         for p in processes:

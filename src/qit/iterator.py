@@ -21,10 +21,10 @@ class IteratorFactory(object):
     def filter(self, fn):
         return TransformationFactory(self, FilterTransformation, fn)
 
-    def show(self, notify_count):
+    def progress(self, name, notify_count):
         assert notify_count > 0
 
-        return TransformationFactory(self, ShowTransformation, notify_count)
+        return TransformationFactory(self, ProgressTransformation, name, notify_count)
 
     def split(self, process_count):
         assert process_count > 0
@@ -116,6 +116,6 @@ class EmptyIterator(Iterator):
         pass
 
 
-from transform import TakeTransformation, ShowTransformation, SplitTransformation, JoinTransformation
+from transform import TakeTransformation, ProgressTransformation, SplitTransformation, JoinTransformation
 from transform import MapTransformation
 from transform import FilterTransformation

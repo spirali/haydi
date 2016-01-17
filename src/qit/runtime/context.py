@@ -1,6 +1,3 @@
-from enum import Enum
-
-
 class Context(object):
     def __init__(self):
         self.msg_callbacks = []
