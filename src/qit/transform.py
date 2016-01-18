@@ -89,7 +89,9 @@ class ProgressTransformation(Transformation):
             self.context.post_message(Message(MessageTag.SHOW_ITERATOR_PROGRESS, {
                 "id": self.id,
                 "name": self.name,
-                "count": count
+                "count": count,
+                "total": self.size,
+                "relative": True if self.size else None
             }))
 
         return value
