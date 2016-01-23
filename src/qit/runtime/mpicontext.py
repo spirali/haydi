@@ -1,4 +1,4 @@
-from context import Context
+from context import ParallelContext
 from qit.iterator import Iterator
 from qit.runtime.message import Message, MessageTag
 from qit.transform import JoinTransformation, SplitTransformation
@@ -127,7 +127,7 @@ class MpiSplitIterator(MpiIterator):
             raise StopIteration()
 
 
-class MpiContext(Context):
+class MpiContext(ParallelContext):
     def __init__(self):
         super(MpiContext, self).__init__()
         self.comm = MPI.COMM_WORLD
@@ -146,6 +146,8 @@ class MpiContext(Context):
             exit(0)
 
     def run(self, iterator_graph):
+        self.preprocess_splits(iterator_graph)
+
         self.node_graph = NodeGraph(self.size)
         first_node = self.node_graph.get_available_node()
         previous_node = first_node

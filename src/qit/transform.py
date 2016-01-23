@@ -17,6 +17,9 @@ class Transformation(Iterator):
     def skip(self, start_index, count):
         return self.parent.skip(start_index, count)
 
+    def is_stateful(self):
+        return False
+
 
 class TakeTransformation(Transformation):
 
@@ -26,6 +29,9 @@ class TakeTransformation(Transformation):
 
         if parent.size is not None:
             self.size = max(parent.size, self.count)
+
+    def is_stateful(self):
+        return True
 
     def next(self):
         if self.count <= 0:
@@ -95,6 +101,9 @@ class ProgressTransformation(Transformation):
             }))
 
         return value
+
+    def is_stateful(self):
+        return True
 
     def __repr__(self):
         return "Show every {} items".format(self.notify_count)

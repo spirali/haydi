@@ -21,6 +21,9 @@ class IteratorFactory(object):
     def filter(self, fn):
         return TransformationFactory(self, FilterTransformation, fn)
 
+    def custom(self, transformation_class):
+        return TransformationFactory(self, transformation_class)
+
     def progress(self, name, notify_count):
         assert notify_count > 0
 
@@ -31,11 +34,8 @@ class IteratorFactory(object):
 
         return TransformationFactory(self, SplitTransformation, process_count)
 
-    def join(self):
-        return TransformationFactory(self, JoinTransformation)
-
     def collect(self):
-        return CollectAction(self.create())
+        return CollectAction(self)
 
 
 class TransformationFactory(IteratorFactory):
@@ -59,6 +59,9 @@ class Iterator(object):
 
     def __iter__(self):
         return self
+
+    def is_stateful(self):
+        return True
 
     def create(self):
         return self
@@ -99,6 +102,9 @@ class GeneratingIterator(Iterator):
 
     def next(self):
         return self.generator_fn()
+
+    def is_stateful(self):
+        return False
 
     def reset(self):
         pass

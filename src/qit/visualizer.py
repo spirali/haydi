@@ -24,15 +24,13 @@ class ProgressConsoleVisualizer(MessageListener):
 
 
 class ProgressPlotVisualizer(MessageListener):
-    def __init__(self):
+    def __init__(self, refresh=10):
         self.values = []
         self.timestamps = []
-        plt.ion()
-        plt.ylabel("Items processed")
-        plt.xlabel("Time (s)")
-
         self.label_set = False
         self.initial_timestamp = None
+        self.refresh_count = 0
+        self.refresh = refresh
 
     def handle_message(self, message):
         if message.tag == MessageTag.SHOW_ITERATOR_PROGRESS:
@@ -44,10 +42,15 @@ class ProgressPlotVisualizer(MessageListener):
             self.values.append(message.data["count"])
             self.timestamps.append(time.time() - self.initial_timestamp)
 
-            plt.plot(self.timestamps, self.values)
-            plt.draw()
+            self.refresh_count += 1
+            if self.refresh_count % self.refresh == 0:
+                plt.plot(self.timestamps, self.values)
+                plt.draw()
         elif message.tag == MessageTag.CONTEXT_START:
             self.initial_timestamp = time.time()
+            plt.ion()
+            plt.ylabel("Items processed")
+            plt.xlabel("Time (s)")
             plt.show()
         elif message.tag == MessageTag.CONTEXT_STOP:
             plt.ioff()

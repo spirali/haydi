@@ -1,7 +1,7 @@
 import multiprocessing as mp
 import time
 
-from context import Context
+from context import ParallelContext
 from process import Process
 from message import Message, MessageTag
 from qit.iterator import Iterator
@@ -44,13 +44,15 @@ class QueueJoinIterator(QueueIterator):
             return self.next()
 
 
-class ProcessContext(Context):
+class ProcessContext(ParallelContext):
     def __init__(self):
         super(ProcessContext, self).__init__()
         self.msg_queue = mp.Queue()
         self.processes = []
 
     def run(self, iterator_graph):
+        self.preprocess_splits(iterator_graph)
+
         for node in iterator_graph.nodes:
             if isinstance(node.iterator, JoinTransformation):
                 self._parallelize_iterator(node)
