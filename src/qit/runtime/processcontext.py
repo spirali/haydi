@@ -92,10 +92,10 @@ class ProcessContext(ParallelContext):
     def post_message(self, message):  # called in a worker process
         self.msg_queue.put(
             Message(MessageTag.NOTIFICATION_MESSAGE, {
-                "timestamp" : time.time(),
+                "timestamp": time.time(),
                 "message": message
             }
-        ))
+            ))
 
     def init(self):
         pass

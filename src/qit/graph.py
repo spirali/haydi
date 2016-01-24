@@ -13,6 +13,7 @@ class Node(object):
         else:
             self.inputs.append(node)
 
+
 class Graph(object):
     @staticmethod
     def _construct(iterator):

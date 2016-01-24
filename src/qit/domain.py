@@ -41,5 +41,5 @@ class DomainIterator(Iterator):
         self.domain = domain
         self.size = domain.size
 
-from product import Product
-from join import Join
+from product import Product  # flake8: noqa
+from join import Join  # flake8: noqa

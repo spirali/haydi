@@ -122,6 +122,6 @@ class EmptyIterator(Iterator):
         pass
 
 
-from transform import TakeTransformation, ProgressTransformation, SplitTransformation, JoinTransformation
-from transform import MapTransformation
-from transform import FilterTransformation
+from transform import TakeTransformation, ProgressTransformation, SplitTransformation  # flake8: noqa
+from transform import MapTransformation  # flake8: noqa
+from transform import FilterTransformation  # flake8: noqa

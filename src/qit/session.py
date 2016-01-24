@@ -54,7 +54,7 @@ class Session(object):
         import graphviz
         import string
 
-        dot = graphviz.Digraph(graph_attr={ "rankdir": "LR" })
+        dot = graphviz.Digraph(graph_attr={"rankdir": "LR"})
 
         name_index = 0
         node_names = {}

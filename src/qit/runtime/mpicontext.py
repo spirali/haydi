@@ -49,7 +49,7 @@ class MpiIterator(Iterator):
         self.comm = MPI.COMM_WORLD
 
     def write(self, str):
-        #print("[{0}]: {1}".format(self.comm.Get_rank(), str))
+        #  print("[{0}]: {1}".format(self.comm.Get_rank(), str))
         pass
 
 

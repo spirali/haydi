@@ -86,11 +86,7 @@ class ProgressTransformation(Transformation):
         self.count += 1
 
         if self.count % self.notify_count == 0:
-            size = self.parent.size
             count = self.count
-
-            if size:
-                count = (self.count / float(size)) * 100
 
             self.context.post_message(Message(MessageTag.SHOW_ITERATOR_PROGRESS, {
                 "id": self.id,

@@ -1,5 +1,5 @@
 
-from domain import Domain, DomainIterator
+from domain import Domain
 
 
 class Mapping(Domain):
