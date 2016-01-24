@@ -13,6 +13,9 @@ def test_sequence_iterate():
     assert len(result) == len(expected)
     s.size == len(expected)
 
+def test_sequence_iterate_empty():
+    assert list(qit.Sequence(qit.Range(3), 0)) == [()]
+
 def test_sequence_generate():
     s = qit.Sequence(qit.Range(3), 5)
     result = list(s.generate(200))

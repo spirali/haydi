@@ -40,15 +40,15 @@ class SequenceIterator(DomainIterator):
         self.current = None
 
     def next(self):
-        if self.current:
-            for i, it in enumerate(self.iterators):
-                try:
-                    self.current[i] = next(it)
-                    return tuple(self.current)
-                except StopIteration:
-                    it.reset()
-                    self.current[i] = next(it)
-            raise StopIteration()
+        if self.current is not None:
+           for i, it in enumerate(self.iterators):
+               try:
+                   self.current[i] = next(it)
+                   return tuple(self.current)
+               except StopIteration:
+                   it.reset()
+                   self.current[i] = next(it)
+           raise StopIteration()
         else:
             self.current = [next(i) for i in self.iterators]
             return tuple(self.current)
