@@ -8,6 +8,8 @@ class Join(Domain):
     def __init__(self, domains, ratios=None):
         super(Join, self).__init__()
         self.domains = tuple(domains)
+        self.size = sum(d.size for d in domains)
+
         if ratios is None:
             ratios = (d.size if d.size is not None else 1
                       for d in self.domains)
@@ -41,21 +43,29 @@ class JoinIterator(DomainIterator):
     def __init__(self, domain):
         super(JoinIterator, self).__init__(domain)
         self.index = 0
-        self.iterator = self.domain.domains[0].iterate
+        self.iterators = [ d.iterate() for d in self.domain.domains ]
 
     def reset(self):
         self.index = 0
-        self.iterator = self.domain.domains[0].iterate
+        for it in self.iterators:
+            it.reset()
 
     def next(self):
-        if not self.index < len(self.domain.domains):
-            raise StopIteration
-        while True:
+        while self.index < len(self.domain.domains):
             try:
-                return next(self.iterator)
+                return next(self.iterators[self.index])
             except StopIteration:
                 self.index += 1
-                if self.index < len(self.domain.domains):
-                    self.iterator = self.domain.domains[self.index].iterate
-                else:
-                    raise StopIteration
+        raise StopIteration
+
+    def set(self, index):
+        for i, it in enumerate(self.iterators):
+            size = it.size
+            if index < size:
+                it.set(index)
+                self.index = i
+                return
+            index -= size
+
+        self.index = len(self.domain.domains)
+        self.iterator = None

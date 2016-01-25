@@ -16,3 +16,9 @@ def test_values_iterate():
     b = qit.Values([])
     assert b.size == 0
     assert list(b.iterate()) == []
+
+def test_iter_set():
+    a = qit.Values(["a", "b", "c", "d"])
+    i = iter(a)
+    i.set(2)
+    assert list(i) == ["c", "d"]

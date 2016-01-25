@@ -9,6 +9,7 @@ class Sequence(Domain):
         super(Sequence, self).__init__()
         self.length = length
         self.domain = domain
+        self.size = self._compute_size()
 
     def iterate(self):
         return IteratorFactory(SequenceIterator, self)
@@ -16,8 +17,7 @@ class Sequence(Domain):
     def generate_one(self):
         return tuple(self.domain.generate_one() for i in xrange(self.length))
 
-    @property
-    def size(self):
+    def _compute_size(self):
         if not self.domain:
             return 0
         result = 1
@@ -52,3 +52,14 @@ class SequenceIterator(DomainIterator):
         else:
             self.current = [next(i) for i in self.iterators]
             return tuple(self.current)
+
+    def set(self, index):
+        self.current = None
+        if index >= self.size:
+            for it in self.iterators:
+                it.set(it.size)
+            return
+        for it in self.iterators:
+            size = it.size
+            it.set(index % size)
+            index /= size

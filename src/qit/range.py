@@ -64,3 +64,6 @@ class RangeIterator(DomainIterator):
 
     def __repr__(self):
         return "{} iterator".format(str(self.domain))
+
+    def set(self, index):
+        self.value = self.domain.start + self.domain.step * index

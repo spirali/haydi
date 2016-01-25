@@ -40,7 +40,10 @@ class DomainIterator(Iterator):
     def __init__(self, domain):
         super(DomainIterator, self).__init__()
         self.domain = domain
-        self.size = domain.size
 
-from product import Product  # flake8: noqa
-from join import Join  # flake8: noqa
+    @property
+    def size(self):
+        return self.domain.size
+
+from product import Product  # noqa
+from join import Join  # noqa

@@ -24,3 +24,17 @@ def test_sequence_generate():
         assert len(r) == 5
         for x in r:
             assert 0 <=  x < 3
+
+def test_sequence_iter_set():
+    r2 = qit.Range(4)
+    p = qit.Sequence(r2, 3)
+
+    a = list(p)
+    b = []
+    for i in xrange(p.size + 10):
+        it = iter(p)
+        it.set(i)
+        l = list(it)
+        if l:
+            b.append(l[0])
+    assert a == b

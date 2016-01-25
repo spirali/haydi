@@ -60,3 +60,14 @@ class ProductIterator(DomainIterator):
 
     def __repr__(self):
         return "Product"
+
+    def set(self, index):
+        self.current = None
+        if index >= self.size:
+            for it in self.iterators:
+                it.set(it.size)
+            return
+        for it in self.iterators:
+            size = it.size
+            it.set(index % size)
+            index /= size

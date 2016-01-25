@@ -33,3 +33,15 @@ def test_range_generate():
     for r in result:
         assert 0 <= r < 10
         assert r % 2 == 0
+
+def test_iter_set():
+    r = qit.Range(20, 30, 3)
+    a = list(r)
+    b = []
+    for i in xrange(40):
+        it = iter(r)
+        it.set(i)
+        l = list(it)
+        if l:
+            b.append(l[0])
+    assert a == b

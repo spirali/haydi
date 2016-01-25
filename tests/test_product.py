@@ -38,3 +38,18 @@ def test_product_mul():
     expected = itertools.product(range(4), range(2), range(4))
     assert set(result) == set(expected)
     assert len(result) == 32
+
+def test_iter_set():
+    r1 = qit.Range(3)
+    r2 = qit.Range(4)
+    p = r1 * r2
+
+    a = list(p)
+    b = []
+    for i in xrange(40):
+        it = iter(p)
+        it.set(i)
+        l = list(it)
+        if l:
+            b.append(l[0])
+    assert a == b
