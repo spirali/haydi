@@ -53,3 +53,12 @@ def test_iter_set():
         if l:
             b.append(l[0])
     assert a == b
+
+
+def test_uproduct_iterate():
+    r1 = qit.Range(3)
+    p = qit.UnorderedProduct((r1, r1))
+
+    result = list(p.iterate())
+    assert set(result) == set([(0, 0), (1, 0), (2, 0), (1, 1), (2, 1), (2, 2)])
+    assert len(result) == p.size
