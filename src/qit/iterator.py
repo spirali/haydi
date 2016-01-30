@@ -1,67 +1,28 @@
 import functools
 
-from action import CollectAction
-
-
-class IteratorFactory(object):
-    def __init__(self, iterator_class, *args, **kwargs):
-        self.iterator_class = iterator_class
-        self.args = args
-        self.kwargs = kwargs
-
-    def create(self):
-        return self.iterator_class(*self.args, **self.kwargs)
-
-    def take(self, count):
-        return TransformationFactory(self, TakeTransformation, count)
-
-    def map(self, fn):
-        return TransformationFactory(self, MapTransformation, fn)
-
-    def filter(self, fn):
-        return TransformationFactory(self, FilterTransformation, fn)
-
-    def custom(self, transformation_class):
-        return TransformationFactory(self, transformation_class)
-
-    def progress(self, name, notify_count):
-        assert notify_count > 0
-
-        return TransformationFactory(self, ProgressTransformation, name, notify_count)
-
-    def split(self, process_count):
-        assert process_count > 0
-
-        return TransformationFactory(self, SplitTransformation, process_count)
-
-    def collect(self):
-        return CollectAction(self)
-
-
-class TransformationFactory(IteratorFactory):
-    def __init__(self, parent, transformation, *args, **kwargs):
-        super(TransformationFactory, self).__init__(transformation, *args, **kwargs)
-        self.parent = parent
-
-    def create(self):
-        return self.iterator_class(self.parent.create(), *self.args, **self.kwargs)
-
 
 class Iterator(object):
-    ID_COUNTER = 0
+    @staticmethod
+    def is_split():
+        return False
+
+    @staticmethod
+    def is_join():
+        return False
+
+    @staticmethod
+    def is_transformation():
+        return False
+
+    @staticmethod
+    def is_stateful():
+        return True
 
     def __init__(self):
-        self.id = Iterator.ID_COUNTER
-        Iterator.ID_COUNTER += 1
-
-        self.context = None
         self.size = None
 
     def __iter__(self):
         return self
-
-    def is_stateful(self):
-        return True
 
     def create(self):
         return self
@@ -84,12 +45,6 @@ class Iterator(object):
     def skip(self, start_index, count):
         raise NotImplementedError()
 
-    def set_context(self, context):
-        self.context = context
-
-        for parent in self.get_parents():
-            parent.set_context(context)
-
     def to_list(self):
         return list(self)
 
@@ -102,9 +57,6 @@ class GeneratingIterator(Iterator):
 
     def next(self):
         return self.generator_fn()
-
-    def is_stateful(self):
-        return False
 
     def reset(self):
         pass
@@ -120,8 +72,3 @@ class EmptyIterator(Iterator):
 
     def reset(self):
         pass
-
-
-from transform import TakeTransformation, ProgressTransformation, SplitTransformation  # flake8: noqa
-from transform import MapTransformation  # flake8: noqa
-from transform import FilterTransformation  # flake8: noqa

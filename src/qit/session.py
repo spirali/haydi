@@ -1,72 +1,53 @@
-from enum import Enum
-
-from runtime.mpicontext import MpiContext
-from runtime.serialcontext import SerialContext
-from runtime.processcontext import ProcessContext
-from graph import Graph
-
-
-class ContextType(Enum):
-    Serial = 1
-    Process = 2
-    MPI = 3
+from exception import InnerParallelContext
 
 
 class Session(object):
-    PROCESS_MAPPING = {
-        ContextType.Serial: SerialContext,
-        ContextType.Process: ProcessContext,
-        ContextType.MPI: MpiContext
-    }
-
-    def __init__(self, context_type=ContextType.Serial, debug=False):
-        assert context_type in Session.PROCESS_MAPPING
-
-        self.context_type = context_type
+    def __init__(self):
         self.listeners = []
-        self.debug = debug
+        self.parallel_context = None
+        self.contexts = []
 
-    def create_context(self, iterator):
-        ctx = Session.PROCESS_MAPPING[self.context_type]()
+    def create_context(self, parallel):
+        from runtime import serialcontext
 
-        iterator.set_context(ctx)
+        if parallel and self.parallel_context:
+            raise InnerParallelContext()
 
-        ctx.on_message_received(self._broadcast_message)
+        if not parallel:
+            ctx = serialcontext.SerialContext()
+        else:
+            ctx = self._create_parallel_context()
+            self.parallel_context = ctx
+
+        self.contexts.append(ctx)
 
         return ctx
 
-    def create_graph(self, iterator):
-        iterator_graph = Graph(iterator)
+    def destroy_context(self, context):
+        if context.is_parallel():
+            self.parallel_context = None
 
-        if self.debug:
-                self._draw_graph(iterator_graph)
+        self.contexts.remove(context)
 
-        return iterator_graph
+    def post_message(self, message):
+        if self.parallel_context and not self.parallel_context.is_master():
+            self.parallel_context.transmit_to_master(message)
+        else:
+            self.broadcast_message(message)
 
     def add_message_listener(self, listener):
         self.listeners.append(listener)
 
-    def _broadcast_message(self, message):
+    def broadcast_message(self, message):
         for listener in self.listeners:
             listener.handle_message(message)
 
-    def _draw_graph(self, graph):
-        import graphviz
-        import string
+    def _create_parallel_context(self):
+        from runtime import mpicontext, processcontext
 
-        dot = graphviz.Digraph(graph_attr={"rankdir": "LR"})
+        if mpicontext.MpiRun:
+            return mpicontext.MpiContext()
+        else:
+            return processcontext.ProcessContext()
 
-        name_index = 0
-        node_names = {}
-
-        for node in graph.nodes:
-            name = string.ascii_uppercase[name_index]
-            name_index += 1
-            dot.node(name, label=str(node.iterator))
-            node_names[node] = name
-
-        for node in graph.nodes:
-            for input in node.inputs:
-                dot.edge(node_names[input], node_names[node])
-
-        dot.render("iterator-graph", cleanup=True)
+session = Session()

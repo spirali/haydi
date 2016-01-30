@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 
 from message import Message, MessageTag
+from qit.session import session
 
 
 class Process(object):
@@ -23,16 +24,15 @@ class Process(object):
         if self.process is not None:
             self.process.join()
 
-    def _compute_fn(self, iterator, output_queue):
-        self.context.post_message(Message(MessageTag.PROCESS_START, {"pid": os.getpid()}))
+    def _compute_fn(self, factory, output_queue):
+        session.post_message(Message(MessageTag.PROCESS_START, {"pid": os.getpid()}))
 
-        for item in iterator:
+        for item in factory.create():
             output_queue.put(Message(MessageTag.PROCESS_ITERATOR_ITEM, item))
-            self.context.post_message(Message(MessageTag.PROCESS_ITERATOR_ITEM, {"pid": os.getpid()}))
 
         output_queue.put(Message(MessageTag.PROCESS_ITERATOR_STOP))
-        self.context.post_message(Message(MessageTag.PROCESS_STOP, {"pid": os.getpid()}))
+        session.post_message(Message(MessageTag.PROCESS_STOP, {"pid": os.getpid()}))
 
-    def compute(self, iterator, output_queue):
-        self.process = mp.Process(target=self._compute_fn, args=(iterator, output_queue))
+    def compute(self, factory, output_queue):
+        self.process = mp.Process(target=self._compute_fn, args=(factory, output_queue))
         self.process.start()

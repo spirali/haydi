@@ -1,9 +1,21 @@
+import time
+
 from context import ParallelContext
 from qit.iterator import Iterator
-from qit.runtime.message import Message, MessageTag
+from qit.session import session
 from qit.transform import JoinTransformation, SplitTransformation
 
-from mpi4py import MPI
+
+MpiRun = True
+
+try:
+    from mpi4py import MPI
+
+    comm = MPI.COMM_WORLD
+    if comm.Get_size() < 2:
+        raise Exception()
+except:
+    MpiRun = False
 
 
 class MpiTag(object):
@@ -54,8 +66,10 @@ class MpiIterator(Iterator):
 
 
 class MpiReceiveIterator(MpiIterator):
-    def __init__(self, source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG):
+    def __init__(self, group_count, source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG):
         super(MpiReceiveIterator, self).__init__()
+        self.group_count = group_count
+        self.stop_count = 0
         self.source = source
         self.tag = tag
 
@@ -64,10 +78,16 @@ class MpiReceiveIterator(MpiIterator):
         status = MPI.Status()
         message = self.comm.recv(source=self.source, tag=self.tag, status=status)
 
+        self.write("Receive received {}".format(message))
+
         if status.tag == MpiTag.ITERATOR_ITEM:
             return message
         elif status.tag == MpiTag.ITERATOR_STOP:
-            raise StopIteration()
+            self.stop_count += 1
+            if self.group_count == self.stop_count:
+                raise StopIteration()
+            else:
+                return self.next()
 
 
 class MpiRegionJoinIterator(MpiIterator):
@@ -83,6 +103,7 @@ class MpiRegionJoinIterator(MpiIterator):
             self.write("RegionJoin sending to {0}".format(self.destination))
             self.comm.send(item, self.destination, tag=MpiTag.ITERATOR_ITEM)
         except:
+            self.write("RegionJoin ending")
             self.comm.send("", self.destination, tag=MpiTag.ITERATOR_STOP)
             raise StopIteration()
 
@@ -99,7 +120,7 @@ class MpiRegionSplitIterator(MpiIterator):
         status = MPI.Status()
         message = self.comm.recv(source=self.source, tag=MPI.ANY_TAG, status=status)
 
-        self.write("RegionSplit requested message with tag {0}".format(status.tag))
+        self.write("RegionSplit received item {}".format(message))
 
         if status.tag == MpiTag.NODE_JOB_OFFER:
             return message
@@ -119,7 +140,7 @@ class MpiSplitIterator(MpiIterator):
             self.write("Split generated item {0}".format(item))
             status = MPI.Status()
             self.comm.recv(source=MPI.ANY_SOURCE, tag=MpiTag.NODE_JOB_REQUEST, status=status)
-            self.write("Split sending to {0} after request".format(status.source))
+            self.write("Split sending to {0}".format(status.source))
             self.comm.send(item, status.source, tag=MpiTag.NODE_JOB_OFFER)
         except:
             for node in self.group:
@@ -145,7 +166,11 @@ class MpiContext(ParallelContext):
         if self.rank != 0:
             exit(0)
 
-    def run(self, iterator_graph):
+    def is_master(self):
+        return self.rank == 0
+
+    def get_result(self, iterator_factory):
+        iterator_graph = self._create_iterator_graph(iterator_factory)
         self.preprocess_splits(iterator_graph)
 
         self.node_graph = NodeGraph(self.size)
@@ -166,7 +191,7 @@ class MpiContext(ParallelContext):
 
         return None
 
-    def post_message(self, message):
+    def transmit_to_master(self, message):
         self.comm.send(message, 0, MpiTag.NOTIFICATION_MESSAGE)
 
     def _worker(self, iterator_graph):
@@ -177,22 +202,31 @@ class MpiContext(ParallelContext):
     def _master(self, iterator_graph):
         result = []
 
-        self._notify_message(Message(MessageTag.CONTEXT_START))
+        while self._receive_msg(result):
+            pass
 
         while True:
             status = MPI.Status()
-            message = self.comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-
-            if status.tag == MpiTag.NOTIFICATION_MESSAGE:
-                self._notify_message(message)
-            elif status.tag == MpiTag.ITERATOR_ITEM:
-                result.append(message)
-            elif status.tag == MpiTag.ITERATOR_STOP:
+            self.comm.iprobe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            if status.count > 0:
+                self._receive_msg(result)
+            else:
                 break
 
-        self._notify_message(Message(MessageTag.CONTEXT_STOP))
-
         return result
+
+    def _receive_msg(self, result):
+        status = MPI.Status()
+        message = self.comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+
+        if status.tag == MpiTag.NOTIFICATION_MESSAGE:
+            session.post_message(message)
+        elif status.tag == MpiTag.ITERATOR_ITEM:
+            result.append(message)
+        elif status.tag == MpiTag.ITERATOR_STOP:
+            return False
+
+        return True
 
     def _parallelize_iterator(self, join, previous_node):
         split = join
@@ -218,7 +252,7 @@ class MpiContext(ParallelContext):
             group.append(node)
 
         # MPI > Join
-        join_iterator = MpiReceiveIterator()
+        join_iterator = MpiReceiveIterator(len(group))
         join_iterator.size = join.iterator.size
         join.iterator = join_iterator
         if join.output:

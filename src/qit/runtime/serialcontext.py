@@ -1,31 +1,26 @@
 from context import Context
 from message import Message, MessageTag
+from qit.session import session
 from qit.transform import SplitTransformation
 
 
 class SerialContext(Context):
-    def run(self, iterator_graph):
-        self.preprocess_graph(iterator_graph)
-        self.post_message(Message(MessageTag.CONTEXT_START))
+    def get_result(self, iterator_factory):
+        self.preprocess_graph(iterator_factory)
 
-        result = list(iterator_graph.nodes[0].iterator)
+        return list(iterator_factory.create())
 
-        self.post_message(Message(MessageTag.CONTEXT_STOP))
-
-        return result
-
-    def preprocess_graph(self, iterator_graph):
+    def preprocess_graph(self, iterator_factory):
         """
         Removes all split transformations.
-        :type iterator_graph: graph.Graph
+        :type iterator_factory: graph.Graph
         """
         skipped = []
-        for node in iterator_graph.nodes:
-            if isinstance(node.iterator, SplitTransformation):
+        node = iterator_factory
+        while node:
+            if node.iterator_class.is_split():
                 skipped.append(node)
+            node = node.input
 
         for skipped_node in skipped:
-            iterator_graph.skip(skipped_node)
-
-    def post_message(self, message):
-        self._notify_message(message)
+            skipped_node.skip()

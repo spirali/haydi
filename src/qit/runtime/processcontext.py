@@ -1,11 +1,13 @@
 import multiprocessing as mp
-import time
+import os
 
 from context import ParallelContext
 from process import Process
-from message import Message, MessageTag
+from message import MessageTag
+from qit.factory import IteratorFactory
 from qit.iterator import Iterator
-from qit.transform import JoinTransformation, SplitTransformation
+from qit.session import session
+from qit.transform import JoinTransformation
 
 
 class QueueIterator(Iterator):
@@ -49,27 +51,32 @@ class ProcessContext(ParallelContext):
         super(ProcessContext, self).__init__()
         self.msg_queue = mp.Queue()
         self.processes = []
+        self.master_pid = None
 
-    def run(self, iterator_graph):
-        self.preprocess_splits(iterator_graph)
+    def is_master(self):
+        return os.getpid() == self.master_pid
 
-        for node in iterator_graph.nodes:
-            if isinstance(node.iterator, JoinTransformation):
+    def get_result(self, iterator_factory):
+        self.master_pid = os.getpid()
+        iterator_factory = self.preprocess_splits(iterator_factory)
+
+        node = iterator_factory
+        while node:
+            if node.iterator_class.is_join():
                 self._parallelize_iterator(node)
+            node = node.input
 
         collect_process = Process(self)
-        collect_process.compute(iterator_graph.nodes[0].iterator, self.msg_queue)
+        collect_process.compute(iterator_factory, self.msg_queue)
 
         result = []
-
-        self._notify_message(Message(MessageTag.CONTEXT_START))
 
         # collect notify messages and results
         while True:
             msg = self.msg_queue.get(True)
             if msg.tag == MessageTag.NOTIFICATION_MESSAGE:
                 msg.data["message"].data["timestamp"] = msg.data["timestamp"]
-                self._notify_message(msg.data["message"])
+                session.post_message(msg.data["message"])
             elif msg.tag == MessageTag.PROCESS_ITERATOR_ITEM:
                 result.append(msg.data)
             elif msg.tag == MessageTag.PROCESS_ITERATOR_STOP:
@@ -79,9 +86,7 @@ class ProcessContext(ParallelContext):
             msg = self.msg_queue.get()
             assert msg.tag == MessageTag.NOTIFICATION_MESSAGE
             msg.data["message"].data["timestamp"] = msg.data["timestamp"]
-            self._notify_message(msg.data["message"])
-
-        self._notify_message(Message(MessageTag.CONTEXT_STOP))
+            session.post_message(msg.data["message"])
 
         collect_process.stop()
         for p in self.processes:
@@ -89,13 +94,8 @@ class ProcessContext(ParallelContext):
 
         return result
 
-    def post_message(self, message):  # called in a worker process
-        self.msg_queue.put(
-            Message(MessageTag.NOTIFICATION_MESSAGE, {
-                "timestamp": time.time(),
-                "message": message
-            }
-            ))
+    def transmit_to_master(self, message):  # called in a worker process
+        self.msg_queue.put(message)
 
     def init(self):
         pass
@@ -104,21 +104,27 @@ class ProcessContext(ParallelContext):
         pass
 
     def _parallelize_iterator(self, node):
+        assert node.iterator_class == JoinTransformation
+
         split = node
 
-        # assumes that the graph is correct with respect to split-join pairing and we deal only with transformations
-        while not isinstance(split.iterator, SplitTransformation):
-            split = split.inputs[0]
+        # assumes that the graph is correct with respect to split-join pairing
+        # and we deal only with transformations
+        while split and not split.iterator_class.is_split():
+            split = split.input
 
-        process_count = split.iterator.process_count
+        assert split
 
+        process_count = split.args[0]
+
+        # TODO
         output_queue = mp.Queue()
-        parallel_iter_begin = node.iterator.parent
-        node.iterator = QueueJoinIterator(output_queue, process_count, "join")
-        node.iterator.size = parallel_iter_begin.size
-
-        if node.output:
-            node.output.iterator.parent = node.iterator
+        queue_join = IteratorFactory(QueueJoinIterator,
+                                     output_queue,
+                                     process_count,
+                                     "join")  # TODO: pass size
+        parallel_iter_begin = node.input  # first iterator that is parallelized
+        node.replace(queue_join)
 
         processes = []
 
@@ -126,15 +132,16 @@ class ProcessContext(ParallelContext):
             processes.append(Process(self))
 
         input_queue = mp.Queue()
-        input_iterator = QueueIterator(input_queue, "map")
-        input_iterator.size = split.iterator.size
-        split.output.iterator.parent = input_iterator
+        queue_iterator = IteratorFactory(QueueIterator, input_queue, "map")
+        # TODO: pass size
+
+        split.append(queue_iterator)
 
         for p in processes:
             p.compute(parallel_iter_begin, output_queue)
 
         split_process = Process(self)
-        split_process.compute(split.iterator.parent, input_queue)
+        split_process.compute(split.input, input_queue)
 
         self.processes += processes
         self.processes.append(split_process)

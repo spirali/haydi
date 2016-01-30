@@ -1,5 +1,6 @@
 
-from iterator import Iterator, GeneratingIterator, IteratorFactory
+from factory import IteratorFactory
+from iterator import GeneratingIterator, Iterator
 
 
 class Domain(object):

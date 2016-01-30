@@ -12,7 +12,8 @@ class ProgressConsoleVisualizer(MessageListener):
 
     def handle_message(self, message):
         if message.tag == MessageTag.SHOW_ITERATOR_PROGRESS:
-            print("\r{}: {} %".format(message.data["name"], message.data["count"]), end=self._get_end())
+            percent = (float(message.data["count"]) / float(message.data["total"])) * 100.0
+            print("\r{}: {} %".format(message.data["name"], percent), end=self._get_end())
         elif message.tag == MessageTag.CONTEXT_STOP:
             print("")
 

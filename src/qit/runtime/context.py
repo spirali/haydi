@@ -1,11 +1,12 @@
-from qit.graph import Node
+from qit.exception import TooManySplits
+from qit.factory import TransformationFactory
+from qit.graph import Node, Graph
+from qit.runtime.message import Message, MessageTag
+from qit.session import session
 from qit.transform import Transformation, SplitTransformation, JoinTransformation
 
 
 class Context(object):
-    def __init__(self):
-        self.msg_callbacks = []
-
     def __enter__(self):
         self.init()
         return self
@@ -13,7 +14,17 @@ class Context(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.shutdown()
 
-    def run(self, iterator_graph):
+    def is_parallel(self):
+        return False
+
+    def run(self, iterator_factory):
+        session.post_message(Message(MessageTag.CONTEXT_START))
+        result = self.get_result(iterator_factory)
+        session.post_message(Message(MessageTag.CONTEXT_STOP))
+
+        return result
+
+    def get_result(self, iterator_factory):
         raise NotImplementedError()
 
     def init(self):
@@ -22,39 +33,46 @@ class Context(object):
     def shutdown(self):
         pass
 
-    def on_message_received(self, callback):
-        self.msg_callbacks.append(callback)
-
-    def post_message(self, message):
-        raise NotImplementedError()
-
-    def _notify_message(self, message):
-        for callback in self.msg_callbacks:
-            callback(message)
-
 
 class ParallelContext(Context):
-    def preprocess_splits(self, iterator_graph):
+    def is_parallel(self):
+        return True
+
+    def is_master(self):
+        raise NotImplementedError()
+
+    def transmit_to_master(self, message):
+        raise NotImplementedError()
+
+    def preprocess_splits(self, iterator_factory):
         process_count = 4  # TODO
 
-        node = self._find_first_transform(iterator_graph)
-        iterator_graph.insert_before(node, Node(SplitTransformation(node.inputs[0].iterator, process_count)))
+        node = self._find_first_transform(iterator_factory)
+        user_splits = self._count_user_splits(iterator_factory)
+
+        if user_splits > 1:
+            raise TooManySplits()
+        elif user_splits == 0:
+            node.prepend(
+                TransformationFactory(None, SplitTransformation, process_count))
 
         master = True
 
         while True:
-            iterator = node.iterator
-            if isinstance(iterator, SplitTransformation):
+            iterator = node.iterator_class
+            if iterator.is_split():
                 if not master:
-                    iterator_graph.skip(node)  # ignore splits in worker region
+                    node.skip()  # ignore splits in worker region
                 else:
                     master = False
             else:
                 if master and not iterator.is_stateful():  # split here
-                    iterator_graph.insert_before(node, Node(SplitTransformation(node.inputs[0].iterator, process_count)))
+                    node.prepend(TransformationFactory(
+                        None, SplitTransformation, process_count))
                     master = False
                 elif not master and iterator.is_stateful():  # join here
-                    iterator_graph.insert_before(node, Node(JoinTransformation(node.inputs[0].iterator)))
+                    node.prepend(
+                        TransformationFactory(None, JoinTransformation))
                     master = True
 
             if node.output:
@@ -63,22 +81,42 @@ class ParallelContext(Context):
                 break
 
         if not master:
-            iterator_graph.insert_after(node, Node(JoinTransformation(node.iterator)))
+            node.append(TransformationFactory(None, JoinTransformation))
 
         skipped = []
 
-        for node in iterator_graph.nodes:  # remove immediate split-joins
-            if isinstance(node.iterator, JoinTransformation):
-                if isinstance(node.inputs[0].iterator, SplitTransformation):
-                    skipped += [node, node.inputs[0]]
+        node = iterator_factory
+
+        while node:  # remove immediate split-joins
+            if node.iterator_class.is_join():
+                if node.input.iterator_class.is_split():
+                    skipped += [node, node.input]
+            node = node.input
 
         for skipped_node in skipped:
-            iterator_graph.skip(skipped_node)
+            skipped_node.skip()
 
-    def _find_first_transform(self, iterator_graph):
-        node = iterator_graph.nodes[0]
+        node = iterator_factory
+        while node.output:
+            node = node.output
 
-        while isinstance(node.iterator, Transformation):
-            node = node.inputs[0]
+        return node
+
+    def _count_user_splits(self, iterator_factory):
+        splits = 0
+        node = iterator_factory
+
+        while node:
+            if node.iterator_class.is_split():
+                splits += 1
+            node = node.input
+
+        return splits
+
+    def _find_first_transform(self, iterator_factory):
+        node = iterator_factory
+
+        while node and node.iterator_class.is_transformation():
+            node = node.input
 
         return node.output

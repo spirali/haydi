@@ -2,7 +2,7 @@
 from domain import Domain, DomainIterator
 import random
 
-from iterator import IteratorFactory
+from factory import IteratorFactory
 
 
 class Values(Domain):

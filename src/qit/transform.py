@@ -1,9 +1,17 @@
 
 from iterator import Iterator
+from session import session
 from runtime.message import Message, MessageTag
 
 
 class Transformation(Iterator):
+    @staticmethod
+    def is_transformation():
+        return True
+
+    @staticmethod
+    def is_stateful():
+        return False
 
     def __init__(self, parent):
         super(Transformation, self).__init__()
@@ -17,11 +25,11 @@ class Transformation(Iterator):
     def skip(self, start_index, count):
         return self.parent.skip(start_index, count)
 
-    def is_stateful(self):
-        return False
-
 
 class TakeTransformation(Transformation):
+    @staticmethod
+    def is_stateful():
+        return True
 
     def __init__(self, parent, count):
         super(TakeTransformation, self).__init__(parent)
@@ -29,9 +37,6 @@ class TakeTransformation(Transformation):
 
         if parent.size is not None:
             self.size = max(parent.size, self.count)
-
-    def is_stateful(self):
-        return True
 
     def next(self):
         if self.count <= 0:
@@ -73,6 +78,9 @@ class FilterTransformation(Transformation):
 
 
 class ProgressTransformation(Transformation):
+    @staticmethod
+    def is_stateful():
+        return True
 
     def __init__(self, parent, name, notify_count):
         super(ProgressTransformation, self).__init__(parent)
@@ -88,8 +96,7 @@ class ProgressTransformation(Transformation):
         if self.count % self.notify_count == 0:
             count = self.count
 
-            self.context.post_message(Message(MessageTag.SHOW_ITERATOR_PROGRESS, {
-                "id": self.id,
+            session.post_message(Message(MessageTag.SHOW_ITERATOR_PROGRESS, {
                 "name": self.name,
                 "count": count,
                 "total": self.size,
@@ -98,14 +105,14 @@ class ProgressTransformation(Transformation):
 
         return value
 
-    def is_stateful(self):
-        return True
-
     def __repr__(self):
         return "Show every {} items".format(self.notify_count)
 
 
 class SplitTransformation(Transformation):
+    @staticmethod
+    def is_split():
+        return True
 
     def __init__(self, parent, process_count):
         super(SplitTransformation, self).__init__(parent)
@@ -119,6 +126,9 @@ class SplitTransformation(Transformation):
 
 
 class JoinTransformation(Transformation):
+    @staticmethod
+    def is_join():
+        return True
 
     def __init__(self, parent):
         super(JoinTransformation, self).__init__(parent)

@@ -1,6 +1,6 @@
 
 from domain import Domain, DomainIterator
-from iterator import IteratorFactory
+from factory import IteratorFactory
 
 
 class Sequence(Domain):

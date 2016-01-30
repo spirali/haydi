@@ -1,5 +1,6 @@
 
-from iterator import Iterator, IteratorFactory
+from factory import IteratorFactory
+from iterator import Iterator
 
 
 class System(object):
