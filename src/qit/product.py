@@ -2,6 +2,8 @@
 from domain import Domain, DomainIterator
 from factory import IteratorFactory
 
+from copy import copy
+
 
 class Product(Domain):
 
@@ -43,6 +45,11 @@ class ProductIterator(DomainIterator):
 
     def get_parents(self):
         return list(self.iterators)
+
+    def copy(self):
+        new = copy(self)
+        new.iterators = [ it.copy() for it in self.iterators ]
+        return new
 
     def next(self):
         if self.current:

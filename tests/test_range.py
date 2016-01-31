@@ -45,3 +45,11 @@ def test_iter_set():
         if l:
             b.append(l[0])
     assert a == b
+
+def test_range_iter_copy():
+    r = qit.Range(3, 10, 2)
+
+    it = r.iterate()
+    it2 = it.copy()
+
+    assert list(it) == list(it2)

@@ -38,3 +38,12 @@ def test_sequence_iter_set():
         if l:
             b.append(l[0])
     assert a == b
+
+def test_sequence_iter_copy():
+    r2 = qit.Range(3)
+    s = qit.Sequence(r2, 4)
+
+    it = s.iterate()
+    it2 = it.copy()
+
+    assert list(it) == list(it2)

@@ -4,6 +4,8 @@ from random import randint
 
 from factory import IteratorFactory
 
+from copy import copy
+
 
 class Range(Domain):
 
@@ -51,6 +53,9 @@ class RangeIterator(DomainIterator):
         end = start + count
 
         return RangeIterator(Range(start, end))
+
+    def copy(self):
+        return copy(self)
 
     def reset(self):
         self.value = self.domain.start

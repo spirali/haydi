@@ -39,6 +39,7 @@ def test_product_mul():
     assert set(result) == set(expected)
     assert len(result) == 32
 
+
 def test_iter_set():
     r1 = qit.Range(3)
     r2 = qit.Range(4)
@@ -62,3 +63,15 @@ def test_uproduct_iterate():
     result = list(p.iterate())
     assert set(result) == set([(0, 0), (1, 0), (2, 0), (1, 1), (2, 1), (2, 2)])
     assert len(result) == p.size
+
+
+def test_product_iter_copy():
+
+    r1 = qit.Range(3)
+    r2 = qit.Range(10)
+    p = r1 * r2
+
+    it = p.iterate()
+    it2 = it.copy()
+
+    assert list(it) == list(it2)
