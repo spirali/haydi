@@ -8,6 +8,7 @@ class Mapping(Domain):
         super(Mapping, self).__init__()
         self.key_domain = key_domain
         self.value_domain = value_domain
+        self.size = self.value_domain.size ** self.key_domain.size
 
     def iterate(self):
         return MappingIterator(self)
