@@ -67,3 +67,15 @@ def test_join_iter_set():
         if l:
             b.append(l[0])
     assert a == b
+
+
+def test_join_copy():
+    r1 = qit.Range(0, 5)
+    r2 = qit.Range(5, 10)
+    r3 = qit.Range(10, 15)
+
+    p = r1 + r2 + r3
+
+    it = p.iterate()
+    it2 = it.copy()
+    assert list(it) == list(it2)

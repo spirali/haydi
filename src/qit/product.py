@@ -50,6 +50,7 @@ class ProductIterator(DomainIterator):
     def copy(self):
         new = copy(self)
         new.iterators = [ it.copy() for it in self.iterators ]
+        new.current = copy(self.current)
         return new
 
     def next(self):
@@ -111,6 +112,13 @@ class UnorderedProductIterator(DomainIterator):
         assert len(set(domain.domains)) == 1
         self.iterators = None
         self.current = None
+
+    def copy(self):
+        new = copy(self)
+        if self.iterators is not None:
+            new.iterators = [ it.copy() for it in self.iterators ]
+        new.current = copy(self.current)
+        return new
 
     def reset(self):
         for it in self.iterators:

@@ -1,6 +1,6 @@
 
-from domain import Domain
-
+from domain import Domain, DomainIterator
+from copy import copy
 
 class Mapping(Domain):
 
@@ -25,9 +25,15 @@ class MappingIterator(DomainIterator):
 
     def __init__(self, domain):
         super(MappingIterator, self).__init__(domain)
-        self.keys = list(domain.key_domain)
+        self.keys = tuple(domain.key_domain)
         self.iterators = [ domain.value_domain.iterate() for key in self.keys ]
         self.current = None
+
+    def copy(self):
+        new = copy(self)
+        new.iterators = [ it.copy() for it in self.iterators ]
+        new.current = copy(self.current)
+        return new
 
     def reset(self):
         for it in self.iterators:
