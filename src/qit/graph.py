@@ -1,67 +1,87 @@
 class Node(object):
-    def __init__(self, iterator, inputs=None, output=None):
-        if not inputs:
-            inputs = []
-
-        self.iterator = iterator
-        self.inputs = inputs
+    def __init__(self, factory, input=None, output=None):
+        self.factory = factory
+        self.input = input
         self.output = output
 
-    def set_input(self, node):
-        if len(self.inputs) > 0:
-            self.inputs[0] = node
-        else:
-            self.inputs.append(node)
+    def __repr__(self):
+        return "Node with {}".format(self.factory)
 
 
 class Graph(object):
-    @staticmethod
-    def _construct(iterator):
-        nodes = []
-        queue = [(iterator, None)]  # (iterator, parent node)
+    def __init__(self, iterator_factory):
+        self.factory = iterator_factory
+        self.nodes = []
 
-        while len(queue) > 0:
-            item = queue.pop()
+        parent = Node(iterator_factory)
+        for tr in iterator_factory.transformations:
+            node = Node(tr, parent)
+            parent.output = node
+            parent = node
+            self.nodes.append(node)
 
-            new_node = Node(item[0])
+    @property
+    def last_node(self):
+        return self.nodes[len(self.nodes) - 1]
 
-            if item[1]:  # if this is a parent of a node, register itself as input and set the parent as output
-                item[1].inputs.append(new_node)
-                new_node.output = item[1]
+    @property
+    def first_node(self):
+        return self.nodes[0]
 
-            for parent in item[0].get_parents():
-                queue.append((parent, new_node))
+    def has_transformations(self):
+        return len(self.factory.transformations) > 0
 
-            nodes.append(new_node)
+    def create(self):
+        return self.factory.create()
 
-        return nodes
+    def get_factory_from(self, node):
+        index = self.nodes.index(node)
+        factory = self.factory.copy()
+        factory.transformations = factory.transformations[:index]
+        return factory
 
-    def __init__(self, iterator):
-        self.nodes = Graph._construct(iterator)
-        self.origin_node = self.nodes[0]
+    def prepend(self, node, transformation_factory):
+        assert node.input
 
-    def insert_before(self, node, inserted_node):
-        parent = node.inputs[0]
-        parent.output = inserted_node
-        inserted_node.set_input(parent)
-        inserted_node.output = node
-        node.set_input(inserted_node)
+        new_node = Node(transformation_factory, node.input, node)
+        node.output = new_node
+        node.input = new_node
 
-        self.nodes.insert(self.nodes.index(parent), inserted_node)
+        self.nodes.insert(self.nodes.index(node.input), new_node)
+        self.factory.transformations.insert(
+            self.nodes.index(node.input.factory), transformation_factory)
 
-    def insert_after(self, node, inserted_node):
-        child = node.output
-        node.output = inserted_node
-        inserted_node.set_input(node.output)
-        inserted_node.output = child
+    def append(self, node, transformation_factory):
+        assert node.input
 
-        if child:
-            child.set_input(inserted_node)
+        new_node = Node(transformation_factory, node, node.output)
+        if node.output:
+            node.output.input = new_node
+        node.output = new_node
 
-        self.nodes.insert(self.nodes.index(node), inserted_node)
+        self.nodes.insert(self.nodes.index(node), new_node)
+        self.factory.transformations.insert(
+            self.factory.transformations.index(node.factory),
+            transformation_factory)
 
     def skip(self, node):
-        parent = node.inputs[0]
+        assert node.input
+
+        parent = node.input
         parent.output = node.output
-        node.output.set_input(parent)
+        node.output = parent
         self.nodes.remove(node)
+        self.factory.transformations.remove(node.factory)
+
+    def replace(self, node, transformation_factory):
+        assert node.input
+
+        new_node = Node(transformation_factory, node.input, node.output)
+        node.input.output = new_node
+
+        if node.output:
+            node.output.input = new_node
+
+        self.nodes[self.nodes.index(node)] = new_node
+        self.factory.transformations[self.factory.transformations.
+            index(node.factory)] = transformation_factory

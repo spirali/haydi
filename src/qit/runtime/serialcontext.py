@@ -5,22 +5,20 @@ from qit.transform import SplitTransformation
 
 
 class SerialContext(Context):
-    def get_result(self, iterator_factory):
-        self.preprocess_graph(iterator_factory)
+    def get_result(self, graph):
+        self.preprocess_graph(graph)
 
-        return list(iterator_factory.create())
+        return list(graph.create())
 
-    def preprocess_graph(self, iterator_factory):
+    def preprocess_graph(self, graph):
         """
         Removes all split transformations.
-        :type iterator_factory: graph.Graph
+        :type graph: graph.Graph
         """
         skipped = []
-        node = iterator_factory
-        while node:
-            if node.iterator_class.is_split():
+        for node in graph.nodes:
+            if node.factory.klass.is_split():
                 skipped.append(node)
-            node = node.input
 
         for skipped_node in skipped:
-            skipped_node.skip()
+            graph.skip(skipped_node)

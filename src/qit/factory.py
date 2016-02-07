@@ -2,98 +2,75 @@ import action
 import transform
 
 
-class IteratorFactory(object):
-    def __init__(self, iterator_class, *args, **kwargs):
-        self.iterator_class = iterator_class
+class Factory(object):
+    def __init__(self, klass, *args, **kwargs):
+        self.klass = klass
         self.args = args
         self.kwargs = kwargs
-        self.output = None
-        self.input = None
 
     def copy(self):
-        return IteratorFactory(self.iterator_class, *self.args, **self.kwargs)
+        return self.__class__(self.klass, *self.args, **self.kwargs)
+
+    def __repr__(self):
+        return "Factory of {}".format(self.klass)
+
+
+class IteratorFactory(Factory):
+    def __init__(self, klass, *args, **kwargs):
+        super(IteratorFactory, self).__init__(klass, *args, **kwargs)
+        self.transformations = []
+
+    def copy(self):
+        cp = super(IteratorFactory, self).copy()
+        for trans in self.transformations:
+            cp.transformations.append(trans.copy())
+
+        return cp
 
     def create(self):
-        return self.iterator_class(*self.args, **self.kwargs)
+        iter = self.klass(*self.args, **self.kwargs)
+        parent = iter
+        for tr in self.transformations:
+            transformation = tr.create(parent)
+            parent = transformation
+
+        return parent
 
     def take(self, count):
-        return self._create_transformation(transform.TakeTransformation, count)
+        self._create_transformation(transform.TakeTransformation, count)
+        return self
 
     def map(self, fn):
-        return self._create_transformation(transform.MapTransformation, fn)
+        self._create_transformation(transform.MapTransformation, fn)
+        return self
 
     def filter(self, fn):
-        return self._create_transformation(transform.FilterTransformation, fn)
-
-    def custom(self, transformation_class, *args, **kwargs):
-        return self._create_transformation(transformation_class, *args, **kwargs)
+        self._create_transformation(transform.FilterTransformation, fn)
+        return self
 
     def progress(self, name, notify_count):
         assert notify_count > 0
 
-        return self._create_transformation(transform.ProgressTransformation, name, notify_count)
+        self._create_transformation(transform.ProgressTransformation, name, notify_count)
+        return self
 
     def split(self, process_count):
         assert process_count > 0
 
-        return self._create_transformation(transform.SplitTransformation, process_count)
+        self._create_transformation(transform.SplitTransformation, process_count)
+        return self
 
-    def collect(self):
+    def collect(self):  # TODO: parametrize actions
         return action.CollectAction(self)
 
-    def prepend(self, factory):
-        assert isinstance(factory, IteratorFactory)
-
-        self.input.output = factory
-        factory.input = self.input
-        self.input = factory
-        factory.output = self
-
-    def append(self, factory):
-        assert isinstance(factory, IteratorFactory)
-
-        if self.output:
-            self.output.input = factory
-        factory.output = self.output
-        self.output = factory
-        factory.input = self
-
-    def skip(self):
-        self.input.output = self.output
-
-        if self.output:
-            self.output.input = self.input
-
-    def replace(self, replacement):
-        assert isinstance(replacement, IteratorFactory)
-
-        self.input.output = replacement
-        replacement.input = self.input
-        if self.output:
-            self.output.input = replacement
-        replacement.output = self.output
-
     def _create_transformation(self, klass, *args, **kwargs):
-        fac = TransformationFactory(self, klass, *args, **kwargs)
-        self.output = fac
-        return fac
+        fac = TransformationFactory(klass, *args, **kwargs)
+        self.transformations.append(fac)
 
-    def __repr__(self):
-        return "Factory of {}".format(self.iterator_class)
 
-class TransformationFactory(IteratorFactory):
-    def __init__(self, parent, iterator_class, *args, **kwargs):
-        super(TransformationFactory, self).__init__(iterator_class, *args, **kwargs)
-        self.input = parent
+class TransformationFactory(Factory):
+    def __init__(self, klass, *args, **kwargs):
+        super(TransformationFactory, self).__init__(klass, *args, **kwargs)
 
-    def copy(self):
-        assert self.input
-
-        parent = self.input.copy()
-        parent.output = TransformationFactory(parent, self.iterator_class, *self.args, **self.kwargs)
-        return parent.output
-
-    def create(self):
-        assert self.input
-
-        return self.iterator_class(self.input.create(), *self.args, **self.kwargs)
+    def create(self, parent):
+        return self.klass(parent, *self.args, **self.kwargs)

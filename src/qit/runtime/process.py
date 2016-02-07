@@ -25,13 +25,10 @@ class Process(object):
             self.process.join()
 
     def _compute_fn(self, factory, output_queue):
-        session.post_message(Message(MessageTag.PROCESS_START, {"pid": os.getpid()}))
-
         for item in factory.create():
             output_queue.put(Message(MessageTag.PROCESS_ITERATOR_ITEM, item))
 
         output_queue.put(Message(MessageTag.PROCESS_ITERATOR_STOP))
-        session.post_message(Message(MessageTag.PROCESS_STOP, {"pid": os.getpid()}))
 
     def compute(self, factory, output_queue):
         self.process = mp.Process(target=self._compute_fn, args=(factory, output_queue))

@@ -19,7 +19,7 @@ class Context(object):
 
     def run(self, iterator_factory):
         session.post_message(Message(MessageTag.CONTEXT_START))
-        result = self.get_result(iterator_factory)
+        result = self.get_result(Graph(iterator_factory))
         session.post_message(Message(MessageTag.CONTEXT_STOP))
 
         return result
@@ -44,22 +44,25 @@ class ParallelContext(Context):
     def transmit_to_master(self, message):
         raise NotImplementedError()
 
-    def preprocess_splits(self, iterator_factory):
+    def preprocess_splits(self, graph):
+        if not graph.has_transformations():
+            return
+
         process_count = 4  # TODO
 
-        node = self._find_first_transform(iterator_factory)
-        user_splits = self._count_user_splits(iterator_factory)
+        node = graph.first_node
+        user_splits = self._count_user_splits(graph)
 
         if user_splits > 1:
             raise TooManySplits()
         elif user_splits == 0:
-            node.prepend(
-                TransformationFactory(None, SplitTransformation, process_count))
+            graph.prepend(node,
+                TransformationFactory(SplitTransformation, process_count))
 
         master = True
 
         while True:
-            iterator = node.iterator_class
+            iterator = node.factory.klass
             if iterator.is_split():
                 if not master:
                     node.skip()  # ignore splits in worker region
@@ -67,12 +70,12 @@ class ParallelContext(Context):
                     master = False
             else:
                 if master and not iterator.is_stateful():  # split here
-                    node.prepend(TransformationFactory(
-                        None, SplitTransformation, process_count))
+                    graph.prepend(node,
+                      TransformationFactory(SplitTransformation, process_count))
                     master = False
                 elif not master and iterator.is_stateful():  # join here
-                    node.prepend(
-                        TransformationFactory(None, JoinTransformation))
+                    graph.prepend(node,
+                        TransformationFactory(JoinTransformation))
                     master = True
 
             if node.output:
@@ -81,42 +84,22 @@ class ParallelContext(Context):
                 break
 
         if not master:
-            node.append(TransformationFactory(None, JoinTransformation))
+            graph.append(node, TransformationFactory(JoinTransformation))
 
         skipped = []
-
-        node = iterator_factory
-
-        while node:  # remove immediate split-joins
-            if node.iterator_class.is_join():
-                if node.input.iterator_class.is_split():
+        for node in graph.nodes:  # remove immediate split-joins
+            if node.factory.klass.is_join():
+                if node.input.factory.klass.is_split():
                     skipped += [node, node.input]
-            node = node.input
 
         for skipped_node in skipped:
-            skipped_node.skip()
+            graph.skip(skipped_node)
 
-        node = iterator_factory
-        while node.output:
-            node = node.output
-
-        return node
-
-    def _count_user_splits(self, iterator_factory):
+    def _count_user_splits(self, graph):
         splits = 0
-        node = iterator_factory
 
-        while node:
-            if node.iterator_class.is_split():
+        for node in graph.nodes:
+            if node.factory.klass.is_split():
                 splits += 1
-            node = node.input
 
         return splits
-
-    def _find_first_transform(self, iterator_factory):
-        node = iterator_factory
-
-        while node and node.iterator_class.is_transformation():
-            node = node.input
-
-        return node.output

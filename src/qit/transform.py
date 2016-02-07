@@ -17,13 +17,15 @@ class Transformation(Iterator):
         super(Transformation, self).__init__()
         self.parent = parent
         self.size = parent.size
-        self.child = None
 
     def get_parents(self):
         return [self.parent]
 
     def skip(self, start_index, count):
         return self.parent.skip(start_index, count)
+
+    def reset(self):
+        self.parent.reset()
 
 
 class TakeTransformation(Transformation):
