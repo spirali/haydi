@@ -3,6 +3,7 @@ from domain import Domain, DomainIterator
 from factory import IteratorFactory
 
 from copy import copy
+import math
 
 
 class Product(Domain):
@@ -100,39 +101,52 @@ class UnorderedProduct(Domain):
         result = 1
         for i, domain in enumerate(self.domains):
             result *= domain.size - i
-        return result
+        return result / math.factorial(len(self.domains))
 
 
 class UnorderedProductIterator(DomainIterator):
 
     def __init__(self, domain):
         super(UnorderedProductIterator, self).__init__(domain)
-        self.iterators = [ d.iterate() for d in domain.domains ]
+        assert len(set(domain.domains)) == 1
+        self.iterators = None
         self.current = None
-        self.indices = [0] * (len(self.iterators) - 1)
 
     def reset(self):
         for it in self.iterators:
             it.reset()
         for i in xrange(len(self.indices) - 1):
-            self.indices[i] = 0
+            self.nexts[i] = None
         self.current = None
 
     def next(self):
-        if self.current:
+        current = self.current
+        if current:
            for i, it in enumerate(self.iterators):
                try:
-                   self.current[i] = next(it)
-                   return tuple(self.current)
+                   current[i] = next(it)
+                   if i == 0:
+                       return tuple(current)
+                   for j in xrange(i - 1, -1, -1):
+                       it = it.copy()
+                       self.iterators[j] = it
+                       current[j] = next(it)
+                   return tuple(current)
                except StopIteration:
-                   if i == len(self.iterators) - 1:
-                       raise StopIteration()
-                   self.indices[i] += 1
-                   it.set(self.indices[i])
-                   self.current[i] = next(it)
+                   continue
            raise StopIteration()
         else:
-           self.current = [ next(i) for i in self.iterators ]
+           it = self.domain.domains[0].iterate()
+           iterators = []
+           current = []
+           for d in self.domain.domains:
+               iterators.append(it)
+               current.append(next(it))
+               it = it.copy()
+           iterators.reverse()
+           current.reverse()
+           self.iterators = iterators
+           self.current = current
            return tuple(self.current)
 
     def set(self, index):

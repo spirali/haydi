@@ -57,11 +57,32 @@ def test_iter_set():
 
 
 def test_uproduct_iterate():
-    r1 = qit.Range(3)
+    r1 = qit.Range(4)
     p = qit.UnorderedProduct((r1, r1))
 
     result = list(p.iterate())
-    assert set(result) == set([(0, 0), (1, 0), (2, 0), (1, 1), (2, 1), (2, 2)])
+    assert set(result) == set(
+            [(1, 0),
+             (2, 0),
+             (3, 0),
+             (2, 1),
+             (3, 1),
+             (3, 2)])
+    assert len(result) == p.size
+
+    p = qit.UnorderedProduct((r1, r1, r1))
+    result = list(p.iterate())
+    assert set(result) == set(
+            [(2, 1, 0),
+             (3, 1, 0),
+             (3, 2, 0),
+             (3, 2, 1),
+             ])
+    assert len(result) == p.size
+
+    p = qit.UnorderedProduct((r1, r1, r1, r1))
+    result = list(p.iterate())
+    assert set(result) == set([(3, 2, 1, 0)])
     assert len(result) == p.size
 
 
