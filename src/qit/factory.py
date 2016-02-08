@@ -65,6 +65,11 @@ class IteratorFactory(Factory):
                                     process_count)
         return self
 
+    def timeout(self, timeout):
+        self._create_transformation(transform.TimeoutTransformation,
+                                           timeout)
+        return self
+
     def collect(self, *args, **kwargs):
         return ActionFactory(action.Collect, self, *args, **kwargs)
 

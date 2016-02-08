@@ -1,3 +1,4 @@
+import time
 
 from iterator import Iterator
 from session import session
@@ -140,3 +141,19 @@ class JoinTransformation(Transformation):
 
     def __repr__(self):
         return "Join"
+
+
+class TimeoutTransformation(Transformation):
+    def __init__(self, parent, timeout):
+        super(TimeoutTransformation, self).__init__(parent)
+        self.timeout = timeout
+        self.start = None
+
+    def next(self):
+        if not self.start:
+            self.start = time.time()
+
+        if time.time() - self.start >= self.timeout:
+            raise StopIteration()
+        else:
+            return next(self.parent)
