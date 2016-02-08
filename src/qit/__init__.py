@@ -9,3 +9,4 @@ from mapping import Mapping  # flake8: noqa
 
 # Others
 from system import System  # flake8: noqa
+from lts import LTS
