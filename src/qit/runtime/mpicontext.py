@@ -6,16 +6,23 @@ from qit.session import session
 from qit.transform import JoinTransformation, SplitTransformation
 
 
-MpiRun = True
+class MpiWorker(object):
+    def __init__(self, size, rank):
+        self.size = size
+        self.rank = rank
+        self.comm = MPI.COMM_WORLD
+        session.set_worker(self)
 
-try:
-    from mpi4py import MPI
+    def run(self):
+        while True:
+            status = MPI.Status()
+            msg = self.comm.recv(source=MPI.ANY_SOURCE,
+                                 tag=MPI.ANY_TAG, status=status)
+            print(msg)
 
-    comm = MPI.COMM_WORLD
-    if comm.Get_size() < 2:
-        raise Exception()
-except:
-    MpiRun = False
+    def post_message(self, msg):
+        # send to master
+        self.comm.send(msg, 0, tag=MpiTag.NOTIFICATION_MESSAGE)
 
 
 class MpiTag(object):
@@ -162,10 +169,6 @@ class MpiContext(ParallelContext):
     def init(self):
         pass
 
-    def shutdown(self):
-        if self.rank != 0:
-            exit(0)
-
     def is_master(self):
         return self.rank == 0
 
@@ -193,11 +196,6 @@ class MpiContext(ParallelContext):
 
     def transmit_to_master(self, message):
         self.comm.send(message, 0, MpiTag.NOTIFICATION_MESSAGE)
-
-    def _worker(self, iterator_graph):
-        iterator = self.node_graph.get_iterator(self.rank)
-        for _ in iterator:
-            pass
 
     def _master(self, iterator_graph):
         result = []
@@ -264,3 +262,21 @@ class MpiContext(ParallelContext):
         self.node_graph.assign_job(splitter_node, input_iterator)
 
         return splitter_node
+
+
+MpiRun = True
+
+try:
+    from mpi4py import MPI
+
+    comm = MPI.COMM_WORLD
+    size = comm.Get_size()
+    rank = comm.Get_rank()
+    if size < 2:
+        raise Exception()
+
+    if rank != 0:
+        MpiWorker(size, rank).run()
+        exit(0)
+except:
+    MpiRun = False

@@ -5,6 +5,7 @@ class Session(object):
     def __init__(self):
         self.listeners = []
         self.parallel_context = None
+        self.worker = None
         self.contexts = []
 
     def create_context(self, parallel):
@@ -23,6 +24,9 @@ class Session(object):
 
         return ctx
 
+    def set_worker(self, worker):
+        self.worker = worker
+
     def destroy_context(self, context):
         if context.is_parallel():
             self.parallel_context = None
@@ -30,7 +34,9 @@ class Session(object):
         self.contexts.remove(context)
 
     def post_message(self, message):
-        if self.parallel_context and not self.parallel_context.is_master():
+        if self.worker:
+            self.worker.post_message(message)
+        elif self.parallel_context and not self.parallel_context.is_master():
             self.parallel_context.transmit_to_master(message)
         else:
             self.broadcast_message(message)
