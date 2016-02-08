@@ -22,6 +22,9 @@ class Process(object):
         if self.process is not None:
             self.process.join()
 
+    def terminate(self):
+        self.process.terminate()
+
     def _compute_fn(self, factory, output_queue):
         for item in factory.create():
             output_queue.put(Message(MessageTag.PROCESS_ITERATOR_ITEM, item))

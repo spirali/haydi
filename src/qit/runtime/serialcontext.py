@@ -5,8 +5,9 @@ class SerialContext(Context):
     def compute_action(self, graph, action):
         self.preprocess_graph(graph)
 
-        for item in list(graph.create()):
-            action.handle_item(item)
+        for item in graph.create():
+            if not action.handle_item(item):
+                break
 
     def preprocess_graph(self, graph):
         """

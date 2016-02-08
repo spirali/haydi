@@ -72,7 +72,10 @@ class ProcessContext(ParallelContext):
         while True:
             msg = self.msg_queue.get(True)
             if msg.tag == MessageTag.PROCESS_ITERATOR_ITEM:
-                action.handle_item(msg.data)
+                if not action.handle_item(msg.data):
+                    # TODO: shutdown the processes properly
+                    self._stop_processes([collect_process] + self.processes)
+                    break
             elif msg.tag == MessageTag.PROCESS_ITERATOR_STOP:
                 break
             else:
@@ -96,6 +99,10 @@ class ProcessContext(ParallelContext):
 
     def shutdown(self):
         pass
+
+    def _stop_processes(self, processes):
+        for p in processes:
+            p.terminate()
 
     def _parallelize_iterator(self, graph, node):
         assert node.factory.klass == JoinTransformation

@@ -39,6 +39,8 @@ class First(Action):
         self.result = None
 
     def handle_item(self, item):
+        assert self.result is None
+
         if self.fn(item):
             self.result = item
             return False
