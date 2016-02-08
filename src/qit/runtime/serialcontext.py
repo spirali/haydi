@@ -1,14 +1,12 @@
 from context import Context
-from message import Message, MessageTag
-from qit.session import session
-from qit.transform import SplitTransformation
 
 
 class SerialContext(Context):
-    def get_result(self, graph):
+    def compute_action(self, graph, action):
         self.preprocess_graph(graph)
 
-        return list(graph.create())
+        for item in list(graph.create()):
+            action.handle_item(item)
 
     def preprocess_graph(self, graph):
         """

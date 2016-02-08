@@ -1,9 +1,18 @@
-import time
-
 from context import ParallelContext
 from qit.iterator import Iterator
 from qit.session import session
 from qit.transform import JoinTransformation, SplitTransformation
+
+
+MpiRun = True
+
+try:
+    from mpi4py import MPI
+
+    if MPI.COMM_WORLD.Get_size() < 2:
+        raise Exception()
+except:
+    MpiRun = False
 
 
 class MpiWorker(object):
@@ -83,7 +92,9 @@ class MpiReceiveIterator(MpiIterator):
     def next(self):
         self.write("Receive receiving...")
         status = MPI.Status()
-        message = self.comm.recv(source=self.source, tag=self.tag, status=status)
+        message = self.comm.recv(source=self.source,
+                                 tag=self.tag,
+                                 status=status)
 
         self.write("Receive received {}".format(message))
 
@@ -125,7 +136,9 @@ class MpiRegionSplitIterator(MpiIterator):
         self.comm.send("", self.source, tag=MpiTag.NODE_JOB_REQUEST)
 
         status = MPI.Status()
-        message = self.comm.recv(source=self.source, tag=MPI.ANY_TAG, status=status)
+        message = self.comm.recv(source=self.source,
+                                 tag=MPI.ANY_TAG,
+                                 status=status)
 
         self.write("RegionSplit received item {}".format(message))
 
@@ -146,7 +159,9 @@ class MpiSplitIterator(MpiIterator):
             item = next(self.parent)
             self.write("Split generated item {0}".format(item))
             status = MPI.Status()
-            self.comm.recv(source=MPI.ANY_SOURCE, tag=MpiTag.NODE_JOB_REQUEST, status=status)
+            self.comm.recv(source=MPI.ANY_SOURCE,
+                           tag=MpiTag.NODE_JOB_REQUEST,
+                           status=status)
             self.write("Split sending to {0}".format(status.source))
             self.comm.send(item, status.source, tag=MpiTag.NODE_JOB_OFFER)
         except:
@@ -164,7 +179,8 @@ class MpiContext(ParallelContext):
         self.node_graph = None
 
         if self.comm.Get_size() < 2:
-            raise BaseException("MPI context has to be run with at least 2 MPI processes")
+            raise BaseException("MPI context has to be run with at"
+                                "least 2 MPI processes")
 
     def init(self):
         pass
@@ -172,55 +188,52 @@ class MpiContext(ParallelContext):
     def is_master(self):
         return self.rank == 0
 
-    def get_result(self, iterator_factory):
-        iterator_graph = self._create_iterator_graph(iterator_factory)
-        self.preprocess_splits(iterator_graph)
+    def compute_action(self, graph, action):
+        self.preprocess_splits(graph)
 
         self.node_graph = NodeGraph(self.size)
         first_node = self.node_graph.get_available_node()
         previous_node = first_node
 
-        for node in iterator_graph.nodes:
+        for node in graph.nodes:
             if isinstance(node.iterator, JoinTransformation):
                 previous_node = self._parallelize_iterator(node, previous_node)
 
-        start_iterator = MpiRegionJoinIterator(iterator_graph.nodes[0].iterator, 0)
+        start_iterator = MpiRegionJoinIterator(graph.nodes[0].iterator, 0)
         self.node_graph.assign_job(first_node, start_iterator)
 
         if self.rank == 0:
-            return self._master(iterator_graph)
-        else:
-            self._worker(iterator_graph)
+            return self._master(graph, action)
 
         return None
 
     def transmit_to_master(self, message):
         self.comm.send(message, 0, MpiTag.NOTIFICATION_MESSAGE)
 
-    def _master(self, iterator_graph):
-        result = []
-
-        while self._receive_msg(result):
+    def _master(self, graph, action):
+        while self._receive_msg(action):
             pass
 
         while True:
             status = MPI.Status()
-            self.comm.iprobe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+            self.comm.iprobe(source=MPI.ANY_SOURCE,
+                             tag=MPI.ANY_TAG,
+                             status=status)
             if status.count > 0:
-                self._receive_msg(result)
+                self._receive_msg(action)
             else:
                 break
 
-        return result
-
-    def _receive_msg(self, result):
+    def _receive_msg(self, action):
         status = MPI.Status()
-        message = self.comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+        message = self.comm.recv(source=MPI.ANY_SOURCE,
+                                 tag=MPI.ANY_TAG,
+                                 status=status)
 
         if status.tag == MpiTag.NOTIFICATION_MESSAGE:
             session.post_message(message)
         elif status.tag == MpiTag.ITERATOR_ITEM:
-            result.append(message)
+            action.handle_item(message)
         elif status.tag == MpiTag.ITERATOR_STOP:
             return False
 
@@ -229,7 +242,8 @@ class MpiContext(ParallelContext):
     def _parallelize_iterator(self, join, previous_node):
         split = join
 
-        # assumes that the graph is correct with respect to split-join pairing and we deal only with transformations
+        # assumes that the graph is correct with respect
+        # to split-join pairing and we deal only with transformations
         # TODO: copy iterator attributes
         while not isinstance(split.iterator, SplitTransformation):
             split = split.inputs[0]
@@ -238,14 +252,16 @@ class MpiContext(ParallelContext):
 
         # MPI > parallel region > Join
         joiner_node = previous_node
-        parallel_iter_begin = MpiRegionJoinIterator(join.iterator.parent, joiner_node)
+        parallel_iter_begin = MpiRegionJoinIterator(join.iterator.parent,
+                                                    joiner_node)
         parallel_iter_end = MpiRegionSplitIterator(splitter_node)
         split.output.iterator.parent = parallel_iter_end
         # assign to multiple nodes
         group = []
 
         for i in xrange(split.iterator.process_count):
-            node = self.node_graph.get_available_node()  # TODO: split into multiple processes
+            node = self.node_graph.get_available_node()
+            # TODO: split into multiple processes
             self.node_graph.assign_job(node, parallel_iter_begin)
             group.append(node)
 
@@ -264,19 +280,9 @@ class MpiContext(ParallelContext):
         return splitter_node
 
 
-MpiRun = True
-
-try:
-    from mpi4py import MPI
-
-    comm = MPI.COMM_WORLD
-    size = comm.Get_size()
-    rank = comm.Get_rank()
-    if size < 2:
-        raise Exception()
-
-    if rank != 0:
-        MpiWorker(size, rank).run()
-        exit(0)
-except:
-    MpiRun = False
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+if rank != 0:
+    MpiWorker(size, rank).run()
+    exit(0)

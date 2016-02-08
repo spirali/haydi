@@ -14,6 +14,7 @@ class Graph(object):
         self.nodes = []
 
         parent = Node(iterator_factory)
+        self.nodes.append(parent)
         for tr in iterator_factory.transformations:
             node = Node(tr, parent)
             parent.output = node
@@ -21,12 +22,12 @@ class Graph(object):
             self.nodes.append(node)
 
     @property
-    def last_node(self):
+    def last_transformation(self):
         return self.nodes[len(self.nodes) - 1]
 
     @property
-    def first_node(self):
-        return self.nodes[0]
+    def first_transformation(self):
+        return self.nodes[1]
 
     def has_transformations(self):
         return len(self.factory.transformations) > 0
@@ -44,12 +45,13 @@ class Graph(object):
         assert node.input
 
         new_node = Node(transformation_factory, node.input, node)
-        node.output = new_node
+        node.input.output = new_node
         node.input = new_node
 
-        self.nodes.insert(self.nodes.index(node.input), new_node)
-        self.factory.transformations.insert(
-            self.nodes.index(node.input.factory), transformation_factory)
+        indices = self._get_indices(node)
+
+        self.nodes.insert(indices[0], new_node)
+        self.factory.transformations.insert(indices[1], transformation_factory)
 
     def append(self, node, transformation_factory):
         assert node.input
@@ -59,10 +61,10 @@ class Graph(object):
             node.output.input = new_node
         node.output = new_node
 
-        self.nodes.insert(self.nodes.index(node), new_node)
-        self.factory.transformations.insert(
-            self.factory.transformations.index(node.factory),
-            transformation_factory)
+        indices = self._get_indices(node, 1)
+
+        self.nodes.insert(indices[0], new_node)
+        self.factory.transformations.insert(indices[1], transformation_factory)
 
     def skip(self, node):
         assert node.input
@@ -82,6 +84,11 @@ class Graph(object):
         if node.output:
             node.output.input = new_node
 
-        self.nodes[self.nodes.index(node)] = new_node
-        self.factory.transformations[self.factory.transformations.
-            index(node.factory)] = transformation_factory
+        indices = self._get_indices(node)
+
+        self.nodes[indices[0]] = new_node
+        self.factory.transformations[indices[1]] = transformation_factory
+
+    def _get_indices(self, node, add=0):
+        index = self.nodes.index(node) + add
+        return (index, index - 1)

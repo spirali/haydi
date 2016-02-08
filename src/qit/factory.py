@@ -11,6 +11,9 @@ class Factory(object):
     def copy(self):
         return self.__class__(self.klass, *self.args, **self.kwargs)
 
+    def create(self):
+        return self.klass(*self.args, **self.kwargs)
+
     def __repr__(self):
         return "Factory of {}".format(self.klass)
 
@@ -51,17 +54,25 @@ class IteratorFactory(Factory):
     def progress(self, name, notify_count):
         assert notify_count > 0
 
-        self._create_transformation(transform.ProgressTransformation, name, notify_count)
+        self._create_transformation(transform.ProgressTransformation,
+                                    name, notify_count)
         return self
 
     def split(self, process_count):
         assert process_count > 0
 
-        self._create_transformation(transform.SplitTransformation, process_count)
+        self._create_transformation(transform.SplitTransformation,
+                                    process_count)
         return self
 
-    def collect(self):  # TODO: parametrize actions
-        return action.CollectAction(self)
+    def collect(self, *args, **kwargs):
+        return ActionFactory(action.Collect, self, *args, **kwargs)
+
+    def first(self, *args, **kwargs):
+        return ActionFactory(action.First, self, *args, **kwargs)
+
+    def reduce(self, *args, **kwargs):
+        return ActionFactory(action.Reduce, self, *args, **kwargs)
 
     def _create_transformation(self, klass, *args, **kwargs):
         fac = TransformationFactory(klass, *args, **kwargs)
@@ -74,3 +85,15 @@ class TransformationFactory(Factory):
 
     def create(self, parent):
         return self.klass(parent, *self.args, **self.kwargs)
+
+
+class ActionFactory(Factory):
+    def __init__(self, klass, iterator_factory, *args, **kwargs):
+        super(ActionFactory, self).__init__(klass, *args, **kwargs)
+        self.iterator_factory = iterator_factory
+
+    def create(self):
+        return self.klass(self.iterator_factory, *self.args, **self.kwargs)
+
+    def run(self, *args, **kwargs):
+        return self.create().run(*args, **kwargs)

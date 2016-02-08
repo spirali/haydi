@@ -1,8 +1,6 @@
 import multiprocessing as mp
-import os
 
 from message import Message, MessageTag
-from qit.session import session
 
 
 class Process(object):
@@ -31,5 +29,6 @@ class Process(object):
         output_queue.put(Message(MessageTag.PROCESS_ITERATOR_STOP))
 
     def compute(self, factory, output_queue):
-        self.process = mp.Process(target=self._compute_fn, args=(factory, output_queue))
+        self.process = mp.Process(target=self._compute_fn,
+                                  args=(factory, output_queue))
         self.process.start()

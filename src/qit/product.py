@@ -17,7 +17,8 @@ class Product(Domain):
 
     @property
     def size(self):
-        if not self.domains or not all([domain.size is not None for domain in self.domains]):
+        if (not self.domains or
+                not all([domain.size is not None for domain in self.domains])):
             return None
         result = 1
         for domain in self.domains:

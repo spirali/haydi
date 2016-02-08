@@ -1,9 +1,9 @@
 from qit.exception import TooManySplits
 from qit.factory import TransformationFactory
-from qit.graph import Node, Graph
+from qit.graph import Graph
 from qit.runtime.message import Message, MessageTag
 from qit.session import session
-from qit.transform import Transformation, SplitTransformation, JoinTransformation
+from qit.transform import SplitTransformation, JoinTransformation
 
 
 class Context(object):
@@ -17,14 +17,14 @@ class Context(object):
     def is_parallel(self):
         return False
 
-    def run(self, iterator_factory):
+    def run(self, iterator_factory, action):
         session.post_message(Message(MessageTag.CONTEXT_START))
-        result = self.get_result(Graph(iterator_factory))
+        self.compute_action(Graph(iterator_factory), action)
         session.post_message(Message(MessageTag.CONTEXT_STOP))
 
-        return result
+        return action.get_result()
 
-    def get_result(self, iterator_factory):
+    def compute_action(self, iterator_factory, action):
         raise NotImplementedError()
 
     def init(self):
@@ -50,16 +50,16 @@ class ParallelContext(Context):
 
         process_count = 4  # TODO
 
-        node = graph.first_node
+        node = graph.first_transformation
         user_splits = self._count_user_splits(graph)
 
         if user_splits > 1:
             raise TooManySplits()
         elif user_splits == 0:
-            graph.prepend(node,
-                TransformationFactory(SplitTransformation, process_count))
+            graph.prepend(node, TransformationFactory(SplitTransformation,
+                                                      process_count))
 
-        master = True
+        master = graph.first_transformation.factory.klass.is_stateful()
 
         while True:
             iterator = node.factory.klass
@@ -71,11 +71,12 @@ class ParallelContext(Context):
             else:
                 if master and not iterator.is_stateful():  # split here
                     graph.prepend(node,
-                      TransformationFactory(SplitTransformation, process_count))
+                                  TransformationFactory(SplitTransformation,
+                                                        process_count))
                     master = False
                 elif not master and iterator.is_stateful():  # join here
                     graph.prepend(node,
-                        TransformationFactory(JoinTransformation))
+                                  TransformationFactory(JoinTransformation))
                     master = True
 
             if node.output:
