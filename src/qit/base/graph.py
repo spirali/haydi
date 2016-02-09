@@ -14,6 +14,19 @@ class Node(object):
     def add_arc(self, node, data=None):
         self.arcs.append(Arc(node, data))
 
+    def merge_arcs(self, merge_fn):
+        if len(self.arcs) < 2:
+            return
+        node_to_arcs = {}
+        for arc in self.arcs[:]:
+            a = node_to_arcs.get(arc.node)
+            if a is None:
+                node_to_arcs[arc.node] = arc
+            else:
+                self.arcs.remove(arc)
+                a.data = merge_fn(a.data, arc.data)
+
+
     def __repr__(self):
         return "<Node {}>".format(self.key)
 
@@ -56,3 +69,7 @@ class Graph(object):
     def show(self):
         dot = self.make_dot()
         dot.render(view=True)
+
+    def merge_arcs(self, merge_fn):
+        for node in self.nodes.values():
+            node.merge_arcs(merge_fn)
