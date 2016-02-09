@@ -1,12 +1,11 @@
-
 # Domains
-from range import Range  # flake8: noqa
-from product import Product, UnorderedProduct  # flake8: noqa
-from sequence import Sequence  # flake8: noqa
-from values import Values  # flake8: noqa
-from join import Join  # flake8: noqa
-from mapping import Mapping  # flake8: noqa
+from base.range import Range
+from base.product import Product, UnorderedProduct
+from base.sequence import Sequence
+from base.values import Values
+from base.join import Join
+from base.mapping import Mapping
 
 # Others
-from system import System  # flake8: noqa
-from lts import LTS
+from base.system import System
+from base.lts import LTS
