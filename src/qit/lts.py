@@ -1,11 +1,32 @@
 
 from iterator import Iterator
-
+from graph import Graph
 
 class LTS(object):
 
     def bfs(self, init_state, depth, return_depth=False):
         return BreadthFirstIterator(self, init_state, depth, return_depth)
+
+    def make_graph(self, init_state, max_depth=None):
+        graph = Graph()
+        new_nodes = [graph.node(init_state)]
+        depth = 0
+
+        while new_nodes and (max_depth is None or depth < max_depth):
+            nodes = new_nodes
+            new_nodes = []
+            depth += 1
+            while nodes:
+                node = nodes.pop()
+                for i, s in enumerate(self.step(node.key)):
+                    n, exists = graph.node_check(s)
+                    node.add_arc(n, i)
+                    if not exists:
+                        new_nodes.append(n)
+        return graph
+
+    def step(self, state):
+        raise NotImplementedError()
 
     def __mul__(self, lts):
         return LTSProduct(self, lts)

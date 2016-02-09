@@ -38,3 +38,36 @@ def test_lts_product():
 
     result = list(s.bfs((3, 7), 2))
     assert result == [(3,7), (4,9), (5, 11)]
+
+
+def test_lts_graph():
+    class MyLTS(qit.LTS):
+
+        def step(self, state):
+            return [ state + 1, state - 1]
+
+    s = MyLTS()
+    g = s.make_graph(10, 2)
+
+    assert g.size == 5
+
+    node = g.node(10)
+    assert len(node.arcs) == 2
+    assert node.arcs[0].node == g.node(11)
+    assert node.arcs[1].node == g.node(9)
+
+    node = g.node(9)
+    assert len(node.arcs) == 2
+    assert node.arcs[0].node == g.node(10)
+    assert node.arcs[1].node == g.node(8)
+
+    node = g.node(8)
+    assert len(node.arcs) == 0
+
+    node = g.node(11)
+    assert len(node.arcs) == 2
+    assert node.arcs[0].node == g.node(12)
+    assert node.arcs[1].node == g.node(10)
+
+    node = g.node(12)
+    assert len(node.arcs) == 0
