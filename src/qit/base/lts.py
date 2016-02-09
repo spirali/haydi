@@ -8,8 +8,13 @@ class LTS(object):
         return BreadthFirstIterator(self, init_state, depth, return_depth)
 
     def make_graph(self, init_state, max_depth=None):
+        def set_label(node):
+            node.label = self.make_label(node.key)
+
         graph = Graph()
         new_nodes = [graph.node(init_state)]
+        new_nodes[0].fillcolor = "gray"
+        set_label(new_nodes[0])
         depth = 0
 
         while new_nodes and (max_depth is None or depth < max_depth):
@@ -18,12 +23,18 @@ class LTS(object):
             depth += 1
             while nodes:
                 node = nodes.pop()
+                set_label(node)
                 for i, s in enumerate(self.step(node.key)):
                     n, exists = graph.node_check(s)
                     node.add_arc(n, i)
                     if not exists:
                         new_nodes.append(n)
+        for node in new_nodes:
+            set_label(node)
         return graph
+
+    def make_label(self, state):
+        return str(state)
 
     def step(self, state):
         raise NotImplementedError()
@@ -41,6 +52,10 @@ class LTSProduct(LTS):
     def step(self, state):
         return tuple(zip(self.lts1.step(state[0]),
                          self.lts2.step(state[1])))
+
+    def make_label(self, state):
+        return "{}\\n{}".format(self.lts1.make_label(state[0]),
+                                self.lts2.make_label(state[1]))
 
 
 class BreadthFirstIterator(Iterator):

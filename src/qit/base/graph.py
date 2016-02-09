@@ -7,6 +7,10 @@ class Arc(object):
 
 class Node(object):
 
+    color = None
+    fillcolor = None
+    label = ""
+
     def __init__(self, key):
         self.key = key
         self.arcs = []
@@ -67,11 +71,16 @@ class Graph(object):
     def make_dot(self, name):
         stream = ["digraph " + name + " {\n" ]
         for node in self.nodes.values():
-            key = str(node.key)
-            stream.append("{0} [label=\"{0}\"]\n".format(key))
+            extra = ""
+            if node.color is not None:
+                extra += " color=" + node.color
+            if node.fillcolor is not None:
+                extra += " style=filled fillcolor=" + node.fillcolor
+            stream.append("v{} [label=\"{}\"{}]\n".format(
+                            id(node), node.label, extra))
             for arc in node.arcs:
-                stream.append("{} -> {} [label=\"{}\"]\n".format(
-                    key, str(arc.node.key), str(arc.data)))
+                stream.append("v{} -> v{} [label=\"{}\"]\n".format(
+                    id(node), id(arc.node), str(arc.data)))
         stream.append("}\n")
         return "".join(stream)
 
