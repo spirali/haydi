@@ -15,8 +15,6 @@ def test_automata_tfn_to_graph():
 
     g = transition_fn_to_graph(
             automaton, rule_to_arc)
-    g.show()
-
     assert g.size == 2
     n = g.node(0)
     assert len(n.arcs) == 2

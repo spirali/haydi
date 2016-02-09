@@ -56,20 +56,34 @@ class Graph(object):
         self.nodes[key] = node
         return node
 
-    def make_dot(self, comment=None):
-        import graphviz
-        dot = graphviz.Digraph(comment=comment)
+    def show(self):
+        run_xdot(self.make_dot("G"))
+
+    def write(self, filename):
+        dot = self.make_dot("G")
+        with open(filename, "w") as f:
+            f.write(dot)
+
+    def make_dot(self, name):
+        stream = ["digraph " + name + " {\n" ]
         for node in self.nodes.values():
             key = str(node.key)
-            dot.node(key, key)
+            stream.append("{0} [label=\"{0}\"]\n".format(key))
             for arc in node.arcs:
-                dot.edge(key, str(arc.node.key), label=str(arc.data))
-        return dot
-
-    def show(self):
-        dot = self.make_dot()
-        dot.render(view=True)
+                stream.append("{} -> {} [label=\"{}\"]\n".format(
+                    key, str(arc.node.key), str(arc.data)))
+        stream.append("}\n")
+        return "".join(stream)
 
     def merge_arcs(self, merge_fn):
         for node in self.nodes.values():
             node.merge_arcs(merge_fn)
+
+
+def run_xdot(dot):
+    import subprocess
+    import tempfile
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(dot)
+        f.flush()
+        subprocess.call(("xdot", f.name))
