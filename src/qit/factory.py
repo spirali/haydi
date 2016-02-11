@@ -40,35 +40,29 @@ class IteratorFactory(Factory):
         return parent
 
     def take(self, count):
-        self._create_transformation(transform.TakeTransformation, count)
-        return self
+        return self._create_transformation(transform.TakeTransformation, count)
 
     def map(self, fn):
-        self._create_transformation(transform.MapTransformation, fn)
-        return self
+        return self._create_transformation(transform.MapTransformation, fn)
 
     def filter(self, fn):
-        self._create_transformation(transform.FilterTransformation, fn)
-        return self
+        return self._create_transformation(transform.FilterTransformation, fn)
 
     def progress(self, name, notify_count):
         assert notify_count > 0
 
-        self._create_transformation(transform.ProgressTransformation,
+        return self._create_transformation(transform.ProgressTransformation,
                                     name, notify_count)
-        return self
 
     def split(self, process_count):
         assert process_count > 0
 
-        self._create_transformation(transform.SplitTransformation,
+        return self._create_transformation(transform.SplitTransformation,
                                     process_count)
-        return self
 
     def timeout(self, timeout):
-        self._create_transformation(transform.TimeoutTransformation,
+        return self._create_transformation(transform.TimeoutTransformation,
                                            timeout)
-        return self
 
     def collect(self, *args, **kwargs):
         return ActionFactory(action.Collect, self, *args, **kwargs)
@@ -80,8 +74,10 @@ class IteratorFactory(Factory):
         return ActionFactory(action.Reduce, self, *args, **kwargs)
 
     def _create_transformation(self, klass, *args, **kwargs):
+        cp = self.copy()
         fac = TransformationFactory(klass, *args, **kwargs)
-        self.transformations.append(fac)
+        cp.transformations.append(fac)
+        return cp
 
 
 class TransformationFactory(Factory):
