@@ -34,6 +34,12 @@ def test_range_generate():
         assert 0 <= r < 10
         assert r % 2 == 0
 
+    result = list(qit.Range(0, 10, 3).generate().take(200))
+    assert len(result) == 200
+    for r in result:
+        assert 0 <= r < 10
+        assert r % 3 == 0
+
 def test_iter_set():
     r = qit.Range(20, 30, 3)
     a = list(r)

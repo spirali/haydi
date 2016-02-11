@@ -26,7 +26,10 @@ class Range(Domain):
 
     @property
     def size(self):
-        return (self.end - self.start) / self.step
+        if self.step == 1 and self.end == 1:
+            return self.end
+        else:
+            return (self.end - self.start) / self.step
 
     def iterate(self):
         return IteratorFactory(RangeIterator, self)
@@ -35,8 +38,7 @@ class Range(Domain):
         if self.step == 1:
             return randint(self.start, self.end - 1)
         else:
-            diff = self.end - self.start - 1
-            return randint(0, diff / self.step) * self.step
+            return randint(0, self.size - 1) * self.step
 
     def __repr__(self):
         return "Range({},{},{})".format(self.start, self.end, self.step)
