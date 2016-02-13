@@ -64,6 +64,9 @@ class IteratorFactory(Factory):
         return self._create_transformation(transform.TimeoutTransformation,
                                            timeout)
 
+    def best(self, *args, **kwargs):
+        return ActionFactory(action.Best, self, *args, **kwargs)
+
     def collect(self, *args, **kwargs):
         return ActionFactory(action.Collect, self, *args, **kwargs)
 
