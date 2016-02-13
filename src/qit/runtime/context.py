@@ -18,11 +18,19 @@ class Context(object):
         return False
 
     def run(self, iterator_factory, action):
-        session.post_message(Message(MessageTag.CONTEXT_START))
-        self.compute_action(Graph(iterator_factory), action)
-        session.post_message(Message(MessageTag.CONTEXT_STOP))
+        try:
+            session.post_message(Message(MessageTag.CONTEXT_START))
+            self.compute_action(Graph(iterator_factory), action)
+        except KeyboardInterrupt:
+            self.finish_computation()
+            print("Returning what I've got so far...")
+        finally:
+            session.post_message(Message(MessageTag.CONTEXT_STOP))
 
         return action.get_result()
+
+    def finish_computation(self):
+        pass
 
     def compute_action(self, iterator_factory, action):
         raise NotImplementedError()

@@ -100,6 +100,9 @@ class ProcessContext(ParallelContext):
     def shutdown(self):
         pass
 
+    def finish_computation(self):
+        self._stop_processes(self.processes)
+
     def _stop_processes(self, processes):
         for p in processes:
             p.terminate()
