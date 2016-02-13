@@ -9,7 +9,7 @@ class Domain(object):
         pass
 
     def __iter__(self):
-        return self.iterate()
+        return iter(self.iterate().collect().run(False))
 
     def __mul__(self, other):
         return Product((self, other))
