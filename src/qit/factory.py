@@ -52,13 +52,14 @@ class IteratorFactory(Factory):
         assert notify_count > 0
 
         return self._create_transformation(transform.ProgressTransformation,
-                                    name, notify_count)
+                                           name,
+                                           notify_count)
 
     def split(self, process_count):
         assert process_count > 0
 
         return self._create_transformation(transform.SplitTransformation,
-                                    process_count)
+                                           process_count)
 
     def timeout(self, timeout):
         return self._create_transformation(transform.TimeoutTransformation,

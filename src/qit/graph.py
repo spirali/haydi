@@ -76,6 +76,8 @@ class Graph(object):
 
         self.nodes.insert(self.nodes.index(node), new_node)
 
+        return new_node
+
     def append(self, node, transformation_factory):
         assert node.input
         assert node in self.nodes
@@ -86,6 +88,8 @@ class Graph(object):
         node.output = new_node
 
         self.nodes.insert(self.nodes.index(node) + 1, new_node)
+
+        return new_node
 
     def skip(self, node):
         assert node.input
@@ -106,3 +110,5 @@ class Graph(object):
         if node.output:
             node.output.input = new_node
         self.nodes[self.nodes.index(node)] = new_node
+
+        return new_node

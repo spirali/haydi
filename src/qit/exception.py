@@ -10,3 +10,7 @@ class InnerParallelContext(QitException):
 
 class TooManySplits(QitException):
     pass
+
+
+class NotEnoughMpiNodes(QitException):
+    pass
