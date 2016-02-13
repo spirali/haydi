@@ -59,13 +59,13 @@ class ParallelContext(Context):
             graph.prepend(node, TransformationFactory(SplitTransformation,
                                                       process_count))
 
-        master = graph.first_transformation.factory.klass.is_stateful()
+        master = True
 
         while True:
             iterator = node.factory.klass
             if iterator.is_split():
                 if not master:
-                    node.skip()  # ignore splits in worker region
+                    graph.skip(node)  # ignore splits in worker region
                 else:
                     master = False
             else:

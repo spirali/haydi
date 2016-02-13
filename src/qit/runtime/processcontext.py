@@ -66,7 +66,7 @@ class ProcessContext(ParallelContext):
             node = node.input
 
         collect_process = Process(self)
-        collect_process.compute(graph.factory, self.msg_queue)
+        collect_process.compute(graph, self.msg_queue)
 
         # collect notify messages and results
         while True:
@@ -142,11 +142,11 @@ class ProcessContext(ParallelContext):
         graph.append(split, queue_iterator)
 
         for p in processes:
-            p.compute(graph.get_factory_from(parallel_iter_begin),
+            p.compute(graph.copy_starting_at(parallel_iter_begin),
                       output_queue)
 
         split_process = Process(self)
-        split_process.compute(graph.get_factory_from(split.input), input_queue)
+        split_process.compute(graph.copy_starting_at(split.input), input_queue)
 
         self.processes += processes
         self.processes.append(split_process)

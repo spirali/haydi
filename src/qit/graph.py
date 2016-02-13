@@ -4,19 +4,22 @@ class Node(object):
         self.input = input
         self.output = output
 
+    def copy(self):
+        return Node(self.factory.copy())
+
     def __repr__(self):
         return "Node with {}".format(self.factory)
 
 
 class Graph(object):
     def __init__(self, iterator_factory):
-        self.factory = iterator_factory
+        self.factory = iterator_factory.copy()
         self.nodes = []
 
-        parent = Node(iterator_factory)
+        parent = Node(self.factory)
         self.nodes.append(parent)
         for tr in iterator_factory.transformations:
-            node = Node(tr, parent)
+            node = Node(tr.copy(), parent)
             parent.output = node
             parent = node
             self.nodes.append(node)
@@ -33,62 +36,73 @@ class Graph(object):
         return len(self.factory.transformations) > 0
 
     def create(self):
-        return self.factory.create()
+        iter = self.factory.klass(*self.factory.args, **self.factory.kwargs)
+        parent = iter
+        for tr in self.nodes[1:]:
+            transformation = tr.factory.create(parent)
+            parent = transformation
 
-    def get_factory_from(self, node):
-        index = self.nodes.index(node)
-        factory = self.factory.copy()
-        factory.transformations = factory.transformations[:index]
-        return factory
+        return parent
+
+    def copy(self):
+        return self.copy_starting_at(self.nodes[-1])
+
+    def copy_starting_at(self, node):
+        assert node in self.nodes
+
+        start_index = self.nodes.index(node)
+        graph = Graph(self.factory)
+        graph.nodes = []
+        parent = None
+        for i, node in enumerate(self.nodes):
+            if i > start_index:
+                break
+            copied = node.copy()
+            copied.input = parent
+            if parent:
+                parent.output = copied
+            graph.nodes.append(copied)
+            parent = copied
+
+        return graph
 
     def prepend(self, node, transformation_factory):
         assert node.input
+        assert node in self.nodes
 
         new_node = Node(transformation_factory, node.input, node)
         node.input.output = new_node
         node.input = new_node
 
-        indices = self._get_indices(node)
-
-        self.nodes.insert(indices[0], new_node)
-        self.factory.transformations.insert(indices[1], transformation_factory)
+        self.nodes.insert(self.nodes.index(node), new_node)
 
     def append(self, node, transformation_factory):
         assert node.input
+        assert node in self.nodes
 
         new_node = Node(transformation_factory, node, node.output)
         if node.output:
             node.output.input = new_node
         node.output = new_node
 
-        indices = self._get_indices(node, 1)
-
-        self.nodes.insert(indices[0], new_node)
-        self.factory.transformations.insert(indices[1], transformation_factory)
+        self.nodes.insert(self.nodes.index(node) + 1, new_node)
 
     def skip(self, node):
         assert node.input
+        assert node in self.nodes
 
         parent = node.input
         parent.output = node.output
         node.output = parent
         self.nodes.remove(node)
-        self.factory.transformations.remove(node.factory)
 
     def replace(self, node, transformation_factory):
         assert node.input
+        assert node in self.nodes
 
         new_node = Node(transformation_factory, node.input, node.output)
         node.input.output = new_node
 
         if node.output:
             node.output.input = new_node
-
-        indices = self._get_indices(node)
-
-        self.nodes[indices[0]] = new_node
-        self.factory.transformations[indices[1]] = transformation_factory
-
-    def _get_indices(self, node, add=0):
-        index = self.nodes.index(node) + add
-        return (index, index - 1)
+        self.nodes[self.nodes.index(node)] = new_node
