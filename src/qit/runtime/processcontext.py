@@ -3,7 +3,7 @@ import os
 
 from context import ParallelContext
 from process import Process
-from message import MessageTag
+from message import MessageTag, Message
 from qit.factory import TransformationFactory
 from qit.session import session
 from qit.transform import JoinTransformation, Transformation
@@ -67,27 +67,32 @@ class ProcessContext(ParallelContext):
 
         collect_process = Process(self)
         collect_process.compute(graph, self.msg_queue)
+        self.processes.append(collect_process)
+
+        terminated_early = False
 
         # collect notify messages and results
         while True:
             msg = self.msg_queue.get(True)
             if msg.tag == MessageTag.PROCESS_ITERATOR_ITEM:
                 if not action.handle_item(msg.data):
-                    # TODO: shutdown the processes properly
-                    self._stop_processes([collect_process] + self.processes)
+                    for p in self.processes:
+                        p.terminate()
+                    terminated_early = True
                     break
             elif msg.tag == MessageTag.PROCESS_ITERATOR_STOP:
                 break
             else:
                 session.post_message(msg)
 
-        while not self.msg_queue.empty():  # collect remaining notify messages
-            msg = self.msg_queue.get()
-            assert msg.tag in (MessageTag.PROCESS_ITERATOR_ITEM,
-                               MessageTag.PROCESS_ITERATOR_STOP)
-            session.post_message(msg)
+        if not terminated_early:
+            # collect remaining notify messages
+            while not self.msg_queue.empty():
+                msg = self.msg_queue.get()
+                assert msg.tag in (MessageTag.PROCESS_ITERATOR_ITEM,
+                                   MessageTag.PROCESS_ITERATOR_STOP)
+                session.post_message(msg)
 
-        collect_process.stop()
         for p in self.processes:
             p.stop()
 
@@ -101,11 +106,11 @@ class ProcessContext(ParallelContext):
         pass
 
     def finish_computation(self):
-        self._stop_processes(self.processes)
+        self._stop_processes()
 
-    def _stop_processes(self, processes):
-        for p in processes:
-            p.terminate()
+    def _stop_processes(self):
+        for p in self.processes:
+            p.send_message(Message(MessageTag.CALCULATION_STOP))
 
     def _parallelize_iterator(self, graph, node):
         assert node.factory.klass == JoinTransformation

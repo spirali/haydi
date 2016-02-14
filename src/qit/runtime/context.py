@@ -27,8 +27,6 @@ class Context(object):
         finally:
             session.post_message(Message(MessageTag.CONTEXT_STOP))
 
-        return action.get_result()
-
     def finish_computation(self):
         pass
 

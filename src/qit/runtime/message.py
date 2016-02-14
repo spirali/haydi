@@ -11,6 +11,8 @@ class MessageTag(object):
     PROCESS_ITERATOR_ITEM = "process_iterator_item"
     PROCESS_ITERATOR_STOP = "process_iterator_stop"
 
+    CALCULATION_STOP = "calculation_stop"
+
 
 class Message(object):
     def __init__(self, tag, data=None):
