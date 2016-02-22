@@ -1,6 +1,7 @@
 
 from qit.base.graph import Graph
 
+
 def transition_fn_to_graph(mapping, rule_to_arc_fn, init_state=None):
     graph = Graph()
     for key, value in mapping.items():

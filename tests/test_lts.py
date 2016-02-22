@@ -1,7 +1,8 @@
 from testutils import init
 init()
 
-import qit
+import qit  # noqa
+
 
 def test_lts_basic():
     class MyLTS(qit.LTS):
@@ -26,6 +27,7 @@ def test_lts_basic():
     assert set(result) == set([11, 110, 12, 13, -11, -110, -10,
                                -9, 130, 14, 15, -13, 120, -12, 1100])
 
+
 def test_lts_product():
     class MyLTS1(qit.LTS):
         def __init__(self):
@@ -46,7 +48,7 @@ def test_lts_product():
     s = MyLTS1() * MyLTS2()
 
     result = list(s.bfs((3, 7), 2))
-    assert result == [(3,7), (4,9), (5, 11)]
+    assert result == [(3, 7), (4, 9), (5, 11)]
 
 
 def test_lts_graph():

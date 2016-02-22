@@ -1,8 +1,9 @@
 from testutils import init
 init()
 
-import qit
-import itertools
+import qit  # noqa
+import itertools  # noqa
+
 
 def test_product_iterate():
     r1 = qit.Range(4)
@@ -13,6 +14,7 @@ def test_product_iterate():
     assert set(p) == set(expected)
     assert len(list(p)) == len(expected)
     assert p.size == len(expected)
+
 
 def test_product_generate():
     r1 = qit.Range(4)
@@ -25,6 +27,7 @@ def test_product_generate():
         assert 0 <= r[0] < 4
         assert 0 <= r[1] < 4
         assert 0 <= r[2] < 2
+
 
 def test_product_mul():
     r1 = qit.Range(4)

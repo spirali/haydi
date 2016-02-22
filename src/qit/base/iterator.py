@@ -1,6 +1,3 @@
-import functools
-
-
 class Iterator(object):
     @staticmethod
     def is_split():
@@ -27,34 +24,6 @@ class Iterator(object):
     def create(self):
         return self
 
-    def first(self, default=None):
-        try:
-            return next(self)
-        except StopIteration:
-            return default
-
-    def reduce(self, fn):
-        return functools.reduce(fn, self)
-
-    def all_max(self, key_fn):
-        it = iter(self)
-        try:
-            obj = next(it)
-        except StopIteration:
-            return None
-        max_value = key_fn(obj)
-        objects = [obj]
-        for obj in self:
-            value = key_fn(obj)
-            if value < max_value:
-                continue
-            elif value == max_value:
-                objects.append(obj)
-            else:
-                objects = [obj]
-                max_value = value
-        return objects
-
     def reset(self):
         raise NotImplementedError()
 
@@ -62,6 +31,9 @@ class Iterator(object):
         return []
 
     def skip(self, start_index, count):
+        raise NotImplementedError()
+
+    def set(self, index):
         raise NotImplementedError()
 
     def to_list(self):

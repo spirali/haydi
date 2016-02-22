@@ -1,11 +1,11 @@
 # Domains
-from base.range import Range
-from base.product import Product, UnorderedProduct
-from base.sequence import Sequence
-from base.values import Values
-from base.join import Join
-from base.mapping import Mapping
+from base.range import Range  # noqa
+from base.product import Product, UnorderedProduct  # noqa
+from base.sequence import Sequence  # noqa
+from base.values import Values  # noqa
+from base.join import Join  # noqa
+from base.mapping import Mapping  # noqa
 
 # Others
-from base.system import System
-from base.lts import LTS
+from base.system import System  # noqa
+from base.lts import LTS  # noqa

@@ -11,6 +11,7 @@ class Product(Domain):
     def __init__(self, domains):
         super(Product, self).__init__()
         self.domains = tuple(domains)
+        self.size = self._compute_size()
 
     def iterate(self):
         return IteratorFactory(ProductIterator, self)
@@ -18,8 +19,7 @@ class Product(Domain):
     def generate_one(self):
         return tuple(d.generate_one() for d in self.domains)
 
-    @property
-    def size(self):
+    def _compute_size(self):
         if (not self.domains or
                 not all([domain.size is not None for domain in self.domains])):
             return None
@@ -49,7 +49,7 @@ class ProductIterator(DomainIterator):
 
     def copy(self):
         new = copy(self)
-        new.iterators = [ it.copy() for it in self.iterators ]
+        new.iterators = [it.copy() for it in self.iterators]
         new.current = copy(self.current)
         return new
 
@@ -85,6 +85,7 @@ class ProductIterator(DomainIterator):
 class UnorderedProduct(Domain):
 
     def __init__(self, domains):
+        super(UnorderedProduct, self).__init__()
         self.domains = tuple(domains)
         if len(set(domains)) > 1:
             raise Exception("Not implemented for discitinct domains")
@@ -116,7 +117,7 @@ class UnorderedProductIterator(DomainIterator):
     def copy(self):
         new = copy(self)
         if self.iterators is not None:
-            new.iterators = [ it.copy() for it in self.iterators ]
+            new.iterators = [it.copy() for it in self.iterators]
         new.current = copy(self.current)
         return new
 
@@ -130,32 +131,32 @@ class UnorderedProductIterator(DomainIterator):
     def next(self):
         current = self.current
         if current:
-           for i, it in enumerate(self.iterators):
-               try:
-                   current[i] = next(it)
-                   if i == 0:
-                       return tuple(current)
-                   for j in xrange(i - 1, -1, -1):
-                       it = it.copy()
-                       self.iterators[j] = it
-                       current[j] = next(it)
-                   return tuple(current)
-               except StopIteration:
-                   continue
-           raise StopIteration()
+            for i, it in enumerate(self.iterators):
+                try:
+                    current[i] = next(it)
+                    if i == 0:
+                        return tuple(current)
+                    for j in xrange(i - 1, -1, -1):
+                        it = it.copy()
+                        self.iterators[j] = it
+                        current[j] = next(it)
+                    return tuple(current)
+                except StopIteration:
+                    continue
+            raise StopIteration()
         else:
-           it = self.domain.domains[0].iterate()
-           iterators = []
-           current = []
-           for d in self.domain.domains:
-               iterators.append(it)
-               current.append(next(it))
-               it = it.copy()
-           iterators.reverse()
-           current.reverse()
-           self.iterators = iterators
-           self.current = current
-           return tuple(self.current)
+            it = self.domain.domains[0].iterate().create()
+            iterators = []
+            current = []
+            for d in self.domain.domains:
+                iterators.append(it)
+                current.append(next(it))
+                it = it.copy()
+            iterators.reverse()
+            current.reverse()
+            self.iterators = iterators
+            self.current = current
+            return tuple(self.current)
 
     def set(self, index):
         raise NotImplementedError()

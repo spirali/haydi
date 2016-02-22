@@ -1,7 +1,8 @@
 from testutils import init
 init()
 
-import qit.base.graph
+import qit.base.graph  # noqa
+
 
 def test_graph_merge_args():
     g = qit.base.graph.Graph()

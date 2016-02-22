@@ -24,12 +24,10 @@ class Range(Domain):
             self.step = step
             assert step >= 0
 
-    @property
-    def size(self):
         if self.step == 1 and self.end == 1:
-            return self.end
+            self.size = self.end
         else:
-            return (self.end - self.start) / self.step
+            self.size = (self.end - self.start) / self.step
 
     def iterate(self):
         return IteratorFactory(RangeIterator, self)

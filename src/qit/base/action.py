@@ -6,8 +6,10 @@ class Action(object):
         from session import session
 
         with session.create_context(parallel) as ctx:
-            ctx.run(self.iterator_factory.copy(), self)
-            session.destroy_context(ctx)
+            try:
+                ctx.run(self.iterator_factory.copy(), self)
+            finally:
+                session.destroy_context(ctx)
 
         return self.get_result()
 
@@ -48,7 +50,7 @@ class First(Action):
             return True
 
     def get_result(self):
-        if self.result:
+        if self.result is not None:
             return self.result
         else:
             return self.default
@@ -62,6 +64,7 @@ class Reduce(Action):
 
     def handle_item(self, item):
         self.value = self.fn(item, self.value)
+        return True
 
     def get_result(self):
         return self.value

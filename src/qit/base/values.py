@@ -10,17 +10,13 @@ class Values(Domain):
     def __init__(self, values):
         super(Values, self).__init__()
         self.values = values
+        self.size = len(self.values)
 
     def generate_one(self):
         return random.choice(self.values)
 
-    @property
     def iterate(self):
         return IteratorFactory(ValuesIterator, self)
-
-    @property
-    def size(self):
-        return len(self.values)
 
 
 class ValuesIterator(DomainIterator):

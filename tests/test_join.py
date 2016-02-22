@@ -1,7 +1,8 @@
 from testutils import init
 init()
 
-import qit
+import qit  # noqa
+
 
 def test_join_range_iterate():
     d1 = qit.Range(3)
@@ -15,6 +16,7 @@ def test_join_range_iterate():
     assert expected == result
     assert j.size == 8
 
+
 def test_join_empty_iterate():
     d2 = qit.Range(0)
     d3 = qit.Range(0)
@@ -23,6 +25,7 @@ def test_join_empty_iterate():
     result = list(j)
     assert [] == result
 
+
 def test_join_int_generate():
     r1 = qit.Range(2)
     r2 = qit.Range(2, 4)
@@ -30,6 +33,7 @@ def test_join_int_generate():
 
     result = list(j.generate().take(1000))
     assert set(result) == set(range(4))
+
 
 def test_join_int_generate2():
     r1 = qit.Values([5000])
@@ -43,6 +47,7 @@ def test_join_int_generate2():
     assert result.count(5001) < 100
     assert result.count(5002) < 100
 
+
 def test_join_int_generate3():
     r1 = qit.Range(2)
     r2 = qit.Range(2, 4)
@@ -52,6 +57,7 @@ def test_join_int_generate3():
 
     result = list(j.generate().take(1000))
     assert set(result) == set((0, 1, 4, 5))
+
 
 def test_join_iter_set():
     r1 = qit.Values([5000])

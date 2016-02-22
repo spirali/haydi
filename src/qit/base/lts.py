@@ -116,7 +116,8 @@ class BreadthFirstIterator(Iterator):
                         self.nexts.append(new_state)
                         to_report += 1
                 self.to_report = to_report
-                if self.max_states is not None and len(self.states) > self.max_states:
+                if (self.max_states is not None and
+                        len(self.states) > self.max_states):
                     raise StopIteration()
                 continue
 

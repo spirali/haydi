@@ -1,8 +1,9 @@
 import time
 
-from iterator import Iterator
-from session import session
 from runtime.message import Message, MessageTag
+
+from iterator import Iterator
+from qit.base.session import session
 
 
 class Transformation(Iterator):

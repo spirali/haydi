@@ -1,7 +1,7 @@
 from testutils import init
 init()
 
-import qit
+import qit  # noqa
 
 
 def test_take():
@@ -9,6 +9,7 @@ def test_take():
 
     assert range(10) == list(r.iterate().take(100))
     assert range(5) == list(r.iterate().take(5))
+
 
 def test_map():
     r = qit.Range(5)

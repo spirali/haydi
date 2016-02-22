@@ -1,7 +1,7 @@
 from testutils import init
 init()
 
-import qit
+import qit  # noqa
 
 
 def test_range_iterate():
@@ -12,10 +12,12 @@ def test_range_iterate():
     assert list(qit.Range(-5, 10, 2)) == list(range(-5, 10, 2))
     assert list(qit.Range(-5, 11, 2)) == list(range(-5, 11, 2))
 
+
 def test_range_size():
     assert qit.Range(20).size == 20
     assert qit.Range(0).size == 0
     assert qit.Range(-1).size == 0
+
 
 def test_range_generate():
     result = list(qit.Range(10).generate().take(200))
@@ -40,6 +42,7 @@ def test_range_generate():
         assert 0 <= r < 10
         assert r % 3 == 0
 
+
 def test_iter_set():
     r = qit.Range(20, 30, 3)
     a = list(r)
@@ -51,6 +54,7 @@ def test_iter_set():
         if l:
             b.append(l[0])
     assert a == b
+
 
 def test_range_iter_copy():
     r = qit.Range(3, 10, 2)

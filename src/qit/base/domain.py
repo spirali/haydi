@@ -6,20 +6,16 @@ from iterator import GeneratingIterator, Iterator
 class Domain(object):
 
     def __init__(self):
-        pass
+        self.size = None
 
     def __iter__(self):
-        return iter(self.iterate().collect().run(False))
+        return self.iterate().create()
 
     def __mul__(self, other):
         return Product((self, other))
 
     def __add__(self, other):
         return Join((self, other))
-
-    @property
-    def size(self):
-        return None
 
     def iterate(self):
         raise NotImplementedError()
@@ -40,10 +36,7 @@ class DomainIterator(Iterator):
     def __init__(self, domain):
         super(DomainIterator, self).__init__()
         self.domain = domain
-
-    @property
-    def size(self):
-        return self.domain.size
+        self.size = self.domain.size
 
 from product import Product  # noqa
 from join import Join  # noqa

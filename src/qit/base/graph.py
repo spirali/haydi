@@ -30,7 +30,6 @@ class Node(object):
                 self.arcs.remove(arc)
                 a.data = merge_fn(a.data, arc.data)
 
-
     def __repr__(self):
         return "<Node {}>".format(self.key)
 
@@ -69,7 +68,7 @@ class Graph(object):
             f.write(dot)
 
     def make_dot(self, name):
-        stream = ["digraph " + name + " {\n" ]
+        stream = ["digraph " + name + " {\n"]
         for node in self.nodes.values():
             extra = ""
             if node.color is not None:

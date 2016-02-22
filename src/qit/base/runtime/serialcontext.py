@@ -16,7 +16,7 @@ class SerialContext(Context):
         """
         skipped = []
         for node in graph.nodes:
-            if node.factory.klass.is_split():
+            if node.klass.is_split():
                 skipped.append(node)
 
         for skipped_node in skipped:

@@ -1,8 +1,8 @@
 from context import ParallelContext
-from qit.exception import NotEnoughMpiNodes
-from qit.factory import TransformationFactory
-from qit.session import session
-from qit.transform import Transformation
+from qit.base.exception import NotEnoughMpiNodes
+from qit.base.session import session
+from qit.base.factory import TransformationFactory
+from qit.base.transform import Transformation
 
 MpiRun = True
 
@@ -202,7 +202,7 @@ class MpiContext(ParallelContext):
         previous_worker = first_worker
 
         for node in graph.nodes:
-            if node.factory.klass.is_join():
+            if node.klass.is_join():
                 previous_worker = self._parallelize_iterator(graph,
                                                              node,
                                                              previous_worker)
@@ -262,40 +262,40 @@ class MpiContext(ParallelContext):
         # assumes that the graph is correct with respect
         # to split-join pairing and we deal only with transformations
         # TODO: copy iterator attributes
-        while not split.factory.klass.is_split():
-            split = split.input
+        while not split.klass.is_split():
+            split = graph.get_previous_node(split)
 
-        process_count = split.factory.args[0]
+        process_count = split.args[0]
 
         # MPI > parallel region > Join
         split_worker = self._fetch_worker()
         parallel_iter_begin = TransformationFactory(MpiRegionJoinIterator,
                                                     previous_worker)
-        parallel_begin_node = graph.replace(join, parallel_iter_begin)
+        graph.replace(join, parallel_iter_begin)
         parallel_iter_end = TransformationFactory(MpiRegionSplitIterator,
                                                   split_worker)
-        parallel_end_node = graph.replace(split, parallel_iter_end)
+        graph.replace(split, parallel_iter_end)
 
         # MPI > Join
         mpi_join = TransformationFactory(MpiReceiveIterator,
                                          process_count)
-        graph.append(parallel_begin_node, mpi_join)
+        graph.append(parallel_iter_begin, mpi_join)
 
         workers = [self._fetch_worker() for i in xrange(process_count)]
 
         # Split > MPI
         mpi_distribute = TransformationFactory(MpiSplitIterator, workers)
-        mpi_distribute_node = graph.prepend(parallel_end_node, mpi_distribute)
+        graph.prepend(parallel_iter_end, mpi_distribute)
 
         self._distribute_computation(split_worker,
                                      graph.copy_starting_at(
-                                         mpi_distribute_node))
+                                         mpi_distribute))
 
         # assign to multiple nodes
         for i in xrange(process_count):
             self._distribute_computation(workers[i],
                                          graph.copy_starting_at(
-                                             parallel_begin_node))
+                                             parallel_iter_begin))
 
         return split_worker
 

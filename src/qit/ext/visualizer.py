@@ -1,9 +1,9 @@
 from __future__ import print_function
 
-import matplotlib.pyplot as plt
 import time
+import matplotlib.pyplot as plt
 
-from runtime.message import MessageListener, MessageTag
+from qit.base.runtime.message import MessageListener, MessageTag
 
 
 class ProgressConsoleVisualizer(MessageListener):

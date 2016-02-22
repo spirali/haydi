@@ -2,8 +2,9 @@
 from testutils import init
 init()
 
-import qit
-import itertools
+import qit  # noqa
+import itertools  # noqa
+
 
 def test_sequence_iterate():
     s = qit.Sequence(qit.Range(3), 2)
@@ -13,8 +14,10 @@ def test_sequence_iterate():
     assert len(result) == len(expected)
     s.size == len(expected)
 
+
 def test_sequence_iterate_empty():
     assert list(qit.Sequence(qit.Range(3), 0)) == [()]
+
 
 def test_sequence_generate():
     s = qit.Sequence(qit.Range(3), 5)
@@ -23,7 +26,8 @@ def test_sequence_generate():
     for r in result:
         assert len(r) == 5
         for x in r:
-            assert 0 <=  x < 3
+            assert 0 <= x < 3
+
 
 def test_sequence_iter_set():
     r2 = qit.Range(4)
@@ -38,6 +42,7 @@ def test_sequence_iter_set():
         if l:
             b.append(l[0])
     assert a == b
+
 
 def test_sequence_iter_copy():
     r2 = qit.Range(3)

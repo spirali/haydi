@@ -1,15 +1,18 @@
 from testutils import init
 init()
 
-import qit
+import qit  # noqa
+
 
 def dict_to_sorted_items(d):
     return tuple(sorted(d.items()))
+
 
 def check_eq_list_of_dicts(list1, list2):
     s1 = map(dict_to_sorted_items, list1)
     s2 = map(dict_to_sorted_items, list1)
     assert list(s1) == list(s2)
+
 
 def test_mapping_int_int():
     r = qit.Range(2)
@@ -20,9 +23,11 @@ def test_mapping_int_int():
                             {0: 0, 1: 1}, {0: 1, 1: 1}])
     assert m.size == 4
 
+
 def test_mapping_size():
     m = qit.Mapping(qit.Range(10), qit.Range(2))
     assert m.size == 1024
+
 
 def test_mapping_generate():
     r1 = qit.Range(2)
@@ -33,6 +38,7 @@ def test_mapping_generate():
         assert len(r) == 2
         assert r[0] == 0 or r[0] == 1
         assert r[1] == 0 or r[1] == 1
+
 
 def test_mapping_copy():
     r1 = qit.Range(4)

@@ -2,11 +2,11 @@ import multiprocessing as mp
 import os
 
 from context import ParallelContext
-from process import Process
 from message import MessageTag, Message
-from qit.factory import TransformationFactory
-from qit.session import session
-from qit.transform import JoinTransformation, Transformation
+from process import Process
+from qit.base.factory import TransformationFactory
+from qit.base.session import session
+from qit.base.transform import Transformation, JoinTransformation
 
 
 class QueueIterator(Transformation):
@@ -61,9 +61,9 @@ class ProcessContext(ParallelContext):
 
         node = graph.last_transformation
         while node:
-            if node.factory.klass.is_join():
-                self._parallelize_iterator(graph, node)
-            node = node.input
+            if node.klass.is_join():
+                node = self._parallelize_iterator(graph, node)
+            node = graph.get_previous_node(node)
 
         collect_process = Process(self)
         collect_process.compute(graph, self.msg_queue)
@@ -113,18 +113,18 @@ class ProcessContext(ParallelContext):
             p.send_message(Message(MessageTag.CALCULATION_STOP))
 
     def _parallelize_iterator(self, graph, node):
-        assert node.factory.klass == JoinTransformation
+        assert node.klass == JoinTransformation
 
         split = node
 
         # assumes that the graph is correct with respect to split-join pairing
         # and we deal only with transformations
-        while split and not split.factory.klass.is_split():
-            split = split.input
+        while split and not split.klass.is_split():
+            split = graph.get_previous_node(split)
 
         assert split
 
-        process_count = split.factory.args[0]
+        process_count = split.args[0]
 
         output_queue = mp.Queue()
         queue_join = TransformationFactory(
@@ -133,7 +133,9 @@ class ProcessContext(ParallelContext):
             process_count,
             "join"
         )  # TODO: pass size
-        parallel_iter_begin = node.input  # first iterator that is parallelized
+
+        # first transformation that is parallelized
+        parallel_iter_begin = graph.get_previous_node(node)
         graph.replace(node, queue_join)
 
         processes = []
@@ -154,7 +156,12 @@ class ProcessContext(ParallelContext):
                       output_queue)
 
         split_process = Process(self)
-        split_process.compute(graph.copy_starting_at(split.input), input_queue)
+        split_process.compute(
+            graph.copy_starting_at(graph.get_previous_node(split)),
+            input_queue
+        )
 
         self.processes += processes
         self.processes.append(split_process)
+
+        return queue_join

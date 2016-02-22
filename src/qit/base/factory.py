@@ -77,11 +77,17 @@ class IteratorFactory(Factory):
     def reduce(self, *args, **kwargs):
         return ActionFactory(action.Reduce, self, *args, **kwargs)
 
+    def run(self, *args, **kwargs):
+        return self.collect().run(*args, **kwargs)
+
     def _create_transformation(self, klass, *args, **kwargs):
         cp = self.copy()
         fac = TransformationFactory(klass, *args, **kwargs)
         cp.transformations.append(fac)
         return cp
+
+    def __iter__(self):
+        return iter(self.run())
 
 
 class TransformationFactory(Factory):
@@ -102,3 +108,6 @@ class ActionFactory(Factory):
 
     def run(self, *args, **kwargs):
         return self.create().run(*args, **kwargs)
+
+    def __iter__(self):
+        return iter(self.run())

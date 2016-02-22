@@ -1,9 +1,9 @@
-from qit.exception import TooManySplits
-from qit.factory import TransformationFactory
-from qit.graph import Graph
-from qit.runtime.message import Message, MessageTag
-from qit.session import session
-from qit.transform import SplitTransformation, JoinTransformation
+from qit.base.exception import TooManySplits
+from qit.base.factory import TransformationFactory
+from qit.base.session import session
+from qit.base.factorylist import FactoryList
+from qit.base.runtime.message import Message, MessageTag
+from qit.base.transform import JoinTransformation, SplitTransformation
 
 
 class Context(object):
@@ -20,7 +20,7 @@ class Context(object):
     def run(self, iterator_factory, action):
         try:
             session.post_message(Message(MessageTag.CONTEXT_START))
-            self.compute_action(Graph(iterator_factory), action)
+            self.compute_action(FactoryList(iterator_factory), action)
         except KeyboardInterrupt:
             self.finish_computation()
             print("Returning what I've got so far...")
@@ -68,7 +68,7 @@ class ParallelContext(Context):
         master = True
 
         while True:
-            iterator = node.factory.klass
+            iterator = node.klass
             if iterator.is_split():
                 if not master:
                     graph.skip(node)  # ignore splits in worker region
@@ -85,8 +85,9 @@ class ParallelContext(Context):
                                   TransformationFactory(JoinTransformation))
                     master = True
 
-            if node.output:
-                node = node.output
+            output = graph.get_next_node(node)
+            if output:
+                node = output
             else:
                 break
 
@@ -95,9 +96,10 @@ class ParallelContext(Context):
 
         skipped = []
         for node in graph.nodes:  # remove immediate split-joins
-            if node.factory.klass.is_join():
-                if node.input.factory.klass.is_split():
-                    skipped += [node, node.input]
+            if node.klass.is_join():
+                previous = graph.get_previous_node(node)
+                if previous.klass.is_split():
+                    skipped += [node, previous]
 
         for skipped_node in skipped:
             graph.skip(skipped_node)
@@ -106,7 +108,7 @@ class ParallelContext(Context):
         splits = 0
 
         for node in graph.nodes:
-            if node.factory.klass.is_split():
+            if node.klass.is_split():
                 splits += 1
 
         return splits

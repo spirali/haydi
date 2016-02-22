@@ -45,11 +45,12 @@ class JoinIterator(DomainIterator):
     def __init__(self, domain):
         super(JoinIterator, self).__init__(domain)
         self.index = 0
-        self.iterators = [ d.iterate() for d in self.domain.domains ]
+        self.iterators = [d.iterate().create()
+                          for d in self.domain.domains]
 
     def copy(self):
         new = copy(self)
-        new.iterators = [ it.copy() for it in self.iterators ]
+        new.iterators = [it.copy() for it in self.iterators]
         return new
 
     def reset(self):
