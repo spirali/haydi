@@ -80,12 +80,8 @@ class LTSProduct(LTS):
 
 class BreadthFirstIterator(Iterator):
 
-    def __init__(self,
-                 lts,
-                 init_state,
-                 max_depth,
-                 return_depth,
-                 max_states):
+    def __init__(self, lts, init_state, max_depth, return_depth, max_states):
+        super(BreadthFirstIterator, self).__init__()
         self.lts = lts
         self.return_depth = return_depth
         self.depth = 0

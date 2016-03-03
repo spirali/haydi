@@ -39,7 +39,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
         pda2 = PdaLTS(pda_pair[1], actions)
         x = (pda1 * pda2).bfs(init_state, depth, True, max_states=max_states) \
             .filter(is_witness_pair) \
-            .map(lambda s: s[1]).first(-1)
+            .map(lambda s: s[1]).first(None, -1).run()
         return (pda_pair, x)
 
     def save_lts(pda1, pda2, depth, filename):
