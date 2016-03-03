@@ -70,24 +70,20 @@ class Reduce(Action):
         return self.value
 
 
-class Best(Action):
-    def __init__(self, iterator_factory, fitness_fn):
-        super(Best, self).__init__(iterator_factory)
-        self.best_results = []
-        self.fitness = None
-        self.fitness_fn = fitness_fn
+class MaxAll(Action):
+    def __init__(self, iterator_factory, key_fn):
+        super(MaxAll, self).__init__(iterator_factory)
+        self.best_results = None
+        self.best_value = None
+        self.key_fn = key_fn
 
     def handle_item(self, item):
-        fitness = self.fitness_fn(item)
-        if self.fitness is None:
-            self.fitness = fitness
-            self.best_results.append(item)
-        elif fitness == self.fitness:
-            self.best_results.append(item)
-        elif fitness > self.fitness:
-            self.fitness = fitness
+        value = self.key_fn(item)
+        if self.best_value is None or value > self.best_value:
+            self.best_value = value
             self.best_results = [item]
-
+        elif value == self.best_value:
+            self.best_results.append(item)
         return True
 
     def get_result(self):

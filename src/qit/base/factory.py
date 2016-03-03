@@ -3,6 +3,7 @@ import transform
 
 
 class Factory(object):
+
     def __init__(self, klass, *args, **kwargs):
         self.klass = klass
         self.args = args
@@ -19,6 +20,7 @@ class Factory(object):
 
 
 class IteratorFactory(Factory):
+
     def __init__(self, klass, *args, **kwargs):
         super(IteratorFactory, self).__init__(klass, *args, **kwargs)
         self.transformations = []
@@ -27,7 +29,6 @@ class IteratorFactory(Factory):
         cp = super(IteratorFactory, self).copy()
         for trans in self.transformations:
             cp.transformations.append(trans.copy())
-
         return cp
 
     def create(self):
@@ -65,8 +66,8 @@ class IteratorFactory(Factory):
         return self._create_transformation(transform.TimeoutTransformation,
                                            timeout)
 
-    def best(self, *args, **kwargs):
-        return ActionFactory(action.Best, self, *args, **kwargs)
+    def max_all(self, *args, **kwargs):
+        return ActionFactory(action.MaxAll, self, *args, **kwargs)
 
     def collect(self, *args, **kwargs):
         return ActionFactory(action.Collect, self, *args, **kwargs)
@@ -91,6 +92,7 @@ class IteratorFactory(Factory):
 
 
 class TransformationFactory(Factory):
+
     def __init__(self, klass, *args, **kwargs):
         super(TransformationFactory, self).__init__(klass, *args, **kwargs)
 
@@ -99,6 +101,7 @@ class TransformationFactory(Factory):
 
 
 class ActionFactory(Factory):
+
     def __init__(self, klass, iterator_factory, *args, **kwargs):
         super(ActionFactory, self).__init__(klass, *args, **kwargs)
         self.iterator_factory = iterator_factory
