@@ -66,20 +66,20 @@ class IteratorFactory(Factory):
         return self._create_transformation(transform.TimeoutTransformation,
                                            timeout)
 
-    def max_all(self, *args, **kwargs):
-        return ActionFactory(action.MaxAll, self, *args, **kwargs)
+    def max_all(self, key_fn):
+        return ActionFactory(action.MaxAll, self, key_fn)
 
-    def collect(self, *args, **kwargs):
-        return ActionFactory(action.Collect, self, *args, **kwargs)
+    def collect(self):
+        return ActionFactory(action.Collect, self)
 
-    def first(self, *args, **kwargs):
-        return ActionFactory(action.First, self, *args, **kwargs)
+    def first(self, fn, default=None):
+        return ActionFactory(action.First, self, fn, default)
 
-    def reduce(self, *args, **kwargs):
-        return ActionFactory(action.Reduce, self, *args, **kwargs)
+    def reduce(self, fn, init=0):
+        return ActionFactory(action.Reduce, self, fn, init)
 
-    def run(self, *args, **kwargs):
-        return self.collect().run(*args, **kwargs)
+    def run(self):
+        return self.collect().run()
 
     def _create_transformation(self, klass, *args, **kwargs):
         cp = self.copy()
