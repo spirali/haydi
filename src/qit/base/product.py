@@ -92,7 +92,7 @@ class UnorderedProduct(Domain):
         self.size = self._compute_size()
 
     def iterate(self):
-        return UnorderedProductIterator(self)
+        return IteratorFactory(UnorderedProductIterator, self)
 
     def generate_one(self):
         return tuple(d.generate_one() for d in self.domains)

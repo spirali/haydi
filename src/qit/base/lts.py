@@ -1,6 +1,7 @@
 
 from iterator import Iterator
 from graph import Graph
+from factory import IteratorFactory
 
 
 class LTS(object):
@@ -14,7 +15,8 @@ class LTS(object):
             max_depth=None,
             return_depth=False,
             max_states=None):
-        return BreadthFirstIterator(
+        return IteratorFactory(
+            BreadthFirstIterator,
             self,
             init_state,
             max_depth,
