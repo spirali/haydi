@@ -72,7 +72,7 @@ class IteratorFactory(Factory):
     def collect(self):
         return ActionFactory(action.Collect, self)
 
-    def first(self, fn, default=None):
+    def first(self, fn=None, default=None):
         return ActionFactory(action.First, self, fn, default)
 
     def reduce(self, fn, init=0):

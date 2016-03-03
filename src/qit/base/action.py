@@ -34,7 +34,7 @@ class Collect(Action):
 
 
 class First(Action):
-    def __init__(self, iterator_factory, fn, default=None):
+    def __init__(self, iterator_factory, fn=None, default=None):
         super(First, self).__init__(iterator_factory)
         self.fn = fn
         self.default = default
@@ -43,7 +43,7 @@ class First(Action):
     def handle_item(self, item):
         assert self.result is None
 
-        if self.fn(item):
+        if self.fn is None or self.fn(item):
             self.result = item
             return False
         else:
