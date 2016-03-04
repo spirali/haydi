@@ -19,13 +19,13 @@ class Context(object):
 
     def run(self, iterator_factory, action):
         try:
-            session.post_message(Message(MessageTag.CONTEXT_START))
+            self.on_context_start()
             self.compute_action(FactoryList(iterator_factory), action)
         except KeyboardInterrupt:
             self.finish_computation()
             print("Returning what I've got so far...")
         finally:
-            session.post_message(Message(MessageTag.CONTEXT_STOP))
+            self.on_context_stop()
 
     def finish_computation(self):
         pass
@@ -39,8 +39,20 @@ class Context(object):
     def shutdown(self):
         pass
 
+    def on_context_start(self):
+        pass
+
+    def on_context_stop(self):
+        pass
+
 
 class ParallelContext(Context):
+    def on_context_start(self):
+        session.post_message(Message(MessageTag.CONTEXT_START))
+
+    def on_context_stop(self):
+        session.post_message(Message(MessageTag.CONTEXT_STOP))
+
     def is_parallel(self):
         return True
 

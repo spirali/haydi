@@ -4,10 +4,12 @@ from message import Message, MessageTag
 
 
 class Process(object):
-    def __init__(self, context):
+    def __init__(self, context, name="", batch_amount=300):
         self.context = context
         self.process = None
+        self.name = name
         self.input_queue = mp.Queue()
+        self.batch_amount = batch_amount
 
     def __enter__(self):
         self.start()
@@ -35,13 +37,21 @@ class Process(object):
         self.input_queue.put(msg)
 
     def _compute_fn(self, factory, output_queue):
-        for item in factory.create():
+        items = []
+
+        iter = factory.create()
+        for item in iter:
             if not self.input_queue.empty():
                 msg = self.input_queue.get()
                 if msg.tag == MessageTag.CALCULATION_STOP:
                     self.input_queue.close()
                     output_queue.close()
                     return
-            output_queue.put(Message(MessageTag.PROCESS_ITERATOR_ITEM, item))
+            items.append(item)
+
+            if len(items) == self.batch_amount:
+                output_queue.put(
+                    Message(MessageTag.PROCESS_ITERATOR_ITEM, items))
+                items = []
 
         output_queue.put(Message(MessageTag.PROCESS_ITERATOR_STOP))

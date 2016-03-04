@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import os
+from collections import Iterable
 
 from context import ParallelContext
 from message import MessageTag, Message
@@ -14,14 +15,24 @@ class QueueIterator(Transformation):
         super(QueueIterator, self).__init__(parent)
         self.queue = queue
         self.tag = tag
+        self.items = []
+        self.item_index = 0
 
     def next(self):
+        if self.item_index < len(self.items):
+            item = self.items[self.item_index]
+            self.item_index += 1
+            return item
+
         message = self.queue.get()
 
         if message.tag == MessageTag.PROCESS_ITERATOR_STOP:
             return self.handle_stop(message)
         elif message.tag == MessageTag.PROCESS_ITERATOR_ITEM:
-            return message.data
+            assert isinstance(message.data, list)
+            self.items = message.data
+            self.item_index = 1
+            return self.items[0]
         else:
             raise KeyError()
 
@@ -65,21 +76,22 @@ class ProcessContext(ParallelContext):
                 node = self._parallelize_iterator(graph, node)
             node = graph.get_previous_node(node)
 
-        collect_process = Process(self)
+        collect_process = Process(self, "Collect")
         collect_process.compute(graph, self.msg_queue)
         self.processes.append(collect_process)
 
         terminated_early = False
 
         # collect notify messages and results
-        while True:
-            msg = self.msg_queue.get(True)
+        while not terminated_early:
+            msg = self.msg_queue.get()
             if msg.tag == MessageTag.PROCESS_ITERATOR_ITEM:
-                if not action.handle_item(msg.data):
-                    for p in self.processes:
-                        p.terminate()
-                    terminated_early = True
-                    break
+                for item in msg.data:
+                    if not action.handle_item(item):
+                        for p in self.processes:
+                            p.terminate()
+                        terminated_early = True
+                        break
             elif msg.tag == MessageTag.PROCESS_ITERATOR_STOP:
                 break
             else:
@@ -141,7 +153,7 @@ class ProcessContext(ParallelContext):
         processes = []
 
         for i in xrange(process_count):
-            processes.append(Process(self))
+            processes.append(Process(self, "Compute {}".format(i)))
 
         input_queue = mp.Queue()
         queue_iterator = TransformationFactory(
@@ -155,7 +167,7 @@ class ProcessContext(ParallelContext):
             p.compute(graph.copy_starting_at(parallel_iter_begin),
                       output_queue)
 
-        split_process = Process(self)
+        split_process = Process(self, "Split")
         split_process.compute(
             graph.copy_starting_at(graph.get_previous_node(split)),
             input_queue
