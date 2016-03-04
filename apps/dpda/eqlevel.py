@@ -5,11 +5,11 @@ import qit.ext.automata
 from pprint import pprint
 
 N_SIZE = 2            # Number of states
-S_SIZE = 2            # Number of stack symbols
+S_SIZE = 1            # Number of stack symbols
 A_SIZE = 2            # Number of actions (alphabet size)
-DEPTH = 20            # Maximal depth of state space
-MAX_STATES = 1000000  # Max nodes in state space
-COUNT = 10000         # None = iterate all
+DEPTH = 10            # Maximal depth of state space
+MAX_STATES = 100000  # Max nodes in state space
+COUNT = None         # None = iterate all
 
 
 def compute(n_size, s_size, a_size, depth, max_states, count):
@@ -58,7 +58,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
     else:
         source = pda_pairs.iterate()
 
-    results = source.map(compute_eqlevel_of_two_dpda).max_all(lambda x: x[1]).run()
+    results = source.map(compute_eqlevel_of_two_dpda).max_all(lambda x: x[1]).run(False)
 
     (p1, p2), value = results[0]
     print "Value {}, Found: {}".format(value, len(results))

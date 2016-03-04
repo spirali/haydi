@@ -4,16 +4,14 @@ from qit.base.session import session
 from qit.base.factory import TransformationFactory
 from qit.base.transform import Transformation
 
-MpiRun = True
+mpi_available = False
 
 try:
     from mpi4py import MPI
-
-    if MPI.COMM_WORLD.Get_size() < 2:
-        raise Exception()
-except:
-    MpiRun = False
-
+    if MPI.COMM_WORLD.Get_size() >= 2:
+        mpi_available = True
+except ImportError:
+    pass
 
 class MpiWorker(object):
     def __init__(self, size, rank):
@@ -43,7 +41,11 @@ class MpiWorker(object):
                              tag=MPI.ANY_TAG, status=status)
         return MpiMessage(msg, status.tag, status.source)
 
-    def _has_msg(self, tag=MPI.ANY_TAG, source=MPI.ANY_SOURCE):
+    def _has_msg(self, tag=None, source=None):
+        if tag is None:
+            tag = MPI.ANY_TAG
+        if source is None:
+            source = MPI.ANY_SOURCE
         status = MPI.Status()
         self.comm.iprobe(source=source,
                          tag=tag,
@@ -90,8 +92,8 @@ class MpiIterator(Transformation):
 
 class MpiReceiveIterator(MpiIterator):
     def __init__(self, parent, group_count,
-                 source=MPI.ANY_SOURCE,
-                 tag=MPI.ANY_TAG):
+                 source=None,
+                 tag=None):
         super(MpiReceiveIterator, self).__init__(parent)
         self.group_count = group_count
         self.stop_count = 0
@@ -310,9 +312,10 @@ class MpiContext(ParallelContext):
         self.worker_index += 1
         return index
 
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-if rank != 0:
-    MpiWorker(size, rank).run()
-    exit(0)
+if mpi_available:
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+    if rank != 0:
+        MpiWorker(size, rank).run()
+        exit(0)

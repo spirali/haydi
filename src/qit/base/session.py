@@ -50,8 +50,7 @@ class Session(object):
 
     def _create_parallel_context(self):
         from runtime import mpicontext, processcontext
-
-        if mpicontext.MpiRun:
+        if mpicontext.mpi_available:
             return mpicontext.MpiContext()
         else:
             return processcontext.ProcessContext()
