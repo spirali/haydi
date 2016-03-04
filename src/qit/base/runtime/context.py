@@ -40,19 +40,15 @@ class Context(object):
         pass
 
     def on_context_start(self):
-        pass
+        if session.is_context_main(self):
+            session.post_message(Message(MessageTag.CONTEXT_START))
 
     def on_context_stop(self):
-        pass
+        if session.is_context_main(self):
+            session.post_message(Message(MessageTag.CONTEXT_STOP))
 
 
 class ParallelContext(Context):
-    def on_context_start(self):
-        session.post_message(Message(MessageTag.CONTEXT_START))
-
-    def on_context_stop(self):
-        session.post_message(Message(MessageTag.CONTEXT_STOP))
-
     def is_parallel(self):
         return True
 
