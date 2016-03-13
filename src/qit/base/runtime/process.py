@@ -54,4 +54,7 @@ class Process(object):
                     Message(MessageTag.PROCESS_ITERATOR_ITEM, items))
                 items = []
 
+        if len(items) > 0:
+            output_queue.put(Message(MessageTag.PROCESS_ITERATOR_ITEM, items))
+
         output_queue.put(Message(MessageTag.PROCESS_ITERATOR_STOP))
