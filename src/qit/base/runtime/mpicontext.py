@@ -1,4 +1,5 @@
 from context import ParallelContext
+from mpicomm import MpiMessage, MpiTag
 from qit.base.exception import NotEnoughMpiNodes
 from qit.base.session import session
 from qit.base.factory import TransformationFactory
@@ -12,6 +13,16 @@ try:
         mpi_available = True
 except ImportError:
     pass
+
+
+def shutdown_workers():
+    comm = MPI.COMM_WORLD
+    size = comm.Get_size()
+
+    if comm.Get_rank() == 0:
+        for i in xrange(1, size):
+            comm.send(None, i, tag=MpiTag.APP_QUIT)
+
 
 class MpiWorker(object):
     def __init__(self, size, rank):
@@ -55,29 +66,6 @@ class MpiWorker(object):
     def post_message(self, msg):
         # send to master
         self.comm.send(msg, 0, tag=MpiTag.NOTIFICATION_MESSAGE)
-
-
-class MpiMessage(object):
-    def __init__(self, data=None, tag=None, source=None):
-        self.data = data
-        self.tag = tag
-        self.source = source
-
-
-class MpiTag(object):
-    NOTIFICATION_MESSAGE = 100
-
-    ITERATOR_ITEM = 200
-    ITERATOR_STOP = 201
-
-    APP_QUIT = 300
-
-    NODE_JOB_REQUEST = 400
-    NODE_JOB_OFFER = 401
-    CALCULATION_START = 402
-    CALCULATION_STOP = 403
-
-    ITERATOR_REGION_START = 1000
 
 
 class MpiIterator(Transformation):

@@ -1,3 +1,4 @@
+import atexit
 from exception import InnerParallelContext
 
 
@@ -64,3 +65,9 @@ class Session(object):
             return processcontext.ProcessContext()
 
 session = Session()
+
+
+def mpi_shutdown():
+    from runtime import mpicontext
+    if mpicontext.mpi_available:
+        mpicontext.shutdown_workers()
