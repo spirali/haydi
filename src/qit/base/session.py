@@ -1,4 +1,3 @@
-import atexit
 from exception import InnerParallelContext
 
 

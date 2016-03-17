@@ -1,6 +1,5 @@
 import multiprocessing as mp
 import os
-from collections import Iterable
 
 from context import ParallelContext
 from message import MessageTag, Message
