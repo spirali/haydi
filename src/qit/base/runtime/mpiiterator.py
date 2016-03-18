@@ -7,7 +7,7 @@ class MpiIterator(Transformation):
         super(MpiIterator, self).__init__(parent)
         self.comm = MpiCommunicator()
 
-    def write(self, str):
+    def log(self, str):
         # print("[{0}]: {1}".format(self.comm.rank, str))
         pass
 
@@ -23,11 +23,11 @@ class MpiReceiveIterator(MpiIterator):
         self.tag = tag
 
     def next(self):
-        self.write("Receive receiving from {}, tag {}".format(
+        self.log("Receive receiving from {}, tag {}".format(
             self.source, self.tag))
         message = self.comm.recv()
 
-        self.write("Receive received {}".format(message))
+        self.log("Receive received {}".format(message))
 
         if message.tag == MpiTag.ITERATOR_ITEM:
             return message.data
@@ -48,10 +48,10 @@ class MpiRegionJoinIterator(MpiIterator):
         try:
             item = next(self.parent)
 
-            self.write("RegionJoin sending to {0}".format(self.destination))
+            self.log("RegionJoin sending to {0}".format(self.destination))
             self.comm.send(item, self.destination, tag=MpiTag.ITERATOR_ITEM)
         except StopIteration:
-            self.write("RegionJoin ending")
+            self.log("RegionJoin ending")
             self.comm.send("", self.destination, tag=MpiTag.ITERATOR_STOP)
             raise StopIteration()
 
@@ -62,10 +62,10 @@ class MpiRegionSplitIterator(MpiIterator):
         self.source = source
 
     def next(self):
-        self.write("RegionSplit waits for data from {}".format(self.source))
+        self.log("RegionSplit waits for data from {}".format(self.source))
         message = self.comm.recv(self.source, MpiCommunicator.ANY_TAG)
 
-        self.write("RegionSplit received item {}".format(message))
+        self.log("RegionSplit received item {}".format(message))
 
         if message.tag == MpiTag.NODE_JOB_OFFER:
             return message.data
@@ -82,14 +82,14 @@ class MpiSplitIterator(MpiIterator):
     def next(self):
         try:
             item = next(self.parent)
-            self.write("Split generated item {0}".format(item))
+            self.log("Split generated item {0}".format(item))
 
             target = self._get_target()
 
-            self.write("Split sending to {0}".format(target))
+            self.log("Split sending to {0}".format(target))
             self.comm.send(item, target, tag=MpiTag.NODE_JOB_OFFER)
         except StopIteration:
-            self.write("Split ending, notifying group {}".format(self.group))
+            self.log("Split ending, notifying group {}".format(self.group))
             for node in self.group:
                 self.comm.send("", node, MpiTag.ITERATOR_STOP)
             raise StopIteration()

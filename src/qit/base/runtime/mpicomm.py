@@ -10,10 +10,13 @@ class MpiMessage(object):
         self.source = source
 
     def __repr__(self):
-        return "MPI: {} from {} -> {}".format(self.tag, self.source, self.data)
+        return "MPI: {} from {}, containing {}".format(
+            MpiTag.get_tag_name(self.tag), self.source, self.data)
 
 
 class MpiTag(object):
+    ANY = MPI.ANY_TAG
+
     NOTIFICATION_MESSAGE = 100
 
     ITERATOR_ITEM = 200
@@ -27,6 +30,13 @@ class MpiTag(object):
     CALCULATION_STOP = 403
 
     ITERATOR_REGION_START = 1000
+
+    @classmethod
+    def get_tag_name(cls, tag):
+        for attr in cls.__dict__.iteritems():
+            if attr[1] == tag:
+                return attr[0]
+        return "UNKNOWN_TAG"
 
 
 class MpiCommunicator(object):
@@ -75,7 +85,9 @@ class MpiCommunicator(object):
 
     def _recv_bytes(self, source, tag):
         status = MPI.Status()
-        buffer = bytearray(40960)
+        self.comm.probe(source=source, tag=tag, status=status)
+
+        buffer = bytearray(status.count)
         self.comm.Recv((buffer, len(buffer), MPI.BYTE),
                        tag=tag, source=source, status=status)
 
