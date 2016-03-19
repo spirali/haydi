@@ -108,8 +108,9 @@ class MpiContext(ParallelContext):
         if msg.tag == MpiTag.NOTIFICATION_MESSAGE:
             session.post_message(msg.data)
         elif msg.tag == MpiTag.ITERATOR_ITEM:
-            if not action.handle_item(msg.data):
-                raise StopIteration()
+            for item in msg.data:
+                if not action.handle_item(item):
+                    raise StopIteration()
         elif msg.tag == MpiTag.ITERATOR_STOP:
             return False
 
