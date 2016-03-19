@@ -1,3 +1,5 @@
+import logging
+
 from mpicomm import MpiCommunicator, MpiTag
 from qit.base.transform import Transformation
 
@@ -8,8 +10,7 @@ class MpiIterator(Transformation):
         self.comm = MpiCommunicator()
 
     def log(self, str):
-        # print("[{0}]: {1}".format(self.comm.rank, str))
-        pass
+        logging.debug(str)
 
 
 class MpiReceiveIterator(MpiIterator):

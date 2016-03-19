@@ -1,3 +1,5 @@
+import logging
+
 from dill import dill
 import umsgpack as msgpack
 from mpi4py import MPI
@@ -60,28 +62,34 @@ class MpiCommunicator(object):
     def size(self):
         return self.comm.Get_size()
 
-    def send(self, data=None, target=None, tag=None):
-        data = self._serialize_msgpack(data)
-        self._send_bytes(data, target, tag, MpiCommunicator.PICKLE_MSGPACK)
+    def send(self, data=None, target=None, tag=None, synchronous=False):
+        prefix = MpiCommunicator.PICKLE_MSGPACK
 
-    def send_complex(self, data=None, target=None, tag=None):
-        data = self._serialize_dill(data)
-        self._send_bytes(data, target, tag, MpiCommunicator.PICKLE_DILL)
+        try:
+            data = self._serialize_msgpack(data)
+        except msgpack.UnsupportedTypeException:
+            data = self._serialize_dill(data)
+            prefix = MpiCommunicator.PICKLE_DILL
+
+        self._send_bytes(data, target, tag, prefix, synchronous)
 
     def recv(self, source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG):
         return self._recv_bytes(source, tag)
 
     def has_message(self, tag=MPI.ANY_TAG, source=MPI.ANY_SOURCE):
         status = MPI.Status()
-        self.comm.iprobe(source=source,
-                         tag=tag,
-                         status=status)
-        return status.count > 0
+        return self.comm.iprobe(source=source,
+                                tag=tag,
+                                status=status)
 
-    def _send_bytes(self, data, target, tag, prefix):
+    def _send_bytes(self, data, target, tag, prefix, synchronous=False):
         array = bytearray(data)
-        array.insert(0, prefix)
-        self.comm.Send((array, len(array), MPI.BYTE), target, tag=tag)
+        array.extend([prefix])
+
+        if synchronous:
+            self.comm.Ssend((array, len(array), MPI.BYTE), target, tag=tag)
+        else:
+            self.comm.Send((array, len(array), MPI.BYTE), target, tag=tag)
 
     def _recv_bytes(self, source, tag):
         status = MPI.Status()
@@ -91,8 +99,8 @@ class MpiCommunicator(object):
         self.comm.Recv((buffer, len(buffer), MPI.BYTE),
                        tag=tag, source=source, status=status)
 
-        pickle_byte = buffer[0]
-        buffer = buffer[1:]
+        pickle_byte = buffer[-1]
+        buffer = buffer[:-1]
 
         if pickle_byte == MpiCommunicator.PICKLE_DILL:
             buffer = self._deserialize_dill(buffer)
@@ -100,6 +108,9 @@ class MpiCommunicator(object):
             buffer = self._deserialize_msgpack(buffer)
         else:
             raise BaseException("Invalid data received")
+
+        logging.debug("{} received message with tag {}".format(
+            self.rank, MpiTag.get_tag_name(status.tag)))
 
         return MpiMessage(buffer, status.tag, status.source)
 

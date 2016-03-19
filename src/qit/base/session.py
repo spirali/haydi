@@ -1,4 +1,5 @@
 from exception import InnerParallelContext
+from runtime import mpidetection
 
 
 class Session(object):
@@ -57,16 +58,17 @@ class Session(object):
         return self.main_context and self.main_context.is_parallel()
 
     def _create_parallel_context(self):
-        from runtime import mpicontext, processcontext
-        if mpicontext.mpi_available:
+        if mpidetection.mpi_available:
+            from runtime import mpicontext
             return mpicontext.MpiContext()
         else:
+            from runtime import processcontext
             return processcontext.ProcessContext()
 
 session = Session()
 
 
 def mpi_shutdown():
-    from runtime import mpicontext
-    if mpicontext.mpi_available:
+    if mpidetection.mpi_available:
+        from runtime import mpicontext
         mpicontext.shutdown_workers()

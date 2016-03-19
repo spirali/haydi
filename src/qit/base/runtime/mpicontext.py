@@ -1,20 +1,16 @@
+import logging
+import sys
+
 from context import ParallelContext
 from qit.base.exception import NotEnoughMpiNodes
 from qit.base.session import session
 from qit.base.factory import TransformationFactory
 
-mpi_available = False
-
-try:
-    from mpi4py import MPI
-    if MPI.COMM_WORLD.Get_size() >= 2:
-        mpi_available = True
-
-        from mpicomm import MpiTag, MpiCommunicator
-        from qit.base.runtime.mpiiterator import MpiRegionJoinIterator,\
-            MpiRegionSplitIterator, MpiReceiveIterator, MpiSplitIterator
-except ImportError:
-    pass
+from mpicomm import MpiTag, MpiCommunicator
+from mpiiterator import MpiRegionJoinIterator, MpiRegionSplitIterator,\
+    MpiReceiveIterator, MpiSplitIterator
+import mpidetection
+from mpi4py import MPI
 
 
 def shutdown_workers():
@@ -22,7 +18,7 @@ def shutdown_workers():
 
     if comm.rank == 0:
         for i in xrange(1, comm.size):
-            comm.send_complex("", i, tag=MpiTag.APP_QUIT)
+            comm.send("quit", i, tag=MpiTag.APP_QUIT)
 
 
 class MpiWorker(object):
@@ -69,18 +65,18 @@ class MpiContext(ParallelContext):
     def compute_action(self, graph, action):
         self.preprocess_splits(graph)
 
-        split_worker = self._fetch_worker()
+        worker = self._fetch_worker()
+        worker_node = TransformationFactory(MpiRegionJoinIterator, 0)
+        graph.append(graph.last_transformation, worker_node)
 
-        for node in graph.nodes:
+        for node in reversed(graph.nodes):
             if node.klass.is_join():
-                split_worker = self._parallelize_iterator(graph,
-                                                          node,
-                                                          split_worker)
+                worker, worker_node = self._parallelize_iterator(
+                    graph, node, worker, worker_node)
 
-        start_iterator = TransformationFactory(MpiRegionJoinIterator, 0)
-        graph.append(graph.last_transformation, start_iterator)
-
-        self._distribute_computation(split_worker, graph)
+        if worker is not None:
+            self._distribute_computation(worker,
+                                         graph.copy_starting_at(worker_node))
 
         return self._master(action)
 
@@ -119,11 +115,12 @@ class MpiContext(ParallelContext):
 
         return True
 
-    def _parallelize_iterator(self, graph, join, split_worker):
+    def _parallelize_iterator(self, graph, join, worker, start_node):
         """
         :param graph: graph
         :param join: join transformation
-        :param split_worker: worker assigned for current split
+        :param worker: worker assigned for current receive
+        :param start_node: starting node of the assigned worker
         :return: worker assigned for next split
         """
         split = join
@@ -137,9 +134,10 @@ class MpiContext(ParallelContext):
         process_count = split.args[0]
 
         # MPI > parallel region > Join
-        new_worker = self._fetch_worker()
+        split_worker = self._fetch_worker()
+
         parallel_iter_begin = TransformationFactory(MpiRegionJoinIterator,
-                                                    new_worker)
+                                                    worker)
         graph.replace(join, parallel_iter_begin)
         parallel_iter_end = TransformationFactory(MpiRegionSplitIterator,
                                                   split_worker)
@@ -156,9 +154,9 @@ class MpiContext(ParallelContext):
         mpi_distribute = TransformationFactory(MpiSplitIterator, workers)
         graph.prepend(parallel_iter_end, mpi_distribute)
 
-        self._distribute_computation(split_worker,
-                                     graph.copy_starting_at(
-                                         mpi_distribute))
+        # this has to be distributed first
+        self._distribute_computation(worker,
+                                     graph.copy_starting_at(start_node))
 
         # assign to multiple nodes
         for i in xrange(process_count):
@@ -166,10 +164,11 @@ class MpiContext(ParallelContext):
                                          graph.copy_starting_at(
                                              parallel_iter_begin))
 
-        return new_worker
+        return split_worker, mpi_distribute
 
     def _distribute_computation(self, worker, graph):
-        self.comm.send_complex(graph, worker, MpiTag.CALCULATION_START)
+        self.comm.send(graph, worker, MpiTag.CALCULATION_START,
+                       synchronous=True)
 
     def _fetch_worker(self):
         if self.worker_index >= self.comm.size:
@@ -179,8 +178,17 @@ class MpiContext(ParallelContext):
         self.worker_index += 1
         return index
 
-if mpi_available:
+
+if mpidetection.mpi_available:
     comm = MpiCommunicator()
+
+    if "-d" in sys.argv:
+        logging.basicConfig(filename="mpi-{}.log".format(comm.rank),
+                            filemode="w",
+                            format="%(asctime)s %(message)s",
+                            datefmt="%I:%M:%S",
+                            level=logging.DEBUG)
+
     if comm.rank != 0:
         MpiWorker().run()
         exit(0)
