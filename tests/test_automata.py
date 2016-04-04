@@ -6,10 +6,10 @@ from qit.ext.automata import transition_fn_to_graph  # noqa
 
 def test_automata_tfn_to_graph():
     automaton = {
-            (0, "a", 1): (1, ()),
-            (0, "b", 1): (0, (0, 0)),
-            (1, "a", 1): (1, (0,)),
-            (1, "b", 1): (1, (0, 1)),
+        (0, "a", 1): (1, ()),
+        (0, "b", 1): (0, (0, 0)),
+        (1, "a", 1): (1, (0,)),
+        (1, "b", 1): (1, (0, 1)),
     }
 
     def rule_to_arc((q, a, s), (nq, ns)):

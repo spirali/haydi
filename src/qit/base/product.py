@@ -159,4 +159,20 @@ class UnorderedProductIterator(DomainIterator):
             return tuple(self.current)
 
     def set(self, index):
-        raise NotImplementedError()
+        assert len(self.domain.domains) == 2
+        size = self.domain.domains[1].size - 1  # -1 to ignore diagonal
+        # The root of y * size - ((y - 1) * y) / 2 - index
+        # y * size = full rectangle
+        # ((y-1) * y) / 2 = missing elements to full rectangle
+        y = int(0.5 * (-math.sqrt(-8 * index + 4 * size**2 + 4 * size + 1) +
+                       2 * size + 1))
+        x = index - y * size + ((y - 1) * y / 2) + y
+
+        if not self.current:
+            iterators = [d.iterate().create() for d in self.domain.domains]
+        else:
+            iterators = self.iterators
+        iterators[0].set(x)
+        iterators[1].set(y)
+        self.current = [next(it) for it in iterators]
+        self.iterators = iterators
