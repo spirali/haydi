@@ -17,6 +17,9 @@ class Domain(object):
     def __add__(self, other):
         return Join((self, other))
 
+    def map(self, fn):
+        return MapDomain(self, fn)
+
     def iterate(self):
         raise NotImplementedError()
 
@@ -29,6 +32,20 @@ class Domain(object):
             return g
         else:
             return g.take(count)
+
+
+class MapDomain(Domain):
+
+    def __init__(self, domain, fn):
+        self.domain = domain
+        self.size = domain.size
+        self.fn = fn
+
+    def iterate(self):
+        return self.domain.iterate().map(self.fn)
+
+    def generate_one(self):
+        return self.fn(self.domain.generate_one())
 
 
 class DomainIterator(Iterator):
