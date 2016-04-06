@@ -1,4 +1,5 @@
 import time
+from copy import copy
 
 from runtime.message import Message, MessageTag
 
@@ -19,6 +20,11 @@ class Transformation(Iterator):
         super(Transformation, self).__init__()
         self.parent = parent
         self.size = parent.size
+
+    def copy(self):
+        t = copy(self)
+        t.parent = t.parent.copy()
+        return t
 
     def get_parents(self):
         return [self.parent]

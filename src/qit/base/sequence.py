@@ -11,6 +11,7 @@ class Sequence(Domain):
         self.length = length
         self.domain = domain
         self.size = self._compute_size()
+        self.exact_size = domain.exact_size
 
     def iterate(self):
         return IteratorFactory(SequenceIterator, self)

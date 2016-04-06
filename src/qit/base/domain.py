@@ -5,6 +5,8 @@ from iterator import GeneratingIterator, Iterator
 
 class Domain(object):
 
+    exact_size = False
+
     def __init__(self):
         self.size = None
 
@@ -19,6 +21,9 @@ class Domain(object):
 
     def map(self, fn):
         return MapDomain(self, fn)
+
+    def filter(self, fn):
+        return FilterDomain(self, fn)
 
     def iterate(self):
         raise NotImplementedError()
@@ -39,6 +44,7 @@ class MapDomain(Domain):
     def __init__(self, domain, fn):
         self.domain = domain
         self.size = domain.size
+        self.exact_size = domain.exact_size
         self.fn = fn
 
     def iterate(self):
@@ -46,6 +52,23 @@ class MapDomain(Domain):
 
     def generate_one(self):
         return self.fn(self.domain.generate_one())
+
+
+class FilterDomain(Domain):
+
+    def __init__(self, domain, fn):
+        self.domain = domain
+        self.size = domain.size
+        self.fn = fn
+
+    def iterate(self):
+        return self.domain.iterate().filter(self.fn)
+
+    def generate_one(self):
+        while True:
+            x = self.domain.generate_one()
+            if self.fn(x):
+                return x
 
 
 class DomainIterator(Iterator):

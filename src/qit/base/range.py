@@ -9,6 +9,8 @@ from copy import copy
 
 class Range(Domain):
 
+    exact_size = True
+
     def __init__(self, start, end=None, step=None):
         super(Range, self).__init__()
         if end is None:

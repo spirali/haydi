@@ -12,6 +12,7 @@ class Product(Domain):
         super(Product, self).__init__()
         self.domains = tuple(domains)
         self.size = self._compute_size()
+        self.exact_size = all(d.exact_size for d in domains)
 
     def iterate(self):
         return IteratorFactory(ProductIterator, self)
@@ -90,6 +91,7 @@ class UnorderedProduct(Domain):
         if len(set(domains)) > 1:
             raise Exception("Not implemented for discitinct domains")
         self.size = self._compute_size()
+        self.exact_size = all(d.exact_size for d in domains)
 
     def iterate(self):
         return IteratorFactory(UnorderedProductIterator, self)
