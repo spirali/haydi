@@ -1,9 +1,10 @@
 
-from domain import Domain, DomainIterator
+from domain import Domain, DomainIterator, MapDomain
 from factory import IteratorFactory
 
 from copy import copy
 import math
+from collections import namedtuple
 
 
 class Product(Domain):
@@ -178,3 +179,14 @@ class UnorderedProductIterator(DomainIterator):
         iterators[1].set(y)
         self.current = [next(it) for it in iterators]
         self.iterators = iterators
+
+
+class NamedProduct(MapDomain):
+
+    def __init__(self, name, named_domains):
+        domain = Product([d for n, d in named_domains])
+        self.type = namedtuple(name, [n for n, d in named_domains])
+        super(NamedProduct, self).__init__(domain, self.make_instance)
+
+    def make_instance(self, value):
+        return self.type(*value)

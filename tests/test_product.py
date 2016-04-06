@@ -135,3 +135,12 @@ def test_uproduct_iter_set():
     x = 403388
     it.set(x)
     assert list(it) == a[x:]
+
+
+def test_named_product():
+
+    r = qit.Range(10)
+    a = qit.NamedProduct("A", [("a", r), ("b", r * r)])
+    result = list(a)[0]
+    assert result.a == 0
+    assert result.b == (0, 0)
