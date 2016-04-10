@@ -9,3 +9,6 @@ from base.mapping import Mapping  # noqa
 # Others
 from base.system import System  # noqa
 from base.lts import LTS  # noqa
+
+#Constants
+from base.boolean import Boolean # noqa
