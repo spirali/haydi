@@ -9,11 +9,12 @@ from collections import namedtuple
 
 class Product(Domain):
 
-    def __init__(self, domains):
-        super(Product, self).__init__()
+    def __init__(self, domains, name=None):
+        domains = tuple(domains)
+        size = self._compute_size(domains)
+        exact_size = all(d.exact_size for d in domains)
+        super(Product, self).__init__(size, exact_size, name)
         self.domains = tuple(domains)
-        self.size = self._compute_size()
-        self.exact_size = all(d.exact_size for d in domains)
 
     def iterate(self):
         return IteratorFactory(ProductIterator, self)
@@ -21,12 +22,12 @@ class Product(Domain):
     def generate_one(self):
         return tuple(d.generate_one() for d in self.domains)
 
-    def _compute_size(self):
-        if (not self.domains or
-                not all([domain.size is not None for domain in self.domains])):
+    def _compute_size(self, domains):
+        if (not domains or
+                not all([domain.size is not None for domain in domains])):
             return None
         result = 1
-        for domain in self.domains:
+        for domain in domains:
             result *= domain.size
         return result
 
@@ -86,13 +87,14 @@ class ProductIterator(DomainIterator):
 
 class UnorderedProduct(Domain):
 
-    def __init__(self, domains):
-        super(UnorderedProduct, self).__init__()
-        self.domains = tuple(domains)
+    def __init__(self, domains, name=None):
+        domains = tuple(domains)
+        size = self._compute_size(domains)
+        exact_size = all(d.exact_size for d in domains)
+        super(UnorderedProduct, self).__init__(size, exact_size, name)
+        self.domains = domains
         if len(set(domains)) > 1:
             raise Exception("Not implemented for discitinct domains")
-        self.size = self._compute_size()
-        self.exact_size = all(d.exact_size for d in domains)
 
     def iterate(self):
         return IteratorFactory(UnorderedProductIterator, self)
@@ -100,13 +102,13 @@ class UnorderedProduct(Domain):
     def generate_one(self):
         return tuple(d.generate_one() for d in self.domains)
 
-    def _compute_size(self):
-        if not self.domains:
+    def _compute_size(self, domains):
+        if not domains:
             return 0
         result = 1
-        for i, domain in enumerate(self.domains):
+        for i, domain in enumerate(domains):
             result *= domain.size - i
-        return result / math.factorial(len(self.domains))
+        return result / math.factorial(len(domains))
 
 
 class UnorderedProductIterator(DomainIterator):
@@ -183,10 +185,15 @@ class UnorderedProductIterator(DomainIterator):
 
 class NamedProduct(MapDomain):
 
-    def __init__(self, name, named_domains):
+    def __init__(self, named_domains, type_name=None, name=None):
+        if type_name is None:
+            if name is None:
+                type_name = "Tuple" + str(id(self))
+            else:
+                type_name = name
         domain = Product([d for n, d in named_domains])
-        self.type = namedtuple(name, [n for n, d in named_domains])
-        super(NamedProduct, self).__init__(domain, self.make_instance)
+        super(NamedProduct, self).__init__(domain, self.make_instance, name)
+        self.type = namedtuple(type_name, [n for n, d in named_domains])
 
     def make_instance(self, value):
         return self.type(*value)

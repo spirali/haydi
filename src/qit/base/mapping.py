@@ -6,12 +6,12 @@ from qit.base.factory import IteratorFactory
 
 class Mapping(Domain):
 
-    def __init__(self, key_domain, value_domain):
-        super(Mapping, self).__init__()
+    def __init__(self, key_domain, value_domain, name=None):
+        size = value_domain.size ** key_domain.size
+        exact_size = key_domain.exact_size and value_domain.exact_size
+        super(Mapping, self).__init__(size, exact_size, name)
         self.key_domain = key_domain
         self.value_domain = value_domain
-        self.size = self.value_domain.size ** self.key_domain.size
-        self.exact_size = key_domain.exact_size and value_domain.exact_size
 
     def iterate(self):
         return IteratorFactory(MappingIterator, self)

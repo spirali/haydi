@@ -5,10 +5,10 @@ from iterator import GeneratingIterator, Iterator
 
 class Domain(object):
 
-    exact_size = False
-
-    def __init__(self):
-        self.size = None
+    def __init__(self, size=None, exact_size=False,  name=None):
+        self.size = size
+        self.exact_size = exact_size
+        self.name = name
 
     def __iter__(self):
         return self.iterate().create()
@@ -41,10 +41,9 @@ class Domain(object):
 
 class MapDomain(Domain):
 
-    def __init__(self, domain, fn):
+    def __init__(self, domain, fn, name=None):
+        super(MapDomain, self).__init__(domain.size, domain.exact_size, name)
         self.domain = domain
-        self.size = domain.size
-        self.exact_size = domain.exact_size
         self.fn = fn
 
     def iterate(self):
@@ -56,9 +55,9 @@ class MapDomain(Domain):
 
 class FilterDomain(Domain):
 
-    def __init__(self, domain, fn):
+    def __init__(self, domain, fn, name=None):
+        super(FilterDomain, self).__init__(domain.size, False, name)
         self.domain = domain
-        self.size = domain.size
         self.fn = fn
 
     def iterate(self):

@@ -63,3 +63,8 @@ def test_range_iter_copy():
     it2 = it.copy()
 
     assert list(it) == list(it2)
+
+
+def test_range_name():
+    r = qit.Range(3, 10, 5, name="Test")
+    assert r.name == "Test"

@@ -7,14 +7,19 @@ from copy import copy
 
 
 class Join(Domain):
-    def __init__(self, domains, ratios=None):
-        super(Join, self).__init__()
-        self.domains = tuple(domains)
-        self.size = sum(d.size for d in domains)
+    def __init__(self, domains, ratios=None, name=None):
+        domains = tuple(domains)
+        if all(d.size is not None for d in domains):
+            size = sum(d.size for d in domains)
+        else:
+            size = None
+        exact_size = all(d.exact_size for d in domains)
+        super(Join, self).__init__(size, exact_size, name)
+        self.domains = domains
 
         if ratios is None:
             ratios = (d.size if d.size is not None else 1
-                      for d in self.domains)
+                      for d in domains)
 
         ratio_sums = []
         s = 0

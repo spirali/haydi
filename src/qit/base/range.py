@@ -11,25 +11,27 @@ class Range(Domain):
 
     exact_size = True
 
-    def __init__(self, start, end=None, step=None):
-        super(Range, self).__init__()
+    def __init__(self, start, end=None, step=None, name=None):
         if end is None:
             end = start
             start = 0
         end = max(start, end)
-        self.start = start
-        self.end = end
-
         if step is None:
-            self.step = 1
+            step = 1
         else:
-            self.step = step
+            step = step
             assert step >= 0
 
-        if self.step == 1 and self.end == 1:
-            self.size = self.end
+        if step == 1 and end == 1:
+            size = end
         else:
-            self.size = (self.end - self.start) / self.step
+            size = (end - start) / step
+
+        super(Range, self).__init__(size, True, name)
+
+        self.start = start
+        self.end = end
+        self.step = step
 
     def iterate(self):
         return IteratorFactory(RangeIterator, self)

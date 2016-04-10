@@ -15,6 +15,15 @@ def test_join_range_iterate():
     result = list(j)
     assert expected == result
     assert j.size == 8
+    assert j.exact_size
+
+
+def test_join_non_exact_size():
+    d1 = qit.Range(3)
+    d2 = qit.Range(3).filter(lambda x: True)
+    j = d1 + d2
+    assert j.size == 6
+    assert not j.exact_size
 
 
 def test_join_empty_iterate():
@@ -85,3 +94,8 @@ def test_join_copy():
     it = p.iterate()
     it2 = it.copy()
     assert list(it) == list(it2)
+
+
+def test_join_name():
+    j = qit.Join((qit.Range(10), qit.Range(10)), name="TestJoin")
+    assert j.name == "TestJoin"

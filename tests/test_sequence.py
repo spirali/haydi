@@ -52,3 +52,8 @@ def test_sequence_iter_copy():
     it2 = it.copy()
 
     assert list(it) == list(it2)
+
+
+def test_sequence_name():
+    s = qit.Sequence(qit.Range(10), 2, "TestSequence")
+    assert s.name == "TestSequence"

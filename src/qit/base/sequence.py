@@ -6,12 +6,11 @@ from copy import copy
 
 class Sequence(Domain):
 
-    def __init__(self, domain, length):
-        super(Sequence, self).__init__()
+    def __init__(self, domain, length, name=None):
+        size = self._compute_size(domain, length)
+        super(Sequence, self).__init__(size, domain.exact_size, name)
         self.length = length
         self.domain = domain
-        self.size = self._compute_size()
-        self.exact_size = domain.exact_size
 
     def iterate(self):
         return IteratorFactory(SequenceIterator, self)
@@ -19,12 +18,12 @@ class Sequence(Domain):
     def generate_one(self):
         return tuple(self.domain.generate_one() for i in xrange(self.length))
 
-    def _compute_size(self):
-        if not self.domain:
-            return 0
+    def _compute_size(self, domain, length):
+        if domain.size is None:
+            return None
         result = 1
-        size = self.domain.size
-        for i in xrange(self.length):
+        size = domain.size
+        for i in xrange(length):
             result *= size
         return result
 

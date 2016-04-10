@@ -140,7 +140,20 @@ def test_uproduct_iter_set():
 def test_named_product():
 
     r = qit.Range(10)
-    a = qit.NamedProduct("A", [("a", r), ("b", r * r)])
+    a = qit.NamedProduct([("a", r), ("b", r * r)])
     result = list(a)[0]
     assert result.a == 0
     assert result.b == (0, 0)
+
+
+def test_product_name():
+    r = qit.Range(10)
+    p = qit.Product((r, r), name="TestProduct")
+    assert p.name == "TestProduct"
+
+    r = qit.Range(10)
+    p = qit.UnorderedProduct((r, r), name="TestUProduct")
+    assert p.name == "TestUProduct"
+
+    p = qit.NamedProduct([("a", r), ("b", r * r)], name="TestNamedProduct")
+    assert p.name == "TestNamedProduct"

@@ -49,3 +49,16 @@ def test_mapping_copy():
     it2 = it.copy()
 
     assert list(it) == list(it2)
+
+
+def test_mapping_name():
+    r = qit.Range(10)
+    m = qit.Mapping(r, r, name="TestMapping")
+    assert m.name == "TestMapping"
+
+
+def test_mapping_exact_size():
+    d1 = qit.Range(3)
+    d2 = qit.Range(3).filter(lambda x: True)
+    assert not qit.Mapping(d1, d2).exact_size
+    assert qit.Mapping(d1, d1).exact_size

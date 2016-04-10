@@ -7,10 +7,9 @@ from factory import IteratorFactory
 
 class Values(Domain):
 
-    def __init__(self, values):
-        super(Values, self).__init__()
+    def __init__(self, values, name=None):
+        super(Values, self).__init__(len(values), True, name)
         self.values = values
-        self.size = len(self.values)
 
     def generate_one(self):
         return random.choice(self.values)
