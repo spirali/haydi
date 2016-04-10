@@ -10,6 +10,7 @@ class Node(object):
     color = None
     fillcolor = None
     label = ""
+    shape = "circle"
 
     def __init__(self, key):
         self.key = key
@@ -75,8 +76,8 @@ class Graph(object):
                 extra += " color=" + node.color
             if node.fillcolor is not None:
                 extra += " style=filled fillcolor=" + node.fillcolor
-            stream.append("v{} [label=\"{}\"{}]\n".format(
-                          id(node), node.label, extra))
+            stream.append("v{} [label=\"{}\" shape=\"{}\"{}]\n".format(
+                            id(node), node.label, node.shape, extra))
             for arc in node.arcs:
                 stream.append("v{} -> v{} [label=\"{}\"]\n".format(
                     id(node), id(arc.node), str(arc.data)))
