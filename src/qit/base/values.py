@@ -1,5 +1,6 @@
 
 from domain import Domain, DomainIterator
+from copy import copy
 import random
 
 from factory import IteratorFactory
@@ -33,3 +34,9 @@ class ValuesIterator(DomainIterator):
 
     def set(self, index):
         self.index = index
+
+    def reset(self):
+        self.index = 0
+
+    def copy(self):
+        return copy(self)
