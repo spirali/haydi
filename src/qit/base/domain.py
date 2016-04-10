@@ -38,6 +38,29 @@ class Domain(object):
         else:
             return g.take(count)
 
+    def __repr__(self):
+        ITEMS_LIMIT = 4
+        ITEMS_CHAR_LIMIT = 50
+        if self.name:
+            name = self.name
+        else:
+            name = self.__class__.__name__
+
+        if self.exact_size and self.size is not None:
+            items = ", ".join(map(str, self.iterate().take(ITEMS_LIMIT)))
+            if len(items) > ITEMS_CHAR_LIMIT:
+                items = items[:ITEMS_CHAR_LIMIT - 5]
+                items += ", ..."
+            elif self.size > ITEMS_LIMIT:
+                items += ", ..."
+            extra = "{{{0}}}".format(items)
+        else:
+            if not self.exact_size:
+                extra = "not exact_size"
+            else:
+                extra = ""
+        return "<{} size={} {}>".format(name, self.size, extra)
+
 
 class MapDomain(Domain):
 

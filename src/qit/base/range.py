@@ -42,9 +42,6 @@ class Range(Domain):
         else:
             return randint(0, self.size - 1) * self.step
 
-    def __repr__(self):
-        return "Range({},{},{})".format(self.start, self.end, self.step)
-
 
 class RangeIterator(DomainIterator):
 
