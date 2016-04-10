@@ -8,7 +8,6 @@ class LTS(object):
 
     def __init__(self, actions):
         self.actions = actions
-        self.actions_size = actions.size
 
     def bfs(self,
             init_state,
@@ -37,12 +36,12 @@ class LTS(object):
             while nodes:
                 node = nodes.pop()
                 node.label = self.make_label(node.key)
-                for i in xrange(self.actions_size):
-                    s = self.step(node.key, i)
+                for a in self.actions.iterate():
+                    s = self.step(node.key, a)
                     if s is None:
                         continue
                     n, exists = graph.node_check(s)
-                    node.add_arc(n, i)
+                    node.add_arc(n, a)
                     if not exists:
                         new_nodes.append(n)
         for node in new_nodes:
@@ -62,7 +61,9 @@ class LTS(object):
 class LTSProduct(LTS):
 
     def __init__(self, lts1, lts2):
-        assert lts1.actions_size == lts2.actions_size
+        assert lts1.actions.size == lts2.actions.size
+        assert cmp(sorted(lts1.actions.iterate().run()),
+                   sorted(lts2.actions.iterate().run())) == 0
         LTS.__init__(self, lts1.actions)
         self.lts1 = lts1
         self.lts2 = lts2
@@ -105,7 +106,7 @@ class BreadthFirstIterator(Iterator):
             if self.states:
                 state = self.states.pop()
                 to_report = 0
-                for a in xrange(self.lts.actions_size):
+                for a in self.lts.actions.iterate():
                     new_state = self.lts.step(state, a)
                     if new_state is None:
                         continue
