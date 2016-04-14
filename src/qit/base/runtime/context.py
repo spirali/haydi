@@ -1,9 +1,5 @@
 from qit.base.exception import TooManySplits
-from qit.base.factory import TransformationFactory
-from qit.base.session import session
 from qit.base.factorylist import FactoryList
-from qit.base.runtime.message import Message, MessageTag
-from qit.base.transform import JoinTransformation, SplitTransformation
 
 
 class Context(object):
@@ -19,13 +15,10 @@ class Context(object):
 
     def run(self, iterator_factory, action):
         try:
-            self.on_context_start()
             self.compute_action(FactoryList(iterator_factory), action)
         except KeyboardInterrupt:
             self.finish_computation()
             print("Returning what I've got so far...")
-        finally:
-            self.on_context_stop()
 
     def finish_computation(self):
         pass
@@ -39,16 +32,21 @@ class Context(object):
     def shutdown(self):
         pass
 
-    def on_context_start(self):
-        if session.is_context_main(self):
-            session.post_message(Message(MessageTag.CONTEXT_START))
-
-    def on_context_stop(self):
-        if session.is_context_main(self):
-            session.post_message(Message(MessageTag.CONTEXT_STOP))
-
 
 class ParallelContext(Context):
+    def __init__(self):
+        self.has_computation = False
+
+    def compute_action(self, iterator_factory, action):
+        try:
+            self.has_computation = True
+            self.do_computation(iterator_factory, action)
+        finally:
+            self.has_computation = False
+
+    def do_computation(self, iterator_factory, action):
+        raise NotImplementedError()
+
     def is_parallel(self):
         return True
 
@@ -59,6 +57,9 @@ class ParallelContext(Context):
         raise NotImplementedError()
 
     def preprocess_splits(self, graph):
+        from qit.base.factory import TransformationFactory
+        from qit.base.transform import JoinTransformation, SplitTransformation
+
         if not graph.has_transformations():
             return
 

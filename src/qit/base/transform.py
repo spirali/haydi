@@ -1,10 +1,6 @@
 import time
 from copy import copy
-
-from runtime.message import Message, MessageTag
-
 from iterator import Iterator
-from qit.base.session import session
 
 
 class Transformation(Iterator):
@@ -92,38 +88,6 @@ class FilterTransformation(Transformation):
 
     def __repr__(self):
         return "Filter"
-
-
-class ProgressTransformation(Transformation):
-    @staticmethod
-    def is_stateful():
-        return True
-
-    def __init__(self, parent, name, notify_count):
-        super(ProgressTransformation, self).__init__(parent)
-        self.notify_count = notify_count
-        self.name = name
-        self.count = 0
-
-    def next(self):
-        value = next(self.parent)
-
-        self.count += 1
-
-        if self.count % self.notify_count == 0:
-            count = self.count
-
-            session.post_message(Message(MessageTag.SHOW_ITERATOR_PROGRESS, {
-                "name": self.name,
-                "count": count,
-                "total": self.size,
-                "relative": True if self.size else None
-            }))
-
-        return value
-
-    def __repr__(self):
-        return "Show every {} items".format(self.notify_count)
 
 
 class SplitTransformation(Transformation):

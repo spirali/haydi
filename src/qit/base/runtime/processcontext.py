@@ -4,9 +4,7 @@ import os
 from context import ParallelContext
 from message import MessageTag, Message
 from process import Process
-from qit.base.factory import TransformationFactory
-from qit.base.session import session
-from qit.base.transform import Transformation, JoinTransformation
+from qit.base.transform import Transformation
 
 
 class QueueIterator(Transformation):
@@ -65,7 +63,7 @@ class ProcessContext(ParallelContext):
     def is_master(self):
         return os.getpid() == self.master_pid
 
-    def compute_action(self, graph, action):
+    def do_computation(self, graph, action):
         self.master_pid = os.getpid()
         self.preprocess_splits(graph)
 
@@ -93,8 +91,6 @@ class ProcessContext(ParallelContext):
                         break
             elif msg.tag == MessageTag.PROCESS_ITERATOR_STOP:
                 break
-            else:
-                session.post_message(msg)
 
         if not terminated_early:
             # collect remaining notify messages
@@ -102,7 +98,6 @@ class ProcessContext(ParallelContext):
                 msg = self.msg_queue.get()
                 assert msg.tag in (MessageTag.PROCESS_ITERATOR_ITEM,
                                    MessageTag.PROCESS_ITERATOR_STOP)
-                session.post_message(msg)
 
         for p in self.processes:
             p.stop()
@@ -124,6 +119,9 @@ class ProcessContext(ParallelContext):
             p.send_message(Message(MessageTag.CALCULATION_STOP))
 
     def _parallelize_iterator(self, graph, node):
+        from qit.base.factory import TransformationFactory
+        from qit.base.transform import JoinTransformation
+
         assert node.klass == JoinTransformation
 
         split = node

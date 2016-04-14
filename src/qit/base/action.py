@@ -1,16 +1,13 @@
+from session import session
+
+
 class Action(object):
     def __init__(self, iterator_factory):
         self.iterator_factory = iterator_factory
 
     def run(self, parallel=False):
-        from session import session
-
-        with session.create_context(parallel) as ctx:
-            try:
-                ctx.run(self.iterator_factory.copy(), self)
-            finally:
-                session.destroy_context(ctx)
-
+        ctx = session.get_context(parallel)
+        ctx.run(self.iterator_factory.copy(), self)
         return self.get_result()
 
     def get_result(self):

@@ -62,7 +62,7 @@ class MpiContext(ParallelContext):
     def is_master(self):
         return self.comm.rank == 0
 
-    def compute_action(self, graph, action):
+    def do_computation(self, graph, action):
         self.preprocess_splits(graph)
 
         worker = self._fetch_worker()

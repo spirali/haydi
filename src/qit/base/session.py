@@ -4,66 +4,30 @@ from runtime import mpidetection
 
 class Session(object):
     def __init__(self):
+        from runtime.serialcontext import SerialContext
+        from runtime.processcontext import ProcessContext
+
         self.listeners = []
-        self.main_context = None
+        self.serial_context = SerialContext()
+        self.parallel_context = ProcessContext()
         self.worker = None
-        self.contexts = []
 
-    def create_context(self, parallel):
-        from runtime import serialcontext
-
-        if parallel and self._has_parallel_ctx():
+    def get_context(self, parallel):
+        if parallel and self.parallel_context.has_computation:
             raise InnerParallelContext()
 
-        if not parallel:
-            ctx = serialcontext.SerialContext()
+        if parallel:
+            ctx = self.parallel_context
         else:
-            ctx = self._create_parallel_context()
-
-        if not self.main_context:
-            self.main_context = ctx
-
-        self.contexts.append(ctx)
+            ctx = self.serial_context
 
         return ctx
-
-    def is_context_main(self, ctx):
-        return ctx == self.main_context
 
     def set_worker(self, worker):
         self.worker = worker
 
-    def destroy_context(self, context):
-        if context == self.main_context:
-            self.main_context = None
-
-        self.contexts.remove(context)
-
-    def post_message(self, message):
-        if self.worker:
-            self.worker.post_message(message)
-        elif self._has_parallel_ctx() and not self.main_context.is_master():
-            self.main_context.transmit_to_master(message)
-        else:
-            self.broadcast_message(message)
-
-    def add_message_listener(self, listener):
-        self.listeners.append(listener)
-
-    def broadcast_message(self, message):
-        for listener in self.listeners:
-            listener.handle_message(message)
-
-    def _has_parallel_ctx(self):
-        return self.main_context and self.main_context.is_parallel()
-
-    def _create_parallel_context(self):
-        if mpidetection.mpi_available:
-            from runtime import mpicontext
-            return mpicontext.MpiContext()
-        else:
-            from runtime import processcontext
-            return processcontext.ProcessContext()
+    def set_parallel_context(self, ctx):
+        self.parallel_context = ctx
 
 session = Session()
 
