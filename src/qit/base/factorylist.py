@@ -63,6 +63,17 @@ class FactoryList(object):
 
         self.nodes.remove(node)
 
+    def reparent(self, node, parent):
+        assert node in self.nodes
+        assert parent in self.nodes
+
+        node_index = self.nodes.index(node)
+        parent_index = self.nodes.index(parent)
+
+        assert parent_index < node_index
+
+        self.nodes = self.nodes[:parent_index + 1] + self.nodes[node_index:]
+
     def replace(self, node, transformation_factory):
         assert node in self.nodes
 

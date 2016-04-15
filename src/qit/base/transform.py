@@ -31,6 +31,32 @@ class Transformation(Iterator):
     def reset(self):
         self.parent.reset()
 
+    def set(self, index):
+        self.parent.set(index)
+
+
+class YieldTransformation(Transformation):
+    @staticmethod
+    def is_stateful():
+        return True
+
+    def __init__(self, parent):
+        super(YieldTransformation, self).__init__(parent)
+        self.data = []
+        self.index = 0
+
+    def next(self):
+        if self.index == len(self.data):
+            self.data = self.parent.next()
+            self.index = 0
+
+        if len(self.data) == 0:
+            raise StopIteration()
+
+        item = self.data[self.index]
+        self.index += 1
+        return item
+
 
 class TakeTransformation(Transformation):
     @staticmethod
