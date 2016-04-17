@@ -5,6 +5,10 @@ from qit.base.runtime.message import MessageTag, Message
 from qit.base.transform import Transformation
 
 
+def set_and_compute_unwrap(args):
+    return set_and_compute(*args)
+
+
 def set_and_compute(graph, index, count):
     graph.set(index)
 
@@ -31,33 +35,28 @@ class DistributedSplitIterator(Transformation):
         self.parallel_subgraph = parallel_subgraph
         self.subgraph_iterator = self.parallel_subgraph.create()
         self.index = 0
-        self.batch = int(math.ceil(
-            (self.parent.size / config.worker_count) * 0.1))
+        if self.parent.size:
+            self.batch = int(math.ceil(
+                (self.parent.size / config.worker_count)) * 0.1)
+        else:
+            self.batch = 100
 
     def next(self):
-        """dask = {}
-        keys = []
-        for worker in xrange(self.config.worker_count):
-            key = "j{}".format(worker)
-            dask[key] = (set_and_compute,
-                         self.subgraph_iterator,
-                         self.index,
-                         self.batch)
-            keys.append(key)
-            self.index += self.batch
+        if self.parent.size:
+            task_count = int(math.ceil(self.parent.size / self.batch))
+        else:
+            task_count = self.config.worker_count
 
-        data = self.executor.get(dask, keys)
-        """
+        index = self.index
+        args = [(index + i * self.batch, self.batch)
+                for i in xrange(task_count)]
+        self.index += task_count * self.batch
 
-        futures = []
-        for worker in xrange(self.config.worker_count):
-            futures.append(self.executor.submit(set_and_compute,
-                                                self.subgraph_iterator,
-                                                self.index,
-                                                self.batch))
-            self.index += self.batch
-
-        data = self.executor.gather(futures)
+        [data_future] = self.executor.scatter([self.subgraph_iterator],
+                                              broadcast=True)
+        tasks = [self.executor.submit(set_and_compute, data_future, *arg)
+                 for arg in args]
+        data = self.executor.gather(tasks)
 
         result = []
         for item in data:

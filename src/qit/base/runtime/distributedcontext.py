@@ -1,6 +1,7 @@
 from threading import Thread
 
-from distributed import Scheduler, Worker
+import time
+from distributed import Scheduler, Nanny as Worker
 from context import ParallelContext
 from tornado.ioloop import IOLoop
 
@@ -50,10 +51,10 @@ class DistributedContext(ParallelContext):
         self.config = config
 
         if config.spawn_compute_nodes:
-
             self.scheduler = self._create_scheduler(self.config.address)
             self.workers = [self._create_worker(self.config.address)
-                        for i in xrange(self.config.worker_count)]
+                            for i in xrange(self.config.worker_count)]
+            time.sleep(1)  # wait for workers to spawn
 
     def is_master(self):
         pass
