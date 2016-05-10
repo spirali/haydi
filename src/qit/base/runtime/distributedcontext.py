@@ -5,9 +5,10 @@ from distributed import Scheduler, Nanny as Worker
 from context import ParallelContext
 from tornado.ioloop import IOLoop
 
+from qit.base.action import Collect
 from qit.base.runtime.distributediterator import DistributedSplitIterator
 from qit.base.transform import JoinTransformation, YieldTransformation
-from qit.base.factory import TransformationFactory
+from qit.base.factory import TransformationFactory, ActionFactory
 
 loop = IOLoop()
 t = Thread(target=loop.start)
@@ -62,29 +63,24 @@ class DistributedContext(ParallelContext):
     def transmit_to_master(self, message):
         pass
 
-    def init(self):
-        self._create_scheduler(self.address)
-
-        for i in xrange(4):
-            self._create_worker(self.address)
-
-    def shutdown(self):
-        pass
-
-    def do_computation(self, graph, action):
+    def do_computation(self, graph, action, action_factory):
         self.preprocess_splits(graph)
+
+        if not action.is_associative():
+            action_factory = ActionFactory(Collect, graph.factory)
 
         node = graph.last_transformation
         while node:
             if node.klass.is_join():
-                node = self._parallelize_iterator(graph, node)
+                node = self._distribute_iterator(graph, node, action_factory)
+                action_factory = ActionFactory(Collect, graph.factory)
             node = graph.get_previous_node(node)
 
         # collect notify messages and results
         for item in graph.create():
             action.handle_item(item)
 
-    def _parallelize_iterator(self, graph, node):
+    def _distribute_iterator(self, graph, node, action_factory):
         assert node.klass == JoinTransformation
 
         split = node
@@ -97,7 +93,8 @@ class DistributedContext(ParallelContext):
             graph.get_previous_node(node))
 
         distributed_split = TransformationFactory(
-            DistributedSplitIterator, self.config, parallel_subgraph
+            DistributedSplitIterator, action_factory,
+            self.config, parallel_subgraph
         )
 
         graph.replace(node, distributed_split)

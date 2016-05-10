@@ -29,6 +29,10 @@ class Session(object):
     def set_parallel_context(self, ctx):
         self.parallel_context = ctx
 
+    def run(self, action_factory, parallel=False):
+        ctx = self.get_context(parallel)
+        return ctx.run(action_factory)
+
 session = Session()
 
 

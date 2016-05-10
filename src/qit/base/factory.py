@@ -1,5 +1,6 @@
 import action
 import transform
+from qit.base import session
 
 
 class Factory(object):
@@ -109,8 +110,8 @@ class ActionFactory(Factory):
     def create(self):
         return self.klass(self.iterator_factory, *self.args, **self.kwargs)
 
-    def run(self, *args, **kwargs):
-        return self.create().run(*args, **kwargs)
+    def run(self, parallel=False):
+        return session.session.run(self, parallel)
 
     def __iter__(self):
         return iter(self.run())

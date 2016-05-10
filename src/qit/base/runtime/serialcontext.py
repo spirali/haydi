@@ -2,7 +2,7 @@ from context import Context
 
 
 class SerialContext(Context):
-    def compute_action(self, graph, action):
+    def compute_action(self, graph, action, action_factory):
         self.preprocess_graph(graph)
 
         for item in graph.create():

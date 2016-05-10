@@ -16,6 +16,9 @@ class Action(object):
     def handle_item(self, item):
         raise NotImplementedError()
 
+    def is_associative(self):
+        return True
+
 
 class Collect(Action):
     def __init__(self, iterator_factory):
@@ -54,10 +57,11 @@ class First(Action):
 
 
 class Reduce(Action):
-    def __init__(self, iterator_factory, fn, init=0):
+    def __init__(self, iterator_factory, fn, init=0, associative=True):
         super(Reduce, self).__init__(iterator_factory)
         self.fn = fn
         self.value = init
+        self.associative = associative
 
     def handle_item(self, item):
         self.value = self.fn(item, self.value)
@@ -65,6 +69,9 @@ class Reduce(Action):
 
     def get_result(self):
         return self.value
+
+    def is_associative(self):
+        return self.associative
 
 
 class MaxAll(Action):

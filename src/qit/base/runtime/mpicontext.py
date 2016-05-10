@@ -56,13 +56,10 @@ class MpiContext(ParallelContext):
             raise BaseException("MPI context has to be run with at"
                                 "least 2 MPI processes")
 
-    def init(self):
-        pass
-
     def is_master(self):
         return self.comm.rank == 0
 
-    def do_computation(self, graph, action):
+    def do_computation(self, graph, action, action_factory):
         self.preprocess_splits(graph)
 
         worker = self._fetch_worker()

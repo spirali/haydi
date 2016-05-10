@@ -3,48 +3,39 @@ from qit.base.factorylist import FactoryList
 
 
 class Context(object):
-    def __enter__(self):
-        self.init()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.shutdown()
-
     def is_parallel(self):
         return False
 
-    def run(self, iterator_factory, action):
+    def run(self, action_factory):
+        action = action_factory.create()
         try:
-            self.compute_action(FactoryList(iterator_factory), action)
+            self.compute_action(FactoryList(action_factory.iterator_factory),
+                                action, action_factory)
         except KeyboardInterrupt:
             self.finish_computation()
             print("Returning what I've got so far...")
 
+        return action.get_result()
+
     def finish_computation(self):
         pass
 
-    def compute_action(self, iterator_factory, action):
+    def compute_action(self, iterator_graph, action, action_factory):
         raise NotImplementedError()
-
-    def init(self):
-        pass
-
-    def shutdown(self):
-        pass
 
 
 class ParallelContext(Context):
     def __init__(self):
         self.has_computation = False
 
-    def compute_action(self, iterator_factory, action):
+    def compute_action(self, iterator_graph, action, action_factory):
         try:
             self.has_computation = True
-            self.do_computation(iterator_factory, action)
+            self.do_computation(iterator_graph, action, action_factory)
         finally:
             self.has_computation = False
 
-    def do_computation(self, iterator_factory, action):
+    def do_computation(self, iterator_graph, action, action_factory):
         raise NotImplementedError()
 
     def is_parallel(self):

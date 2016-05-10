@@ -186,11 +186,12 @@ class UnorderedProductIterator(DomainIterator):
     def set(self, index):
         assert len(self.domain.domains) == 2
         size = self.domain.domains[1].size - 1  # -1 to ignore diagonal
+        assert index < self.size
         # The root of y * size - ((y - 1) * y) / 2 - index
         # y * size = full rectangle
         # ((y-1) * y) / 2 = missing elements to full rectangle
         y = int(0.5 * (-math.sqrt(-8 * index + 4 * size**2 + 4 * size + 1) +
-                       2 * size + 1))
+                   2 * size + 1))
         x = index - y * size + ((y - 1) * y / 2) + y
 
         if not self.current:

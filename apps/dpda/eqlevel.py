@@ -13,7 +13,7 @@ MAX_STATES = 100000  # Max nodes in state space
 COUNT = 250000        # None = iterate all
 
 
-def compute(n_size, s_size, a_size, depth, max_states, count):
+def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
 
     states = qit.Range(n_size)
     symbols = qit.Range(s_size)
@@ -185,4 +185,4 @@ def pda_to_graph(pda1):
 
 
 if __name__ == "__main__":
-    compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT)
+    compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT, False)

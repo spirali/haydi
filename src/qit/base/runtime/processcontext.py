@@ -63,7 +63,7 @@ class ProcessContext(ParallelContext):
     def is_master(self):
         return os.getpid() == self.master_pid
 
-    def do_computation(self, graph, action):
+    def do_computation(self, graph, action, action_factory):
         self.master_pid = os.getpid()
         self.preprocess_splits(graph)
 
@@ -104,12 +104,6 @@ class ProcessContext(ParallelContext):
 
     def transmit_to_master(self, message):  # called in a worker process
         self.msg_queue.put(message)
-
-    def init(self):
-        pass
-
-    def shutdown(self):
-        pass
 
     def finish_computation(self):
         self._stop_processes()
