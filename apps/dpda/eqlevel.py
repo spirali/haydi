@@ -4,12 +4,13 @@ import qit
 import qit.ext.automata
 from pprint import pprint
 
+
 N_SIZE = 2            # Number of states
 S_SIZE = 1            # Number of stack symbols
 A_SIZE = 2            # Number of actions (alphabet size)
 DEPTH = 10            # Maximal depth of state space
 MAX_STATES = 100000  # Max nodes in state space
-COUNT = None         # None = iterate all
+COUNT = 50000        # None = iterate all
 
 
 def compute(n_size, s_size, a_size, depth, max_states, count):
@@ -35,6 +36,16 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
         return c1 != c2 and (c1 == 1 or c2 == 1)
 
     def compute_eqlevel_of_two_dpda(pda_pair):
+        normdecomp = NormDecomposition(pda_pair[0], n_size, s_size)
+        norm1 = normdecomp.get_norms(0, (0,))
+        if norm1 is None:
+            return (pda_pair, -1)
+        normdecomp = NormDecomposition(pda_pair[1], n_size, s_size)
+        norm2 = normdecomp.get_norms(0, (0,))
+        if norm2 is None:
+            return (pda_pair, -1)
+        if norm1 != norm2:
+            return (pda_pair, -1)
         pda1 = PdaLTS(pda_pair[0], actions)
         pda2 = PdaLTS(pda_pair[1], actions)
         x = (pda1 * pda2).bfs(init_state, depth, True, max_states=max_states) \
@@ -76,6 +87,71 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
         print "Pda2:"
         pprint(p1)
         print "-" * 79
+
+
+def min_null(a, b):
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return min(a, b)
+
+
+class NormDecomposition(object):
+
+    def __init__(self, pda, n_states, n_symbols):
+        self.norms = [[None] * n_states for i in xrange(n_states * n_symbols)]
+        rules = []
+        self.n_states = n_states
+        for rule in pda.items():
+            lrule, rrule = rule
+            if len(rrule[1]) > 1:
+                rules.append(rule)
+            else:
+                state, symbol, action = lrule
+                self._get_norms(state, symbol)[rrule[0]] = 1
+
+        changed = True
+        while changed:
+            changed = False
+            for (state, symbol, action), rrule in rules:
+                norms = self._get_norms(state, symbol)
+                changed |= self._merge_norms(
+                    norms, self.get_norms_to_states(rrule[0], rrule[1]), 1)
+
+    def _merge_norms(self, current_norms, new_norms, delta):
+        changed = False
+        for i, (current, new) in enumerate(zip(current_norms, new_norms)):
+            if new is None:
+                continue
+            new += delta
+            if current is None or new < current:
+                current_norms[i] = new
+                changed = True
+        return changed
+
+    def get_norms(self, state, stack):
+        norms = self.get_norms_to_states(state, stack)
+        return reduce(min_null, norms, None)
+
+    def get_norms_to_states(self, state, stack):
+        norms = self._get_norms(state, stack[-1])
+        if len(stack) == 1:
+            return norms
+        empty_norms = [None] * self.n_states
+        for symbol in stack[:-1]:
+            current_norms = empty_norms[:]
+            for state, norm in enumerate(norms):
+                if norm is None:
+                    continue
+                self._merge_norms(current_norms, self._get_norms(state, symbol), norm)
+            norms = current_norms
+        return norms
+
+    def _get_norms(self, state, symbol):
+        n_states  = self.n_states
+        index = state + n_states * symbol
+        return self.norms[index]
 
 
 class PdaLTS(qit.LTS):
