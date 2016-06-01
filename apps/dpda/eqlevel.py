@@ -10,7 +10,7 @@ S_SIZE = 1            # Number of stack symbols
 A_SIZE = 2            # Number of actions (alphabet size)
 DEPTH = 10            # Maximal depth of state space
 MAX_STATES = 100000  # Max nodes in state space
-COUNT = 50000        # None = iterate all
+COUNT = 250000        # None = iterate all
 
 
 def compute(n_size, s_size, a_size, depth, max_states, count):
@@ -27,7 +27,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
     lrule = states * symbols * actions
     rrule = states * stack_change
     pda = qit.Mapping(lrule, rrule)
-    pda_pairs = qit.Product((pda, pda), unordered=True)
+    pda_pairs = qit.Product((pda, pda), unordered=True, cache_size=50)
     init_state = ((0, 0), (0, 0))
 
     def is_witness_pair(conf_depth_pair):

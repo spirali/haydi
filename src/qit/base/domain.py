@@ -5,7 +5,7 @@ from iterator import GeneratingIterator, Iterator
 
 class Domain(object):
 
-    def __init__(self, size=None, exact_size=False,  name=None):
+    def __init__(self, size=None, exact_size=False, name=None):
         self.size = size
         self.exact_size = exact_size
         self.name = name

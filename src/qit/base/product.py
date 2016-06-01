@@ -1,5 +1,6 @@
 
 from domain import Domain, DomainIterator, MapDomain
+from values import Values
 from factory import IteratorFactory
 
 from copy import copy
@@ -9,13 +10,20 @@ from collections import namedtuple
 
 class Product(Domain):
 
-    def __init__(self, domains, name=None, unordered=False):
+    _generator_cache = None
+
+    def __init__(self,
+                 domains,
+                 name=None,
+                 unordered=False,
+                 cache_size=0):
         domains = tuple(domains)
         size = self._compute_size(domains, unordered)
         exact_size = all(d.exact_size for d in domains)
         super(Product, self).__init__(size, exact_size, name)
         self.domains = tuple(domains)
         self.unordered = unordered
+        self.cache_size = max(len(domains), cache_size) if cache_size else 0
 
         if unordered:
             if len(set(domains)) > 1:
@@ -28,6 +36,18 @@ class Product(Domain):
             return IteratorFactory(ProductIterator, self)
 
     def generate_one(self):
+        if self.unordered:
+            if self.cache_size:
+                if self._generator_cache:
+                    try:
+                        return next(self._generator_cache)
+                    except StopIteration:
+                        pass  # Let us generate new one
+                values = Values(
+                    tuple(self.domains[0].generate(self.cache_size)))
+                self._generator_cache = iter(Product(
+                    (values,) * len(self.domains), unordered=True))
+                return self._generator_cache.next()
         return tuple(d.generate_one() for d in self.domains)
 
     def _compute_size(self, domains, unordered):

@@ -163,3 +163,19 @@ def test_product_name():
 
     p = qit.NamedProduct([("a", r), ("b", r * r)], name="TestNamedProduct")
     assert p.name == "TestNamedProduct"
+
+
+def test_product_cache():
+    def test_for_size(cache_size):
+        r = qit.Range(10000)
+        p = qit.Product((r, r), unordered=True, cache_size=cache_size)
+        result = list(p.generate(1000))
+        cache_pairs = (cache_size * (cache_size - 1)) / 2
+        for i in xrange(100 / cache_pairs):
+            values = set()
+            for a, b in result[i * cache_pairs: (i + 1) * cache_pairs]:
+                values.add(a)
+                values.add(b)
+            assert len(values) <= cache_pairs
+    test_for_size(3)
+    test_for_size(20)

@@ -1,8 +1,8 @@
-
 from domain import Domain, DomainIterator
-import random
-
 from factory import IteratorFactory
+
+import random
+from copy import copy
 
 
 class Values(Domain):
@@ -23,6 +23,9 @@ class ValuesIterator(DomainIterator):
     def __init__(self, domain):
         super(ValuesIterator, self).__init__(domain)
         self.index = 0
+
+    def copy(self):
+        return copy(self)
 
     def next(self):
         if self.index < len(self.domain.values):
