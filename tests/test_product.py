@@ -61,7 +61,7 @@ def test_product_iter_set():
 
 def test_uproduct_iterate():
     r1 = qit.Range(4)
-    p = qit.UnorderedProduct((r1, r1))
+    p = qit.Product((r1, r1), unordered=True)
 
     result = list(p.iterate())
     assert set(result) == set(
@@ -73,7 +73,7 @@ def test_uproduct_iterate():
          (3, 2)])
     assert len(result) == p.size
 
-    p = qit.UnorderedProduct((r1, r1, r1))
+    p = qit.Product((r1, r1, r1), unordered=True)
     result = list(p.iterate())
     assert set(result) == set(
         [(2, 1, 0),
@@ -83,7 +83,7 @@ def test_uproduct_iterate():
          ])
     assert len(result) == p.size
 
-    p = qit.UnorderedProduct((r1, r1, r1, r1))
+    p = qit.Product((r1, r1, r1, r1), unordered=True)
     result = list(p.iterate())
     assert set(result) == set([(3, 2, 1, 0)])
     assert len(result) == p.size
@@ -104,7 +104,7 @@ def test_product_iter_copy():
 def test_uproduct_iter_copy():
 
     r1 = qit.Range(10)
-    p = qit.UnorderedProduct((r1, r1))
+    p = qit.Product((r1, r1), unordered=True)
 
     it = p.iterate()
     it2 = it.copy()
@@ -114,7 +114,7 @@ def test_uproduct_iter_copy():
 
 def test_uproduct_iter_set():
     r = qit.Range(10)
-    p = qit.UnorderedProduct((r, r))
+    p = qit.Product((r, r), unordered=True)
 
     a = list(p)
     it = iter(p)
@@ -124,7 +124,7 @@ def test_uproduct_iter_set():
         assert a[i:] == l
 
     r = qit.Range(899)
-    p = qit.UnorderedProduct((r, r))
+    p = qit.Product((r, r), unordered=True)
 
     a = list(p)
     it = iter(p)
@@ -145,6 +145,12 @@ def test_named_product():
     assert result.a == 0
     assert result.b == (0, 0)
 
+    r = qit.Range(10)
+    a = qit.NamedProduct([("a", r), ("b", r)], unordered=True)
+    result = list(a)[0]
+    assert result.a == 1
+    assert result.b == 0
+
 
 def test_product_name():
     r = qit.Range(10)
@@ -152,7 +158,7 @@ def test_product_name():
     assert p.name == "TestProduct"
 
     r = qit.Range(10)
-    p = qit.UnorderedProduct((r, r), name="TestUProduct")
+    p = qit.Product((r, r), name="TestUProduct", unordered=True)
     assert p.name == "TestUProduct"
 
     p = qit.NamedProduct([("a", r), ("b", r * r)], name="TestNamedProduct")

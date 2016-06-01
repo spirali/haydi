@@ -27,7 +27,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
     lrule = states * symbols * actions
     rrule = states * stack_change
     pda = qit.Mapping(lrule, rrule)
-    pda_pairs = qit.UnorderedProduct((pda, pda))
+    pda_pairs = qit.Product((pda, pda), unordered=True)
     init_state = ((0, 0), (0, 0))
 
     def is_witness_pair(conf_depth_pair):

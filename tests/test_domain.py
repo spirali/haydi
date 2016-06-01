@@ -17,7 +17,7 @@ def test_domain_map():
     for x in result:
         assert x in [10, 20, 30, 40, 50]
 
-    result = list(qit.UnorderedProduct((d, d)))
+    result = list(qit.Product((d, d), unordered=True))
     assert set(result) == set(((20, 10), (30, 10), (40, 10), (50, 10),
                                (30, 20), (40, 20), (50, 20),
                                (40, 30), (50, 30), (50, 40)))
@@ -58,8 +58,8 @@ def test_domain_filter():
     assert not qit.Mapping(r, d).exact_size
     assert qit.Mapping(r, r).exact_size
 
-    assert not qit.UnorderedProduct((d, d)).exact_size
-    assert qit.UnorderedProduct((r, r)).exact_size
+    assert not qit.Product((d, d), unordered=True).exact_size
+    assert qit.Product((r, r), unordered=True).exact_size
 
-    result = list(qit.UnorderedProduct((d, d)))
+    result = list(qit.Product((d, d), unordered=True))
     assert set(result) == set(((4, 3),))
