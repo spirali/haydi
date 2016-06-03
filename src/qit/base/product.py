@@ -36,19 +36,31 @@ class Product(Domain):
             return IteratorFactory(ProductIterator, self)
 
     def generate_one(self):
-        if self.unordered:
-            if self.cache_size:
+        if self._generator_cache:
+            try:
+                return next(self._generator_cache)
+            except StopIteration:
+                pass  # Let us generate new one
+
+        if self.cache_size:
+            if self.unordered:
+                values = Values(
+                    tuple(self.domains[0].generate(self.cache_size)))
+                self._generator_cache = iter(Product(
+                    (values,) * len(self.domains), unordered=True))
+            else:
                 if self._generator_cache:
                     try:
                         return next(self._generator_cache)
                     except StopIteration:
                         pass  # Let us generate new one
-                values = Values(
-                    tuple(self.domains[0].generate(self.cache_size)))
-                self._generator_cache = iter(Product(
-                    (values,) * len(self.domains), unordered=True))
-                return self._generator_cache.next()
-        return tuple(d.generate_one() for d in self.domains)
+                values = [Values(tuple(d.generate(self.cache_size)))
+                          for d in self.domains]
+                self._generator_cache = iter(Product(values))
+
+            return self._generator_cache.next()
+        else:
+            return tuple(d.generate_one() for d in self.domains)
 
     def _compute_size(self, domains, unordered):
         if (not domains or

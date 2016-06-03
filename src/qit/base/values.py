@@ -24,6 +24,9 @@ class ValuesIterator(DomainIterator):
         super(ValuesIterator, self).__init__(domain)
         self.index = 0
 
+    def reset(self):
+        self.index = 0
+
     def copy(self):
         return copy(self)
 
