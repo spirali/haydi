@@ -16,7 +16,18 @@ COUNT = None         # None = iterate all
 
 logging.disable(logging.INFO)
 
+if len(sys.argv) < 3:
+    print("enter ip, port and worker count")
+    exit()
+
+ip = sys.argv[1]
+port = int(sys.argv[2])
+worker_count = int(sys.argv[3])
+
 session.set_parallel_context(DistributedContext(
-    DistributedConfig(worker_count=4, port=1800, spawn_compute_nodes=False)))
+    DistributedConfig(worker_count=worker_count,
+                      port=port,
+                      spawn_compute_nodes=False,
+                      ip=ip)))
 
 compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT, True)
