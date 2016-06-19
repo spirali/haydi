@@ -1,8 +1,8 @@
 from domain import Domain, DomainIterator
 from factory import IteratorFactory
 
-import random
 from copy import copy
+import random
 
 
 class Values(Domain):
