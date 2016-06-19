@@ -69,7 +69,8 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
     else:
         source = pda_pairs.iterate()
 
-    results = source.map(compute_eqlevel_of_two_dpda).max_all(lambda x: x[1]).run(False)
+    results = source.map(compute_eqlevel_of_two_dpda).max_all(
+        lambda x: x[1]).run(False)
 
     (p1, p2), value = results[0]
     print "Value {}, Found: {}".format(value, len(results))
@@ -144,20 +145,21 @@ class NormDecomposition(object):
             for state, norm in enumerate(norms):
                 if norm is None:
                     continue
-                self._merge_norms(current_norms, self._get_norms(state, symbol), norm)
+                self._merge_norms(
+                    current_norms, self._get_norms(state, symbol), norm)
             norms = current_norms
         return norms
 
     def _get_norms(self, state, symbol):
-        n_states  = self.n_states
+        n_states = self.n_states
         index = state + n_states * symbol
         return self.norms[index]
 
 
-class PdaLTS(qit.LTS):
+class PdaLTS(qit.DLTS):
 
     def __init__(self, pda, actions):
-        qit.LTS.__init__(self, actions)
+        qit.DLTS.__init__(self, actions)
         self.pda = pda
 
     def step(self, conf, action):

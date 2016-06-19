@@ -5,7 +5,7 @@ import qit  # noqa
 
 
 def test_lts_basic():
-    class MyLTS(qit.LTS):
+    class MyLTS(qit.DLTS):
         def step(self, state, action):
             if action == 0:
                 return state * 10
@@ -29,17 +29,17 @@ def test_lts_basic():
 
 
 def test_lts_product():
-    class MyLTS1(qit.LTS):
+    class MyLTS1(qit.DLTS):
         def __init__(self):
-            qit.LTS.__init__(self, qit.Range(1))
+            qit.DLTS.__init__(self, qit.Range(1))
 
         def step(self, state, action):
             assert action == 0
             return state + 1
 
-    class MyLTS2(qit.LTS):
+    class MyLTS2(qit.DLTS):
         def __init__(self):
-            qit.LTS.__init__(self, qit.Range(1))
+            qit.DLTS.__init__(self, qit.Range(1))
 
         def step(self, state, action):
             assert action == 0
@@ -52,9 +52,9 @@ def test_lts_product():
 
 
 def test_lts_graph():
-    class MyLTS(qit.LTS):
+    class MyLTS(qit.DLTS):
         def __init__(self):
-            qit.LTS.__init__(self, qit.Range(2))
+            qit.DLTS.__init__(self, qit.Range(2))
 
         def step(self, state, action):
             if action == 0:

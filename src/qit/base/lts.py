@@ -4,7 +4,7 @@ from graph import Graph
 from factory import IteratorFactory
 
 
-class LTS(object):
+class DLTS(object):
 
     def __init__(self, actions):
         self.actions = actions
@@ -58,13 +58,13 @@ class LTS(object):
         return LTSProduct(self, lts)
 
 
-class LTSProduct(LTS):
+class LTSProduct(DLTS):
 
     def __init__(self, lts1, lts2):
         assert lts1.actions.size == lts2.actions.size
         assert cmp(sorted(lts1.actions.iterate().run()),
                    sorted(lts2.actions.iterate().run())) == 0
-        LTS.__init__(self, lts1.actions)
+        DLTS.__init__(self, lts1.actions)
         self.lts1 = lts1
         self.lts2 = lts2
 
