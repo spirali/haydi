@@ -8,7 +8,7 @@ from base.mapping import Mapping  # noqa
 
 # Others
 from base.system import System  # noqa
-from base.lts import DLTS  # noqa
+from base.lts import DLTS, DLTSProduct  # noqa
 
 # Basic types
 from base.boolean import Boolean  # noqa

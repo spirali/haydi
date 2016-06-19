@@ -6,7 +6,7 @@ from factory import IteratorFactory
 
 class DLTS(object):
 
-    def __init__(self, actions):
+    def __init__(self, actions=None):
         self.actions = actions
 
     def bfs(self,
@@ -22,6 +22,9 @@ class DLTS(object):
             return_depth,
             max_states)
 
+    def get_enabled_actions(self, state):
+        return self.actions
+
     def make_graph(self, init_state, max_depth=None):
         graph = Graph()
         new_nodes = [graph.node(init_state)]
@@ -35,9 +38,10 @@ class DLTS(object):
             depth += 1
             while nodes:
                 node = nodes.pop()
-                node.label = self.make_label(node.key)
-                for a in self.actions.iterate():
-                    s = self.step(node.key, a)
+                key = node.key
+                node.label = self.make_label(key)
+                for a in self.get_enabled_actions(key):
+                    s = self.step(key, a)
                     if s is None:
                         continue
                     n, exists = graph.node_check(s)
@@ -55,18 +59,30 @@ class DLTS(object):
         raise NotImplementedError()
 
     def __mul__(self, lts):
-        return LTSProduct(self, lts)
+        return DLTSProduct(self, lts)
 
 
-class LTSProduct(DLTS):
+class DLTSProduct(DLTS):
 
     def __init__(self, lts1, lts2):
-        assert lts1.actions.size == lts2.actions.size
-        assert cmp(sorted(lts1.actions.iterate().run()),
-                   sorted(lts2.actions.iterate().run())) == 0
-        DLTS.__init__(self, lts1.actions)
+        actions1 = lts1.actions
+        actions2 = lts2.actions
+        if actions1 is not actions2:
+            if actions1 is None \
+                    or actions2 is None or \
+                    sorted(actions1) != sorted(actions2):
+                actions1 = None
+
+        DLTS.__init__(self, actions1)
         self.lts1 = lts1
         self.lts2 = lts2
+
+    def get_enabled_actions(self, state):
+        if self.actions is not None:
+            return self.actions
+        actions = frozenset(self.lts1.get_enabled_actions(state))
+        return actions.intersection(
+            frozenset(self.lts2.get_enabled_actions(state)))
 
     def step(self, state, action):
         s1 = self.lts1.step(state[0], action)
@@ -106,7 +122,7 @@ class BreadthFirstIterator(Iterator):
             if self.states:
                 state = self.states.pop()
                 to_report = 0
-                for a in self.lts.actions.iterate():
+                for a in self.lts.get_enabled_actions(state):
                     new_state = self.lts.step(state, a)
                     if new_state is None:
                         continue

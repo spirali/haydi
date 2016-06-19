@@ -16,7 +16,10 @@ def test_lts_basic():
             elif action == 3:
                 return -state
 
-    s = MyLTS(qit.Range(4))
+        def get_enabled_actions(self, state):
+            return qit.Range(4)
+
+    s = MyLTS()
     result = list(s.bfs(10, 0))
     assert result == [10]
 
@@ -28,7 +31,35 @@ def test_lts_basic():
                                -9, 130, 14, 15, -13, 120, -12, 1100])
 
 
-def test_lts_product():
+def test_lts_product1():
+    class MyLTS1(qit.DLTS):
+        def __init__(self):
+            qit.DLTS.__init__(self)
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 1
+
+        def get_enabled_actions(self, state):
+            return qit.Range(1)
+
+    class MyLTS2(qit.DLTS):
+        def __init__(self):
+            qit.DLTS.__init__(self, qit.Range(1))
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 2
+
+    s = MyLTS1() * MyLTS2()
+    assert s.actions is None
+
+    result = list(s.bfs((3, 7), 2))
+    assert result == [(3, 7), (4, 9), (5, 11)]
+
+
+def test_lts_product2():
+
     class MyLTS1(qit.DLTS):
         def __init__(self):
             qit.DLTS.__init__(self, qit.Range(1))
@@ -46,6 +77,7 @@ def test_lts_product():
             return state + 2
 
     s = MyLTS1() * MyLTS2()
+    assert s.actions is not None
 
     result = list(s.bfs((3, 7), 2))
     assert result == [(3, 7), (4, 9), (5, 11)]
