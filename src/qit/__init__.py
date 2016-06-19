@@ -10,5 +10,5 @@ from base.mapping import Mapping  # noqa
 from base.system import System  # noqa
 from base.lts import LTS  # noqa
 
-#Constants
-from base.boolean import Boolean # noqa
+# Basic types
+from base.boolean import Boolean  # noqa
