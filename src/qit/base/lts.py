@@ -67,12 +67,12 @@ class DLTSProduct(DLTS):
     def __init__(self, lts1, lts2):
         actions1 = lts1.actions
         actions2 = lts2.actions
-        if actions1 is not actions2:
-            if actions1 is None \
-                    or actions2 is None or \
-                    sorted(actions1) != sorted(actions2):
-                actions1 = None
-
+        if actions1 is not None and actions2 is not None:
+            if actions1 is not actions2:
+                actions1 = frozenset(actions1)
+                actions1 = actions1.intersection(actions2)
+        else:
+            actions1 = None
         DLTS.__init__(self, actions1)
         self.lts1 = lts1
         self.lts2 = lts2
