@@ -10,11 +10,6 @@ from qit.base.runtime.distributediterator import DistributedSplitIterator
 from qit.base.transform import JoinTransformation, YieldTransformation
 from qit.base.factory import TransformationFactory, ActionFactory
 
-loop = IOLoop()
-t = Thread(target=loop.start)
-t.daemon = True
-t.start()
-
 
 class DistributedConfig(object):
     def __init__(self, worker_count=4,
@@ -47,9 +42,18 @@ class DistributedConfig(object):
 
 
 class DistributedContext(ParallelContext):
+    IO_LOOP_STARTED = False
+
     def __init__(self, config):
         super(DistributedContext, self).__init__()
         self.config = config
+
+        if not DistributedContext.IO_LOOP_STARTED:
+            loop = IOLoop()
+            t = Thread(target=loop.start)
+            t.daemon = True
+            t.start()
+            DistributedContext.IO_LOOP_STARTED = True
 
         if config.spawn_compute_nodes:
             self.scheduler = self._create_scheduler(self.config.address)
