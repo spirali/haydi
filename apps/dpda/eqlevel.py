@@ -70,7 +70,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
         source = pda_pairs.iterate()
 
     results = source.map(compute_eqlevel_of_two_dpda).max_all(
-        lambda x: x[1]).run(False)
+        lambda x: x[1]).run(parallel)
 
     (p1, p2), value = results[0]
     print "Value {}, Found: {}".format(value, len(results))
