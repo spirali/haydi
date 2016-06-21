@@ -10,8 +10,8 @@ from qit.base.runtime.distributedcontext import DistributedContext, \
 N_SIZE = 2            # Number of states
 S_SIZE = 1            # Number of stack symbols
 A_SIZE = 2            # Number of actions (alphabet size)
-DEPTH = 2            # Maximal depth of state space
-MAX_STATES = 1000  # Max nodes in state space
+DEPTH = 10            # Maximal depth of state space
+MAX_STATES = 100000  # Max nodes in state space
 COUNT = None         # None = iterate all
 
 logging.disable(logging.INFO)
