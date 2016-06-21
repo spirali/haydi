@@ -65,7 +65,8 @@ class ParallelContext(Context):
             graph.prepend(node, TransformationFactory(SplitTransformation,
                                                       process_count))
 
-        master = True
+        # master = no split at beginning
+        master = graph.first_transformation.klass != SplitTransformation
 
         while True:
             iterator = node.klass
