@@ -44,39 +44,42 @@ def test_create_cluster(port):
     assert result == [item + 1 for item in xrange(count)]
 
 
-def test_connect_to_cluster(port):
-    try:
-        sched_proc = Popen(["dscheduler", "--host", "127.0.0.1",
-                            "--port", str(port)],
-                           stdout=PIPE, stderr=PIPE
-                           )
+@pytest.yield_fixture
+def cluster(port):
+    sched_proc = Popen(["dscheduler", "--host", "127.0.0.1",
+                        "--port", str(port)],
+                       stdout=PIPE, stderr=PIPE
+                       )
 
-        time.sleep(1)  # wait for the scheduler to spawn
+    time.sleep(1)  # wait for the scheduler to spawn
 
-        env = os.environ.copy()
-        pythonpath = env["PYTHONPATH"] if "PYTHONPATH" in env else ""
-        env["PYTHONPATH"] = "{}:{}".format(pythonpath, SRC_DIR)
+    env = os.environ.copy()
+    pythonpath = env["PYTHONPATH"] if "PYTHONPATH" in env else ""
+    env["PYTHONPATH"] = "{}:{}".format(pythonpath, SRC_DIR)
 
-        worker_proc = [
-            Popen(["dworker", "--nprocs", "1", "--nthreads", "1",
-                   "127.0.0.1:{}".format(port)],
-                  env=env,
-                  stdout=PIPE, stderr=PIPE
-                  )
-            for _ in xrange(4)]
+    worker_proc = [
+        Popen(["dworker", "--nprocs", "1", "--nthreads", "1",
+               "127.0.0.1:{}".format(port)],
+              env=env,
+              stdout=PIPE, stderr=PIPE
+              )
+        for _ in xrange(4)]
 
-        time.sleep(2)  # wait for the workers to spawn
+    time.sleep(2)  # wait for the workers to spawn
 
-        session.set_parallel_context(DistributedContext(DistributedConfig(
-            worker_count=4, port=port, spawn_compute_nodes=False
-        )))
+    yield port
 
-        count = 10000
-        x = Range(count)
-        result = x.iterate().map(lambda x: x + 1).collect().run(True)
+    [p.send_signal(signal.SIGINT) for p in worker_proc]
+    sched_proc.send_signal(signal.SIGINT)
 
-        assert result == [item + 1 for item in xrange(count)]
-    finally:
-        # kill processes "nicely"
-        [p.send_signal(signal.SIGINT) for p in worker_proc]
-        sched_proc.send_signal(signal.SIGINT)
+
+def test_connect_to_cluster(cluster):
+    session.set_parallel_context(DistributedContext(DistributedConfig(
+        worker_count=4, port=cluster, spawn_compute_nodes=False
+    )))
+
+    count = 10000
+    x = Range(count)
+    result = x.iterate().map(lambda x: x + 1).collect().run(True)
+
+    assert result == [item + 1 for item in xrange(count)]

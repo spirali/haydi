@@ -1,10 +1,17 @@
 import pytest
 
+from qit.base.runtime.processcontext import ProcessContext
+from qit.base.session import session
 from testutils import init
 init()
 
 import qit  # noqa
 from qit.base.exception import TooManySplits  # noqa
+
+
+@pytest.fixture(scope="function", autouse=True)
+def set_parallel_context():
+    session.set_parallel_context(ProcessContext())
 
 
 def test_auto_split():
