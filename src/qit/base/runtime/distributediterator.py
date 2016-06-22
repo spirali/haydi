@@ -83,7 +83,7 @@ class DistributedSplitIterator(Transformation):
         self.iterated_count += task_count * self.batch
 
         return [self.executor.submit(set_and_compute, self.subgraph_iterator,
-                                      self.action_factory, *arg)
+                                     self.action_factory, *arg)
                 for arg in args]
 
     def _distribute_broadcast(self, task_count):

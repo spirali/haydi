@@ -191,7 +191,7 @@ class UnorderedProductIterator(DomainIterator):
         # y * size = full rectangle
         # ((y-1) * y) / 2 = missing elements to full rectangle
         y = int(0.5 * (-math.sqrt(-8 * index + 4 * size**2 + 4 * size + 1) +
-                   2 * size + 1))
+                       2 * size + 1))
         x = index - y * size + ((y - 1) * y / 2) + y
 
         if not self.current:

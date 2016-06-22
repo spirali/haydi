@@ -1,5 +1,5 @@
-
 from values import Values
+
 
 class Boolean(Values):
 

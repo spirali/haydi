@@ -40,6 +40,7 @@ class Collect(Action):
     def reduce(self, items):
         return list(itertools.chain.from_iterable(items))
 
+
 class First(Action):
     def __init__(self, iterator_factory, fn=None, default=None):
         super(First, self).__init__(iterator_factory)
