@@ -71,7 +71,7 @@ class ParallelContext(Context):
         while True:
             iterator = node.klass
             if iterator.is_split():
-                if not master:
+                if not master and graph.first_transformation != node:
                     graph.skip(node)  # ignore splits in worker region
                 else:
                     master = False
