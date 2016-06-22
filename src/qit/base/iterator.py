@@ -34,7 +34,7 @@ class Iterator(object):
         raise NotImplementedError()
 
     def set(self, index):
-        raise NotImplementedError()
+        raise Exception("set not implemented for {}".format(type(self)))
 
     def to_list(self):
         return list(self)

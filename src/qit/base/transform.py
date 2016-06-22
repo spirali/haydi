@@ -54,6 +54,10 @@ class TakeTransformation(Transformation):
         self.count -= 1
         return next(self.parent)
 
+    def set(self, index):
+        assert index < self.count
+        self.parent.set(index)
+
     def __repr__(self):
         return "Take {} items".format(self.count)
 
@@ -66,6 +70,9 @@ class MapTransformation(Transformation):
 
     def next(self):
         return self.fn(next(self.parent))
+
+    def set(self, index):
+        self.parent.set(index)
 
     def __repr__(self):
         return "Map"

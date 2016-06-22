@@ -62,3 +62,15 @@ def test_mapping_exact_size():
     d2 = qit.Range(3).filter(lambda x: True)
     assert not qit.Mapping(d1, d2).exact_size
     assert qit.Mapping(d1, d1).exact_size
+
+
+def test_mapping_set():
+    d1 = qit.Range(3)
+    d2 = qit.Range(4)
+    m = qit.Mapping(d1, d2)
+
+    a = list(m)
+    for i in xrange(65):
+        it = iter(m)
+        it.set(i)
+        assert list(it) == a[i:]

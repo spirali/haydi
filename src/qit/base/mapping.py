@@ -44,6 +44,17 @@ class MappingIterator(DomainIterator):
             it.reset()
         self.current = None
 
+    def set(self, index):
+        self.current = None
+        if index >= self.size:
+            for it in self.iterators:
+                it.set(it.size)
+            return
+        for it in self.iterators:
+            size = it.size
+            it.set(index % size)
+            index /= size
+
     def next(self):
         if self.current is not None:
             for key, it in zip(self.keys, self.iterators):
