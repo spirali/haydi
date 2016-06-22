@@ -1,3 +1,5 @@
+import itertools
+
 from session import session
 
 
@@ -19,6 +21,9 @@ class Action(object):
     def is_associative(self):
         return True
 
+    def reduce(self, items):
+        return items
+
 
 class Collect(Action):
     def __init__(self, iterator_factory):
@@ -32,6 +37,8 @@ class Collect(Action):
     def get_result(self):
         return self.items
 
+    def reduce(self, items):
+        return list(itertools.chain.from_iterable(items))
 
 class First(Action):
     def __init__(self, iterator_factory, fn=None, default=None):
@@ -92,3 +99,8 @@ class MaxAll(Action):
 
     def get_result(self):
         return self.best_results
+
+    def reduce(self, items):
+        return [item
+                for list in items if list
+                for item in list]
