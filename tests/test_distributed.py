@@ -51,7 +51,7 @@ def cluster(port):
                        stdout=PIPE, stderr=PIPE
                        )
 
-    time.sleep(1)  # wait for the scheduler to spawn
+    time.sleep(0.3)  # wait for the scheduler to spawn
 
     env = os.environ.copy()
     pythonpath = env["PYTHONPATH"] if "PYTHONPATH" in env else ""
@@ -65,11 +65,16 @@ def cluster(port):
               )
         for _ in xrange(4)]
 
-    time.sleep(2)  # wait for the workers to spawn
+    time.sleep(0.5)  # wait for the workers to spawn
 
     yield port
 
-    [p.send_signal(signal.SIGINT) for p in worker_proc]
+    # Checkt that processes are still running
+    assert not sched_proc.poll()
+    assert not any(w.poll() for w in worker_proc)
+
+    for p in worker_proc:
+        p.send_signal(signal.SIGINT)
     sched_proc.send_signal(signal.SIGINT)
 
 
