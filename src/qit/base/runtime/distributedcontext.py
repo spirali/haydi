@@ -1,7 +1,7 @@
 from threading import Thread
 
 import time
-from distributed import Scheduler, Nanny as Worker
+from distributed import Scheduler, Nanny as Worker, Executor
 from context import ParallelContext
 from tornado.ioloop import IOLoop
 
@@ -11,42 +11,20 @@ from qit.base.transform import JoinTransformation, YieldTransformation
 from qit.base.factory import TransformationFactory, ActionFactory
 
 
-class DistributedConfig(object):
-    def __init__(self, worker_count=4,
-                 ip="127.0.0.1",
-                 port=8787,
-                 spawn_compute_nodes=True):
-        self._worker_count = worker_count
-        self._address = (ip, port)
-        self._spawn_compute_nodes = spawn_compute_nodes
-
-    @property
-    def worker_count(self):
-        return self._worker_count
-
-    @property
-    def ip(self):
-        return self._address[0]
-
-    @property
-    def port(self):
-        return self._address[1]
-
-    @property
-    def address(self):
-        return self._address
-
-    @property
-    def spawn_compute_nodes(self):
-        return self._spawn_compute_nodes
-
-
 class DistributedContext(ParallelContext):
     IO_LOOP_STARTED = False
 
-    def __init__(self, config):
+    def __init__(self,
+                 n_workers=4,
+                 ip="127.0.0.1",
+                 port=8787,
+                 spawn_workers=False):
+
         super(DistributedContext, self).__init__()
-        self.config = config
+
+        self.n_workers = n_workers
+        self.ip = ip
+        self.port = port
 
         if not DistributedContext.IO_LOOP_STARTED:
             loop = IOLoop()
@@ -55,11 +33,13 @@ class DistributedContext(ParallelContext):
             t.start()
             DistributedContext.IO_LOOP_STARTED = True
 
-        if config.spawn_compute_nodes:
-            self.scheduler = self._create_scheduler(self.config.address)
-            self.workers = [self._create_worker(self.config.address)
-                            for i in xrange(self.config.worker_count)]
-            time.sleep(1)  # wait for workers to spawn
+        if spawn_workers:
+            self.scheduler = self._create_scheduler()
+            self.workers = [self._create_worker()
+                            for i in xrange(self.n_workers)]
+            time.sleep(0.5)  # wait for workers to spawn
+
+        self.executor = Executor((ip, port))
 
     def is_master(self):
         pass
@@ -109,14 +89,14 @@ class DistributedContext(ParallelContext):
 
         return distributed_split
 
-    def _create_scheduler(self, address):
-        scheduler = Scheduler(ip=address[0])
-        scheduler.start(address[1])
+    def _create_scheduler(self):
+        scheduler = Scheduler(ip=self.ip)
+        scheduler.start(self.port)
         return scheduler
 
-    def _create_worker(self, address):
-        worker = Worker(center_ip=address[0],
-                        center_port=address[1],
+    def _create_worker(self):
+        worker = Worker(center_ip=self.ip,
+                        center_port=self.port,
                         ncores=1)
         worker.start(0)
         return worker
