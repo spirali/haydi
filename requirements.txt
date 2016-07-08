@@ -1,1 +1,1 @@
-distributed
+git+git://github.com/dask/distributed@master
