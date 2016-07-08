@@ -10,8 +10,7 @@ init()
 
 from qit import Range   # noqa
 from qit.base.session import session  # noqa
-from qit.base.runtime.distributedcontext import DistributedContext, \
-    DistributedConfig   # noqa
+from qit.base.runtime.distributedcontext import DistributedContext  # noqa
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -34,8 +33,9 @@ def port():
 
 def test_create_cluster(port):
     session.set_parallel_context(DistributedContext(
-        DistributedConfig(worker_count=4, port=port,
-                          spawn_compute_nodes=True)))
+        n_workers=4, port=port,
+        spawn_workers=True
+    ))
 
     count = 10000
     x = Range(count)
@@ -79,9 +79,10 @@ def cluster(port):
 
 
 def test_connect_to_cluster(cluster):
-    session.set_parallel_context(DistributedContext(DistributedConfig(
-        worker_count=4, port=cluster, spawn_compute_nodes=False
-    )))
+    session.set_parallel_context(DistributedContext(
+        n_workers=4, port=cluster,
+        spawn_workers=False
+    ))
 
     count = 10000
     x = Range(count)

@@ -5,9 +5,16 @@ from session import session
 
 class Action(object):
     def __init__(self, iterator_factory):
+        """
+        :type iterator_factory: qit.base.factory.IteratorFactory
+        """
         self.iterator_factory = iterator_factory
 
     def run(self, parallel=False):
+        """
+        :type parallel: bool
+        :return: Returns the computed result.
+        """
         ctx = session.get_context(parallel)
         ctx.run(self.iterator_factory.copy(), self)
         return self.get_result()
@@ -16,9 +23,18 @@ class Action(object):
         raise NotImplementedError()
 
     def handle_item(self, item):
+        """
+        :param item: Item to be processed
+        :return: True if the processing should continue, False otherwise
+        :rtype: bool
+        """
         raise NotImplementedError()
 
     def is_associative(self):
+        """
+        :return: True if the action can be divided amongst workers
+        :rtype: bool
+        """
         return True
 
     def reduce(self, items):
@@ -27,6 +43,9 @@ class Action(object):
 
 class Collect(Action):
     def __init__(self, iterator_factory):
+        """
+        :type iterator_factory: qit.base.factory.IteratorFactory
+        """
         super(Collect, self).__init__(iterator_factory)
         self.items = []
 
@@ -43,6 +62,10 @@ class Collect(Action):
 
 class First(Action):
     def __init__(self, iterator_factory, fn=None, default=None):
+        """
+        :type iterator_factory: qit.base.factory.IteratorFactory
+        :type fn: function
+        """
         super(First, self).__init__(iterator_factory)
         self.fn = fn
         self.default = default
@@ -66,6 +89,10 @@ class First(Action):
 
 class Reduce(Action):
     def __init__(self, iterator_factory, fn, init=0, associative=True):
+        """
+        :type iterator_factory: qit.base.factory.IteratorFactory
+        :type fn: function
+        """
         super(Reduce, self).__init__(iterator_factory)
         self.fn = fn
         self.value = init
@@ -84,6 +111,10 @@ class Reduce(Action):
 
 class MaxAll(Action):
     def __init__(self, iterator_factory, key_fn):
+        """
+        :type iterator_factory: qit.base.factory.IteratorFactory
+        :type key_fn: function
+        """
         super(MaxAll, self).__init__(iterator_factory)
         self.best_results = None
         self.best_value = None

@@ -1,18 +1,19 @@
-from exception import InnerParallelContext
-from runtime import mpidetection
+from exception import InnerParallelContext, ParallelContextNotSet
 
 
 class Session(object):
     def __init__(self):
         from runtime.serialcontext import SerialContext
-        from runtime.processcontext import ProcessContext
 
         self.listeners = []
         self.serial_context = SerialContext()
-        self.parallel_context = ProcessContext()
+        self.parallel_context = None
         self.worker = None
 
     def get_context(self, parallel):
+        if parallel and not self.parallel_context:
+            raise ParallelContextNotSet()
+
         if parallel and self.parallel_context.has_computation:
             raise InnerParallelContext()
 
@@ -29,14 +30,4 @@ class Session(object):
     def set_parallel_context(self, ctx):
         self.parallel_context = ctx
 
-    def run(self, action_factory, parallel=False):
-        ctx = self.get_context(parallel)
-        return ctx.run(action_factory)
-
 session = Session()
-
-
-def mpi_shutdown():
-    if mpidetection.mpi_available:
-        from runtime import mpicontext
-        mpicontext.shutdown_workers()

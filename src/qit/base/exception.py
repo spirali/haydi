@@ -8,9 +8,9 @@ class InnerParallelContext(QitException):
     pass
 
 
-class TooManySplits(QitException):
+class ParallelContextNotSet(QitException):
     pass
 
 
-class NotEnoughMpiNodes(QitException):
+class TooManySplits(QitException):
     pass

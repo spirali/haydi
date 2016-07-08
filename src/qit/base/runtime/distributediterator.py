@@ -1,5 +1,4 @@
 import math
-from distributed import Executor
 
 from qit.base.runtime.message import MessageTag, Message
 from qit.base.transform import Transformation
@@ -16,7 +15,7 @@ def set_and_compute(graph, action_factory, index, count):
         count = min(max(graph.size - index, 0), count)
 
     if count == 0:
-        return Message(MessageTag.PROCESS_ITERATOR_STOP)
+        return Message(MessageTag.ITERATOR_STOP)
 
     graph.set(index)
     action = action_factory.create()
@@ -25,17 +24,23 @@ def set_and_compute(graph, action_factory, index, count):
         for _ in xrange(count):
             item = graph.next()
             action.handle_item(item)
-        return Message(MessageTag.PROCESS_ITERATOR_ITEM, action.get_result())
+        return Message(MessageTag.ITERATOR_ITEM, action.get_result())
     except StopIteration:
-        return Message(MessageTag.PROCESS_ITERATOR_ITEM, action.get_result())
+        return Message(MessageTag.ITERATOR_ITEM, action.get_result())
 
 
 class DistributedSplitIterator(Transformation):
-    def __init__(self, parent, action_factory, config, parallel_subgraph):
+    def __init__(self, parent, action_factory, context, parallel_subgraph):
+        """
+        :type parent: Transformation
+        :type action_factory: qit.base.factory.ActionFactory
+        :type context: qit.base.runtime.distributedcontext.DistributedContext
+        :type parallel_subgraph: qit.base.computegraph.ComputeGraph
+        """
         super(DistributedSplitIterator, self).__init__(parent)
         self.action_factory = action_factory
-        self.config = config
-        self.executor = Executor(config.address)
+        self.context = context
+        self.executor = context.executor
         self.action = self.action_factory.create()
         self.parallel_subgraph = parallel_subgraph
         self.subgraph_iterator = self.parallel_subgraph.create()
@@ -43,7 +48,7 @@ class DistributedSplitIterator(Transformation):
 
         if self.parent.size:
             batch = int(math.ceil(
-                self.parent.size / float(config.worker_count)))
+                self.parent.size / float(context.n_workers)))
             self.batch = min(int(batch), 10000)
         else:
             self.batch = 100  # TODO: support generators
@@ -55,14 +60,14 @@ class DistributedSplitIterator(Transformation):
         if self.parent.size:
             task_count = int(math.ceil(self.parent.size / float(self.batch)))
         else:
-            task_count = self.config.worker_count
+            task_count = self.context.n_workers
 
         tasks = self._distribute_map(task_count)
         data = self.executor.gather(tasks)
 
         result = []
         for item in data:
-            if item.tag == MessageTag.PROCESS_ITERATOR_ITEM:
+            if item.tag == MessageTag.ITERATOR_ITEM:
                 result.append(item.data)
 
         return self.action.reduce(result)

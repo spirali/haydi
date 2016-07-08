@@ -121,15 +121,14 @@ class SplitTransformation(Transformation):
     def is_split():
         return True
 
-    def __init__(self, parent, process_count):
+    def __init__(self, parent):
         super(SplitTransformation, self).__init__(parent)
-        self.process_count = process_count
 
     def next(self):
         return next(self.parent)
 
     def __repr__(self):
-        return "Split into {} processes".format(self.process_count)
+        return "Split"
 
 
 class JoinTransformation(Transformation):

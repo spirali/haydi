@@ -27,9 +27,11 @@ class IteratorFactory(Factory):
         self.transformations = []
 
     def copy(self):
+        """
+        :rtype: IteratorFactory
+        """
         cp = super(IteratorFactory, self).copy()
-        for trans in self.transformations:
-            cp.transformations.append(trans.copy())
+        cp.transformations = [tf.copy() for tf in self.transformations]
         return cp
 
     def create(self):
@@ -49,13 +51,6 @@ class IteratorFactory(Factory):
 
     def filter(self, fn):
         return self._create_transformation(transform.FilterTransformation, fn)
-
-    def progress(self, name, notify_count):
-        assert notify_count > 0
-
-        return self._create_transformation(transform.ProgressTransformation,
-                                           name,
-                                           notify_count)
 
     def split(self, process_count):
         assert process_count > 0
@@ -107,11 +102,19 @@ class ActionFactory(Factory):
         super(ActionFactory, self).__init__(klass, *args, **kwargs)
         self.iterator_factory = iterator_factory
 
+    def copy(self):
+        """
+        :rtype: ActionFactory
+        """
+        return ActionFactory(self.klass, self.iterator_factory.copy(),
+                             *self.args, **self.kwargs)
+
     def create(self):
         return self.klass(self.iterator_factory, *self.args, **self.kwargs)
 
     def run(self, parallel=False):
-        return session.session.run(self, parallel)
+        ctx = session.session.get_context(parallel)
+        return ctx.run(self)
 
     def __iter__(self):
         return iter(self.run())

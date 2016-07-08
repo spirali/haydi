@@ -4,8 +4,7 @@ sys.path.insert(0, "../../src")
 
 from eqlevel import compute
 from qit.base.session import session
-from qit.base.runtime.distributedcontext import DistributedContext, \
-    DistributedConfig
+from qit.base.runtime.distributedcontext import DistributedContext
 
 N_SIZE = 2            # Number of states
 S_SIZE = 1            # Number of stack symbols
@@ -16,18 +15,17 @@ COUNT = None         # None = iterate all
 
 logging.disable(logging.INFO)
 
-if len(sys.argv) < 3:
+"""if len(sys.argv) < 3:
     print("enter ip, port and worker count")
     exit()
 
 ip = sys.argv[1]
 port = int(sys.argv[2])
-worker_count = int(sys.argv[3])
+worker_count = int(sys.argv[3])"""
 
 session.set_parallel_context(DistributedContext(
-    DistributedConfig(worker_count=worker_count,
-                      port=port,
-                      spawn_compute_nodes=False,
-                      ip=ip)))
+    n_workers=4,
+    port=9001,
+    spawn_workers=True))
 
 compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT, True)

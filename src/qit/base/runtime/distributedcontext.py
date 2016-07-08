@@ -5,14 +5,14 @@ from distributed import Scheduler, Nanny as Worker, Executor
 from context import ParallelContext
 from tornado.ioloop import IOLoop
 
-from qit.base.action import Collect
 from qit.base.runtime.distributediterator import DistributedSplitIterator
 from qit.base.transform import JoinTransformation, YieldTransformation
-from qit.base.factory import TransformationFactory, ActionFactory
+from qit.base.factory import TransformationFactory
 
 
 class DistributedContext(ParallelContext):
-    IO_LOOP_STARTED = False
+    io_loop = None
+    io_thread = None
 
     def __init__(self,
                  n_workers=4,
@@ -26,12 +26,12 @@ class DistributedContext(ParallelContext):
         self.ip = ip
         self.port = port
 
-        if not DistributedContext.IO_LOOP_STARTED:
-            loop = IOLoop()
-            t = Thread(target=loop.start)
-            t.daemon = True
-            t.start()
-            DistributedContext.IO_LOOP_STARTED = True
+        if not DistributedContext.io_loop:
+            DistributedContext.io_loop = IOLoop()
+            DistributedContext.io_thread = Thread(
+                target=DistributedContext.io_loop.start)
+            DistributedContext.io_thread.daemon = True
+            DistributedContext.io_thread.start()
 
         if spawn_workers:
             self.scheduler = self._create_scheduler()
@@ -47,47 +47,42 @@ class DistributedContext(ParallelContext):
     def transmit_to_master(self, message):
         pass
 
-    def do_computation(self, graph, action, action_factory):
-        self.preprocess_splits(graph)
+    def do_computation(self, computegraph, action):
+        self.preprocess_splits(computegraph)
 
-        if not action.is_associative():
-            action_factory = ActionFactory(Collect, graph.factory)
+        self._distribute_iterator(computegraph,
+                                  computegraph.last_transformation)
 
-        node = graph.last_transformation
-        while node:
-            if node.klass.is_join():
-                node = self._distribute_iterator(graph, node, action_factory)
-                action_factory = ActionFactory(Collect, graph.factory)
-            node = graph.get_previous_node(node)
+        for item in computegraph.create():
+            if not action.handle_item(item):
+                break
 
-        # collect notify messages and results
-        for item in graph.create():
-            action.handle_item(item)
-
-    def _distribute_iterator(self, graph, node, action_factory):
+    def _distribute_iterator(self, computegraph, node):
+        """
+        :type computegraph: qit.base.computegraph.ComputeGraph
+        :type node: qit.base.factory.TransformationFactory
+        """
         assert node.klass == JoinTransformation
 
         split = node
         while split and not split.klass.is_split():
-            split = graph.get_previous_node(split)
+            split = computegraph.get_previous_node(split)
 
         assert split
 
-        parallel_subgraph = graph.copy_starting_at(
-            graph.get_previous_node(node))
+        parallel_subgraph = computegraph.copy_starting_at(
+            computegraph.get_previous_node(node))
 
         distributed_split = TransformationFactory(
-            DistributedSplitIterator, action_factory,
-            self.config, parallel_subgraph
+            DistributedSplitIterator, computegraph.action_factory,
+            self, parallel_subgraph
         )
 
-        graph.replace(node, distributed_split)
-        graph.reparent(distributed_split, split)
+        computegraph.replace(node, distributed_split)
+        computegraph.reparent(distributed_split, split)
 
         yield_transform = TransformationFactory(YieldTransformation)
-        graph.append(distributed_split, yield_transform)
-
-        return distributed_split
+        computegraph.append(distributed_split, yield_transform)
 
     def _create_scheduler(self):
         scheduler = Scheduler(ip=self.ip)

@@ -191,7 +191,7 @@ def test_product_cache():
         r = qit.Range(10000)
         p = qit.Product((r, r), cache_size=cache_size)
         result = list(p.generate(size))
-        print result
+
         cache_pairs = cache_size * cache_size
         for i in xrange(size / cache_pairs):
             values1 = set()
