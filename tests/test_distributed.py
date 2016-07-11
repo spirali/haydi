@@ -65,7 +65,7 @@ def cluster(port):
               )
         for _ in xrange(4)]
 
-    time.sleep(0.5)  # wait for the workers to spawn
+    time.sleep(1.5)  # wait for the workers to spawn
 
     yield port
 

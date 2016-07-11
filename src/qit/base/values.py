@@ -1,5 +1,4 @@
 from domain import Domain, DomainIterator
-from factory import IteratorFactory
 
 from copy import copy
 import random
@@ -14,8 +13,8 @@ class Values(Domain):
     def generate_one(self):
         return random.choice(self.values)
 
-    def iterate(self):
-        return IteratorFactory(ValuesIterator, self)
+    def create_iterator(self):
+        return ValuesIterator(self)
 
 
 class ValuesIterator(DomainIterator):

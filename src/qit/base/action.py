@@ -1,14 +1,18 @@
-import itertools
-
 from session import session
 
 
 class Action(object):
-    def __init__(self, iterator_factory):
+
+    worker_reduce_fn = None
+    worker_reduce_init = None
+    global_reduce_fn = None
+    global_reduce_init = None
+
+    def __init__(self, it_factory):
         """
-        :type iterator_factory: qit.base.factory.IteratorFactory
+        :type it_factory: qit.base.factory.IteratorFactory
         """
-        self.iterator_factory = iterator_factory
+        self.it_factory = it_factory
 
     def run(self, parallel=False):
         """
@@ -16,123 +20,77 @@ class Action(object):
         :return: Returns the computed result.
         """
         ctx = session.get_context(parallel)
-        ctx.run(self.iterator_factory.copy(), self)
-        return self.get_result()
+        result = ctx.run(self.it_factory,
+                         self.worker_reduce_fn,
+                         self.worker_reduce_init,
+                         self.global_reduce_fn,
+                         self.global_reduce_init)
+        return self.postprocess(result)
 
-    def get_result(self):
-        raise NotImplementedError()
+    def postprocess(self, value):
+        return value
 
-    def handle_item(self, item):
-        """
-        :param item: Item to be processed
-        :return: True if the processing should continue, False otherwise
-        :rtype: bool
-        """
-        raise NotImplementedError()
-
-    def is_associative(self):
-        """
-        :return: True if the action can be divided amongst workers
-        :rtype: bool
-        """
-        return True
-
-    def reduce(self, items):
-        return items
+    def __iter__(self):
+        return iter(self.run())
 
 
 class Collect(Action):
-    def __init__(self, iterator_factory):
+
+    def __init__(self, it_factory, postprocess_fn):
         """
-        :type iterator_factory: qit.base.factory.IteratorFactory
+        :type it_factory: qit.base.factory.IteratorFactory
         """
-        super(Collect, self).__init__(iterator_factory)
-        self.items = []
-
-    def handle_item(self, item):
-        self.items.append(item)
-        return True
-
-    def get_result(self):
-        return self.items
-
-    def reduce(self, items):
-        return list(itertools.chain.from_iterable(items))
-
-
-class First(Action):
-    def __init__(self, iterator_factory, fn=None, default=None):
-        """
-        :type iterator_factory: qit.base.factory.IteratorFactory
-        :type fn: function
-        """
-        super(First, self).__init__(iterator_factory)
-        self.fn = fn
-        self.default = default
-        self.result = None
-
-    def handle_item(self, item):
-        assert self.result is None
-
-        if self.fn is None or self.fn(item):
-            self.result = item
-            return False
-        else:
-            return True
-
-    def get_result(self):
-        if self.result is not None:
-            return self.result
-        else:
-            return self.default
+        super(Collect, self).__init__(it_factory)
+        if postprocess_fn:
+            self.postprocess = postprocess_fn
 
 
 class Reduce(Action):
-    def __init__(self, iterator_factory, fn, init=0, associative=True):
+
+    def __init__(self, it_factory, reduce_fn, init_value=0, associative=True):
         """
-        :type iterator_factory: qit.base.factory.IteratorFactory
+        :type it_factory: qit.base.factory.IteratorFactory
         :type fn: function
         """
-        super(Reduce, self).__init__(iterator_factory)
-        self.fn = fn
-        self.value = init
-        self.associative = associative
-
-    def handle_item(self, item):
-        self.value = self.fn(item, self.value)
-        return True
-
-    def get_result(self):
-        return self.value
-
-    def is_associative(self):
-        return self.associative
+        super(Reduce, self).__init__(it_factory)
+        if associative:
+            self.worker_reduce_fn = reduce_fn
+        self.global_reduce_fn = reduce_fn
+        self.global_reduce_init = init_value
 
 
 class MaxAll(Action):
-    def __init__(self, iterator_factory, key_fn):
+
+    def __init__(self, it_factory, key_fn):
         """
-        :type iterator_factory: qit.base.factory.IteratorFactory
+        :type it_factory: qit.base.factory.IteratorFactory
         :type key_fn: function
         """
-        super(MaxAll, self).__init__(iterator_factory)
-        self.best_results = None
-        self.best_value = None
-        self.key_fn = key_fn
 
-    def handle_item(self, item):
-        value = self.key_fn(item)
-        if self.best_value is None or value > self.best_value:
-            self.best_value = value
-            self.best_results = [item]
-        elif value == self.best_value:
-            self.best_results.append(item)
-        return True
+        def worker_fn(pair, item):
+            value = key_fn(item)
+            best_value, best_items = pair
+            if best_value is None or value > best_value:
+                return (value, [item])
+            if value == best_value:
+                best_items.append(item)
+            return pair
 
-    def get_result(self):
-        return self.best_results
+        def global_fn(pair1, pair2):
+            best_value1, best_items1 = pair1
+            best_value2, best_items2 = pair2
+            if best_value1 == best_value2:
+                return (best_value1, best_items1 + best_items2)
+            elif best_value1 < best_value2:
+                return pair2
+            else:
+                return pair1
 
-    def reduce(self, items):
-        return [item
-                for list in items if list
-                for item in list]
+        super(MaxAll, self).__init__(it_factory)
+        self.worker_reduce_fn = worker_fn
+        self.worker_reduce_init = (None, None)
+        self.global_reduce_fn = global_fn
+
+    def postprocess(self, value):
+        if value:
+            return value[1]

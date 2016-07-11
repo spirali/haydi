@@ -1,6 +1,5 @@
 from domain import Domain, DomainIterator
 from random import randint
-from factory import IteratorFactory
 from iterator import EmptyIterator
 
 from copy import copy
@@ -28,11 +27,11 @@ class Join(Domain):
             ratio_sums.append(s)
         self.ratio_sums = ratio_sums
 
-    def iterate(self):
+    def create_iterator(self):
         if not self.domains:
-            return IteratorFactory(EmptyIterator)
+            return EmptyIterator()
         else:
-            return IteratorFactory(JoinIterator, self)
+            return JoinIterator(self)
 
     def generate_one(self):
         c = randint(0, self.ratio_sums[-1] - 1)
@@ -50,7 +49,7 @@ class JoinIterator(DomainIterator):
     def __init__(self, domain):
         super(JoinIterator, self).__init__(domain)
         self.index = 0
-        self.iterators = [d.iterate().create()
+        self.iterators = [d.create_iterator()
                           for d in self.domain.domains]
 
     def copy(self):

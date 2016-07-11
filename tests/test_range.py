@@ -59,7 +59,7 @@ def test_iter_set():
 def test_range_iter_copy():
     r = qit.Range(3, 10, 2)
 
-    it = r.iterate()
+    it = iter(r)
     it2 = it.copy()
 
     assert list(it) == list(it2)

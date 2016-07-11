@@ -1,8 +1,6 @@
 from domain import Domain, DomainIterator
 from copy import copy
 
-from qit.base.factory import IteratorFactory
-
 
 class Mapping(Domain):
 
@@ -13,8 +11,8 @@ class Mapping(Domain):
         self.key_domain = key_domain
         self.value_domain = value_domain
 
-    def iterate(self):
-        return IteratorFactory(MappingIterator, self)
+    def create_iterator(self):
+        return MappingIterator(self)
 
     def generate_one(self):
         result = {}
@@ -29,7 +27,7 @@ class MappingIterator(DomainIterator):
     def __init__(self, domain):
         super(MappingIterator, self).__init__(domain)
         self.keys = tuple(domain.key_domain)
-        self.iterators = [domain.value_domain.iterate().create()
+        self.iterators = [domain.value_domain.create_iterator()
                           for key in self.keys]
         self.current = None
 

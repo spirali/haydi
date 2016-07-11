@@ -1,7 +1,6 @@
 
-from domain import Domain, DomainIterator, MapDomain
+from domain import Domain, DomainIterator
 from values import Values
-from factory import IteratorFactory
 
 from copy import copy
 import math
@@ -29,11 +28,11 @@ class Product(Domain):
             if len(set(domains)) > 1:
                 raise Exception("Not implemented for discitinct domains")
 
-    def iterate(self):
+    def create_iterator(self):
         if self.unordered:
-            return IteratorFactory(UnorderedProductIterator, self)
+            return UnorderedProductIterator(self)
         else:
-            return IteratorFactory(ProductIterator, self)
+            return ProductIterator(self)
 
     def generate_one(self):
         if self._generator_cache:
@@ -85,7 +84,7 @@ class ProductIterator(DomainIterator):
 
     def __init__(self, domain):
         super(ProductIterator, self).__init__(domain)
-        self.iterators = [d.iterate().create() for d in domain.domains]
+        self.iterators = [d.create_iterator() for d in domain.domains]
         self.current = None
 
     def reset(self):
@@ -170,7 +169,7 @@ class UnorderedProductIterator(DomainIterator):
                     continue
             raise StopIteration()
         else:
-            it = self.domain.domains[0].iterate().create()
+            it = self.domain.domains[0].create_iterator()
             iterators = []
             current = []
             for d in self.domain.domains:
@@ -195,7 +194,7 @@ class UnorderedProductIterator(DomainIterator):
         x = index - y * size + ((y - 1) * y / 2) + y
 
         if not self.current:
-            iterators = [d.iterate().create() for d in self.domain.domains]
+            iterators = [d.create_iterator() for d in self.domain.domains]
         else:
             iterators = self.iterators
         iterators[0].set(x)
@@ -204,21 +203,23 @@ class UnorderedProductIterator(DomainIterator):
         self.iterators = iterators
 
 
-class NamedProduct(MapDomain):
-
-    def __init__(self,
-                 named_domains,
+def NamedProduct(named_domains,
                  type_name=None,
                  name=None,
                  unordered=False):
-        if type_name is None:
-            if name is None:
-                type_name = "Tuple" + str(id(self))
-            else:
-                type_name = name
-        domain = Product([d for n, d in named_domains], unordered=unordered)
-        super(NamedProduct, self).__init__(domain, self.make_instance, name)
-        self.type = namedtuple(type_name, [n for n, d in named_domains])
+    def make_instance(value):
+        return ntuple(*value)
 
-    def make_instance(self, value):
-        return self.type(*value)
+    if type_name is None:
+        if name is None:
+            type_name = "NamedProduct"
+        else:
+            type_name = name
+    ntuple = namedtuple(type_name, [n for n, d in named_domains])
+    domain = Product([d for n, d in named_domains], unordered=unordered)
+    domain = domain.map(make_instance)
+    domain.name = name
+    del n
+    del d
+    return domain
+

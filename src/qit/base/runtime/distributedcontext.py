@@ -1,16 +1,11 @@
 from threading import Thread
-
-import time
 from distributed import Scheduler, Nanny as Worker, Executor
-from context import ParallelContext
 from tornado.ioloop import IOLoop
-
-from qit.base.runtime.distributediterator import DistributedSplitIterator
-from qit.base.transform import JoinTransformation, YieldTransformation
-from qit.base.factory import TransformationFactory
+import time
+import itertools
 
 
-class DistributedContext(ParallelContext):
+class DistributedContext(object):
     io_loop = None
     io_thread = None
 
@@ -20,11 +15,10 @@ class DistributedContext(ParallelContext):
                  port=8787,
                  spawn_workers=False):
 
-        super(DistributedContext, self).__init__()
-
         self.n_workers = n_workers
         self.ip = ip
         self.port = port
+        self.active = False
 
         if not DistributedContext.io_loop:
             DistributedContext.io_loop = IOLoop()
@@ -41,48 +35,52 @@ class DistributedContext(ParallelContext):
 
         self.executor = Executor((ip, port))
 
-    def is_master(self):
-        pass
+    def run(self, domain,
+            worker_reduce_fn, worker_reduce_init,
+            global_reduce_fn, global_reduce_init):
+        size = domain.domain.size
+        assert size is not None  # TODO: Iterators without size
 
-    def transmit_to_master(self, message):
-        pass
+        workers = 0
+        for name, value in self.executor.ncores().items():
+            workers += value
 
-    def do_computation(self, computegraph, action):
-        self.preprocess_splits(computegraph)
+        if workers == 0:
+            raise Exception("There are no workers")
 
-        self._distribute_iterator(computegraph,
-                                  computegraph.last_transformation)
+        batch_count = workers * 4
+        batch_size = int(round(size / float(batch_count)))
+        batches = []
+        i = 0
 
-        for item in computegraph.create():
-            if not action.handle_item(item):
+        while True:
+            new = i + batch_size
+            if i + batch_size <= size:
+                batches.append((domain, i, batch_size,
+                                worker_reduce_fn, worker_reduce_init))
+                i = new
+                if new == size:
+                    break
+            else:
+                batches.append((domain, i, size - i,
+                                worker_reduce_fn, worker_reduce_init))
                 break
 
-    def _distribute_iterator(self, computegraph, node):
-        """
-        :type computegraph: qit.base.computegraph.ComputeGraph
-        :type node: qit.base.factory.TransformationFactory
-        """
-        assert node.klass == JoinTransformation
+        s = 0
+        for f, a, b, x, y in batches:
+            print a, b
+            s += b
+        print s
 
-        split = node
-        while split and not split.klass.is_split():
-            split = computegraph.get_previous_node(split)
+        futures = self.executor.map(process_batch, batches)
+        results = self.executor.gather(futures)
+        if worker_reduce_fn is None:
+            results = list(itertools.chain.from_iterable(results))
 
-        assert split
-
-        parallel_subgraph = computegraph.copy_starting_at(
-            computegraph.get_previous_node(node))
-
-        distributed_split = TransformationFactory(
-            DistributedSplitIterator, computegraph.action_factory,
-            self, parallel_subgraph
-        )
-
-        computegraph.replace(node, distributed_split)
-        computegraph.reparent(distributed_split, split)
-
-        yield_transform = TransformationFactory(YieldTransformation)
-        computegraph.append(distributed_split, yield_transform)
+        if global_reduce_fn is None:
+            return results
+        else:
+            return reduce(global_reduce_fn, results, global_reduce_init)
 
     def _create_scheduler(self):
         scheduler = Scheduler(ip=self.ip)
@@ -95,3 +93,19 @@ class DistributedContext(ParallelContext):
                         ncores=1)
         worker.start(0)
         return worker
+
+
+def process_batch(arg):
+    domain, start, size, reduce_fn, reduce_init = arg
+    iterator = domain.create_iterator()
+    iterator.set(start)
+    if reduce_fn is None:
+        return [iterator.next() for i in xrange(size)]
+    else:
+        if reduce_init is not None:
+            return reduce(reduce_fn,
+                          (iterator.next() for i in xrange(size)),
+                          reduce_init)
+        else:
+            return reduce(reduce_fn,
+                          (iterator.next() for i in xrange(size)))

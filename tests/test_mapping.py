@@ -45,7 +45,7 @@ def test_mapping_copy():
     r2 = qit.Range(3)
     p = qit.Mapping(r1, r2)
 
-    it = p.iterate()
+    it = iter(p)
     it2 = it.copy()
 
     assert list(it) == list(it2)

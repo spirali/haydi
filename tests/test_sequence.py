@@ -48,7 +48,7 @@ def test_sequence_iter_copy():
     r2 = qit.Range(3)
     s = qit.Sequence(r2, 4)
 
-    it = s.iterate()
+    it = iter(s)
     it2 = it.copy()
 
     assert list(it) == list(it2)

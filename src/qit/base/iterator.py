@@ -1,19 +1,7 @@
 class Iterator(object):
-    @staticmethod
-    def is_split():
-        return False
 
-    @staticmethod
-    def is_join():
-        return False
-
-    @staticmethod
-    def is_transformation():
-        return False
-
-    @staticmethod
-    def is_stateful():
-        return True
+    size = None
+    exact_size = False
 
     def __init__(self):
         self.size = None
@@ -27,12 +15,6 @@ class Iterator(object):
     def reset(self):
         raise NotImplementedError()
 
-    def get_parents(self):
-        return []
-
-    def skip(self, start_index, count):
-        raise NotImplementedError()
-
     def set(self, index):
         raise Exception("set not implemented for {}".format(type(self)))
 
@@ -41,6 +23,8 @@ class Iterator(object):
 
 
 class GeneratingIterator(Iterator):
+
+    exact_size = True
 
     def __init__(self, generator_fn):
         super(GeneratingIterator, self).__init__()
@@ -52,8 +36,14 @@ class GeneratingIterator(Iterator):
     def reset(self):
         pass
 
+    def set(self):
+        pass
+
 
 class EmptyIterator(Iterator):
+
+    size = 0
+    exact_size = True
 
     def __init__(self):
         super(EmptyIterator, self).__init__()
@@ -62,4 +52,7 @@ class EmptyIterator(Iterator):
         raise StopIteration()
 
     def reset(self):
+        pass
+
+    def set(self):
         pass

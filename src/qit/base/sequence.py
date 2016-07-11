@@ -1,6 +1,5 @@
 
 from domain import Domain, DomainIterator
-from factory import IteratorFactory
 from copy import copy
 
 
@@ -12,8 +11,8 @@ class Sequence(Domain):
         self.length = length
         self.domain = domain
 
-    def iterate(self):
-        return IteratorFactory(SequenceIterator, self)
+    def create_iterator(self):
+        return SequenceIterator(self)
 
     def generate_one(self):
         return tuple(self.domain.generate_one() for i in xrange(self.length))
@@ -32,7 +31,7 @@ class SequenceIterator(DomainIterator):
 
     def __init__(self, domain):
         super(SequenceIterator, self).__init__(domain)
-        self.iterators = [domain.domain.iterate().create()
+        self.iterators = [domain.domain.iterate().create_iterator()
                           for i in xrange(domain.length)]
         self.current = None
 

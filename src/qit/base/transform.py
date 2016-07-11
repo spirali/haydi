@@ -1,32 +1,14 @@
 import time
 from copy import copy
 from iterator import Iterator
+from domain import Domain, DomainIterator
 
 
-class Transformation(Iterator):
-    @staticmethod
-    def is_transformation():
-        return True
+class TransformationIterator(DomainIterator):
 
-    @staticmethod
-    def is_stateful():
-        return False
-
-    def __init__(self, parent):
-        super(Transformation, self).__init__()
+    def __init__(self, domain, parent):
+        super(TransformationIterator, self).__init__(domain)
         self.parent = parent
-        self.size = parent.size
-
-    def copy(self):
-        t = copy(self)
-        t.parent = t.parent.copy()
-        return t
-
-    def get_parents(self):
-        return [self.parent]
-
-    def skip(self, start_index, count):
-        return self.parent.skip(start_index, count)
 
     def reset(self):
         self.parent.reset()
@@ -34,41 +16,29 @@ class Transformation(Iterator):
     def set(self, index):
         self.parent.set(index)
 
-
-class YieldTransformation(Transformation):
-    @staticmethod
-    def is_stateful():
-        return True
-
-    def __init__(self, parent):
-        super(YieldTransformation, self).__init__(parent)
-        self.data = []
-        self.index = 0
-
-    def next(self):
-        if self.index == len(self.data):
-            self.data = self.parent.next()
-            self.index = 0
-
-        if len(self.data) == 0:
-            raise StopIteration()
-
-        item = self.data[self.index]
-        self.index += 1
-        return item
+    def copy(self):
+        new = copy(self)
+        new.parent = self.parent.copy()
+        return new
 
 
-class TakeTransformation(Transformation):
-    @staticmethod
-    def is_stateful():
-        return True
+class Transformation(Domain):
 
-    def __init__(self, parent, count):
-        super(TakeTransformation, self).__init__(parent)
-        self.count = count
+    def __init__(self, domain, size, exact_size):
+        name = type(self).__name__
+        super(Transformation, self).__init__(size, exact_size, name)
+        self.domain = domain
 
-        if parent.size is not None:
-            self.size = max(parent.size, self.count)
+    def create_iterator(self):
+        return self.iterator_class(self, self.domain.create_iterator())
+
+
+
+class TakeIterator(TransformationIterator):
+
+    def __init__(self, domain, parent):
+        super(TakeIterator, self).__init__(domain, parent)
+        self.count = domain.count
 
     def next(self):
         if self.count <= 0:
@@ -84,27 +54,52 @@ class TakeTransformation(Transformation):
         return "Take {} items".format(self.count)
 
 
-class MapTransformation(Transformation):
+class TakeTransformation(Transformation):
 
-    def __init__(self, parent, fn):
-        super(MapTransformation, self).__init__(parent)
-        self.fn = fn
+    iterator_class = TakeIterator
+
+    def __init__(self, parent, count):
+        if parent.size is not None:
+            size = max(parent.size, count)
+        else:
+            size = count
+        self.count = count
+        super(TakeTransformation, self).__init__(parent,
+                                                 size,
+                                                 parent.exact_size)
+
+    def create_iterator(self):
+        return TakeIterator(self, self.domain.create_iterator())
+
+
+class MapIterator(TransformationIterator):
+
+    def __init__(self, domain, parent):
+        super(MapIterator, self).__init__(domain, parent)
+        self.fn = domain.fn
 
     def next(self):
         return self.fn(next(self.parent))
 
-    def set(self, index):
-        self.parent.set(index)
 
-    def __repr__(self):
-        return "Map"
+class MapTransformation(Transformation):
 
+    iterator_class = MapIterator
 
-class FilterTransformation(Transformation):
-
-    def __init__(self, parent, fn):
-        super(FilterTransformation, self).__init__(parent)
+    def __init__(self, domain, fn):
+        super(MapTransformation, self).__init__(
+            domain, domain.size, domain.exact_size)
         self.fn = fn
+
+    def generate_one(self):
+        return self.fn(self.domain.generate_one())
+
+
+class FilterIterator(TransformationIterator):
+
+    def __init__(self, domain, parent):
+        super(FilterIterator, self).__init__(domain, parent)
+        self.fn = domain.fn
 
     def next(self):
         v = next(self.parent)
@@ -112,40 +107,25 @@ class FilterTransformation(Transformation):
             v = next(self.parent)
         return v
 
-    def __repr__(self):
-        return "Filter"
+
+class FilterTransformation(Transformation):
+
+    iterator_class = FilterIterator
+
+    def __init__(self, domain, fn):
+        super(FilterTransformation, self).__init__(
+            domain, domain.size, False)
+        self.fn = fn
+
+    def generate_one(self):
+        while True:
+            x = self.domain.generate_one()
+            if self.fn(x):
+                return x
 
 
-class SplitTransformation(Transformation):
-    @staticmethod
-    def is_split():
-        return True
 
-    def __init__(self, parent):
-        super(SplitTransformation, self).__init__(parent)
-
-    def next(self):
-        return next(self.parent)
-
-    def __repr__(self):
-        return "Split"
-
-
-class JoinTransformation(Transformation):
-    @staticmethod
-    def is_join():
-        return True
-
-    def __init__(self, parent):
-        super(JoinTransformation, self).__init__(parent)
-
-    def next(self):
-        return next(self.parent)
-
-    def __repr__(self):
-        return "Join"
-
-
+"""
 class TimeoutTransformation(Transformation):
     def __init__(self, parent, timeout):
         super(TimeoutTransformation, self).__init__(parent)
@@ -160,3 +140,4 @@ class TimeoutTransformation(Transformation):
             raise StopIteration()
         else:
             return next(self.parent)
+"""

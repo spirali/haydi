@@ -1,28 +1,18 @@
-from exception import InnerParallelContext, ParallelContextNotSet
+from runtime.serialcontext import SerialContext
 
 
 class Session(object):
     def __init__(self):
-        from runtime.serialcontext import SerialContext
-
         self.listeners = []
         self.serial_context = SerialContext()
         self.parallel_context = None
         self.worker = None
 
     def get_context(self, parallel):
-        if parallel and not self.parallel_context:
-            raise ParallelContextNotSet()
-
-        if parallel and self.parallel_context.has_computation:
-            raise InnerParallelContext()
-
-        if parallel:
-            ctx = self.parallel_context
+        if not parallel or self.parallel_context.active:
+            return self.serial_context
         else:
-            ctx = self.serial_context
-
-        return ctx
+            return self.parallel_context
 
     def set_worker(self, worker):
         self.worker = worker

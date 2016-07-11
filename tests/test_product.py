@@ -95,7 +95,7 @@ def test_product_iter_copy():
     r2 = qit.Range(10)
     p = r1 * r2
 
-    it = p.iterate()
+    it = iter(p)
     it2 = it.copy()
 
     assert list(it) == list(it2)
@@ -106,7 +106,7 @@ def test_uproduct_iter_copy():
     r1 = qit.Range(10)
     p = qit.Product((r1, r1), unordered=True)
 
-    it = p.iterate()
+    it = iter(p)
     it2 = it.copy()
 
     assert list(it) == list(it2)

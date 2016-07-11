@@ -6,7 +6,8 @@ import qit  # noqa
 
 def test_reduce():
     r = qit.Range(100).iterate().reduce(lambda x, y: x + y, 100).run()
-    assert r == 100 + sum(range(100))
+    expected = sum(range(100)) + 100
+    assert r == expected
 
 
 def test_first_found():

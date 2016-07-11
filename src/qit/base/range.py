@@ -2,8 +2,6 @@
 from domain import Domain, DomainIterator
 from random import randint
 
-from factory import IteratorFactory
-
 from copy import copy
 
 
@@ -33,14 +31,14 @@ class Range(Domain):
         self.end = end
         self.step = step
 
-    def iterate(self):
-        return IteratorFactory(RangeIterator, self)
-
     def generate_one(self):
         if self.step == 1:
             return randint(self.start, self.end - 1)
         else:
             return randint(0, self.size - 1) * self.step
+
+    def create_iterator(self):
+        return RangeIterator(self)
 
 
 class RangeIterator(DomainIterator):

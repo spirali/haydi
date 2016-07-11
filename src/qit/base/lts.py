@@ -1,7 +1,6 @@
 
 from iterator import Iterator
 from graph import Graph
-from factory import IteratorFactory
 
 
 class DLTS(object):
@@ -14,13 +13,11 @@ class DLTS(object):
             max_depth=None,
             return_depth=False,
             max_states=None):
-        return IteratorFactory(
-            BreadthFirstIterator,
-            self,
-            init_state,
-            max_depth,
-            return_depth,
-            max_states)
+        return BreadthFirstIterator(self,
+                                    init_state,
+                                    max_depth,
+                                    return_depth,
+                                    max_states)
 
     def get_enabled_actions(self, state):
         return self.actions

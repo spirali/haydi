@@ -91,7 +91,7 @@ def test_join_copy():
 
     p = r1 + r2 + r3
 
-    it = p.iterate()
+    it = iter(p)
     it2 = it.copy()
     assert list(it) == list(it2)
 

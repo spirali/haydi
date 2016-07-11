@@ -1,6 +1,6 @@
 
-from factory import IteratorFactory
 from iterator import GeneratingIterator, Iterator
+import action
 
 
 class Domain(object):
@@ -10,33 +10,69 @@ class Domain(object):
         self.exact_size = exact_size
         self.name = name
 
-    def __iter__(self):
-        return self.iterate().create()
-
     def __mul__(self, other):
         return Product((self, other))
 
     def __add__(self, other):
         return Join((self, other))
 
+    # Actions
+
+    def max_all(self, key_fn):
+        return action.MaxAll(self, key_fn)
+
+    def collect(self, postprocess_fn=None):
+        return action.Collect(self, postprocess_fn)
+
+    def first(self, fn=None, default=None):
+        def helper(value):
+            if value:
+                return value[0]
+            else:
+                return default
+        f = self
+        if fn is not None:
+            f = f.filter(fn)
+        return f.take(1).collect(postprocess_fn=helper)
+
+    def reduce(self, reduce_fn, init_value=0, associative=True):
+        return action.Reduce(self, reduce_fn, init_value, associative)
+
+    # Transformations
+
+    # TO REMOVE
+    def iterate(self):
+        return self
+
+    def take(self, count):
+        return transform.TakeTransformation(self, count)
+
     def map(self, fn):
-        return MapDomain(self, fn)
+        return transform.MapTransformation(self, fn)
 
     def filter(self, fn):
-        return FilterDomain(self, fn)
+        return transform.FilterTransformation(self, fn)
 
-    def iterate(self):
-        raise NotImplementedError()
+    def timeout(self, timeout):
+        return transform.TimeoutTransformation(self, timeout)
+
+    # Others
+
+    def run(self, parallel=False):
+        return self.collect().run(parallel)
+
+    def __iter__(self):
+        return self.create_iterator()
 
     def generate_one(self):
         raise NotImplementedError()
 
     def generate(self, count=None):
-        g = IteratorFactory(GeneratingIterator, self.generate_one)
+        domain = GeneratingDomain(self.generate_one)
         if count is None:
-            return g
+            return domain
         else:
-            return g.take(count)
+            return domain.take(count)
 
     def __repr__(self):
         ITEMS_LIMIT = 4
@@ -62,35 +98,14 @@ class Domain(object):
         return "<{} size={} {}>".format(name, self.size, extra)
 
 
-class MapDomain(Domain):
+class GeneratingDomain(Domain):
 
-    def __init__(self, domain, fn, name=None):
-        super(MapDomain, self).__init__(domain.size, domain.exact_size, name)
-        self.domain = domain
-        self.fn = fn
+    def __init__(self, generate_fn, name=None):
+        Domain.__init__(self, None, True, name)
+        self.generate_fn = generate_fn
 
-    def iterate(self):
-        return self.domain.iterate().map(self.fn)
-
-    def generate_one(self):
-        return self.fn(self.domain.generate_one())
-
-
-class FilterDomain(Domain):
-
-    def __init__(self, domain, fn, name=None):
-        super(FilterDomain, self).__init__(domain.size, False, name)
-        self.domain = domain
-        self.fn = fn
-
-    def iterate(self):
-        return self.domain.iterate().filter(self.fn)
-
-    def generate_one(self):
-        while True:
-            x = self.domain.generate_one()
-            if self.fn(x):
-                return x
+    def create_iterator(self):
+        return GeneratingIterator(self.generate_fn)
 
 
 class DomainIterator(Iterator):
@@ -99,6 +114,8 @@ class DomainIterator(Iterator):
         super(DomainIterator, self).__init__()
         self.domain = domain
         self.size = self.domain.size
+        self.exact_size = self.domain.exact_size
 
 from product import Product  # noqa
 from join import Join  # noqa
+import transform  # noqa

@@ -1,7 +1,6 @@
 
-from factory import IteratorFactory
 from iterator import Iterator
-
+from domain import Domain
 
 class System(object):
 
@@ -12,7 +11,9 @@ class System(object):
         return None
 
     def iterate_states(self, depth, return_depth=False):
-        return IteratorFactory(StatesIterator, self, depth, return_depth)
+        domain = Domain(None, False)
+        domain.create_iterator = lambda: StatesIterator(self, depth, return_depth)
+        return domain
 
 
 class StatesIterator(Iterator):
