@@ -9,10 +9,14 @@ class Session(object):
         self.worker = None
 
     def get_context(self, parallel):
-        if not parallel or self.parallel_context.active:
-            return self.serial_context
-        else:
+        if parallel:
+            if self.parallel_context is None:
+                raise Exception("No parallel context")
+            elif self.parallel_context.active:
+                return self.serial_context
             return self.parallel_context
+        else:
+            return self.serial_context
 
     def set_worker(self, worker):
         self.worker = worker

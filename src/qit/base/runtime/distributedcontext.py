@@ -66,12 +66,6 @@ class DistributedContext(object):
                                 worker_reduce_fn, worker_reduce_init))
                 break
 
-        s = 0
-        for f, a, b, x, y in batches:
-            print a, b
-            s += b
-        print s
-
         futures = self.executor.map(process_batch, batches)
         results = self.executor.gather(futures)
         if worker_reduce_fn is None:
