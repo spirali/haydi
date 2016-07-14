@@ -40,10 +40,6 @@ class Domain(object):
 
     # Transformations
 
-    # TO REMOVE
-    def iterate(self):
-        return self
-
     def take(self, count):
         return transform.TakeTransformation(self, count)
 

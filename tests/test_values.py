@@ -10,13 +10,13 @@ def test_values_iterate():
 
     assert a.exact_size
     assert a.size == 3
-    assert list(a.iterate()) == ["a", "b", "c"]
+    assert list(a) == ["a", "b", "c"]
     for x in a.generate(100):
         assert x in ("a", "b", "c")
 
     b = qit.Values([])
     assert b.size == 0
-    assert list(b.iterate()) == []
+    assert list(b) == []
 
 
 def test_values_set():

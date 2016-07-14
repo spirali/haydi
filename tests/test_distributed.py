@@ -72,7 +72,7 @@ def cluster4():
 def test_dist_map(cluster4):
     count = 10000
     x = Range(count)
-    result = x.iterate().map(lambda x: x + 1).collect().run(True)
+    result = x.map(lambda x: x + 1).collect().run(True)
 
     assert result == [item + 1 for item in xrange(count)]
 

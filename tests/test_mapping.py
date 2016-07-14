@@ -17,7 +17,7 @@ def check_eq_list_of_dicts(list1, list2):
 def test_mapping_int_int():
     r = qit.Range(2)
     m = qit.Mapping(r, r)
-    result = list(m.iterate())
+    result = list(m)
     check_eq_list_of_dicts(result,
                            [{0: 0, 1: 0}, {0: 1, 1: 0},
                             {0: 0, 1: 1}, {0: 1, 1: 1}])

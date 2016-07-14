@@ -31,7 +31,7 @@ class SequenceIterator(DomainIterator):
 
     def __init__(self, domain):
         super(SequenceIterator, self).__init__(domain)
-        self.iterators = [domain.domain.iterate().create_iterator()
+        self.iterators = [domain.domain.create_iterator()
                           for i in xrange(domain.length)]
         self.current = None
 

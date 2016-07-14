@@ -32,12 +32,12 @@ def test_product_generate():
 def test_product_mul():
     r1 = qit.Range(4)
     r2 = qit.Range(2)
-    result = list((r1 * r2).iterate())
+    result = list((r1 * r2))
     expected = itertools.product(range(4), range(2))
     assert set(result) == set(expected)
     assert len(result) == 8
 
-    result = list((r1 * r2 * r1).iterate())
+    result = list((r1 * r2 * r1))
     expected = itertools.product(range(4), range(2), range(4))
     assert set(result) == set(expected)
     assert len(result) == 32
@@ -63,7 +63,7 @@ def test_uproduct_iterate():
     r1 = qit.Range(4)
     p = qit.Product((r1, r1), unordered=True)
 
-    result = list(p.iterate())
+    result = list(p)
     assert set(result) == set(
         [(1, 0),
          (2, 0),
@@ -74,7 +74,7 @@ def test_uproduct_iterate():
     assert len(result) == p.size
 
     p = qit.Product((r1, r1, r1), unordered=True)
-    result = list(p.iterate())
+    result = list(p)
     assert set(result) == set(
         [(2, 1, 0),
          (3, 1, 0),
@@ -84,7 +84,7 @@ def test_uproduct_iterate():
     assert len(result) == p.size
 
     p = qit.Product((r1, r1, r1, r1), unordered=True)
-    result = list(p.iterate())
+    result = list(p)
     assert set(result) == set([(3, 2, 1, 0)])
     assert len(result) == p.size
 
