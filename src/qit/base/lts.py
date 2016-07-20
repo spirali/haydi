@@ -3,6 +3,7 @@ from iterator import Iterator
 from graph import Graph
 from domain import Domain
 
+
 class DLTS(object):
 
     def __init__(self, actions=None):

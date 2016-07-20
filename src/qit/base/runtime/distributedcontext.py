@@ -38,7 +38,7 @@ class DistributedContext(object):
     def run(self, domain,
             worker_reduce_fn, worker_reduce_init,
             global_reduce_fn, global_reduce_init):
-        size = domain.domain.size
+        size = domain.size
         assert size is not None  # TODO: Iterators without size
 
         workers = 0
@@ -93,13 +93,17 @@ def process_batch(arg):
     domain, start, size, reduce_fn, reduce_init = arg
     iterator = domain.create_iterator()
     iterator.set(start)
+
+    items = []
+    try:
+        for i in xrange(size):
+            items.append(iterator.next())
+    except StopIteration:
+        pass
+
     if reduce_fn is None:
-        return [iterator.next() for i in xrange(size)]
+        return items
     else:
-        if reduce_init is not None:
-            return reduce(reduce_fn,
-                          (iterator.next() for i in xrange(size)),
-                          reduce_init)
-        else:
-            return reduce(reduce_fn,
-                          (iterator.next() for i in xrange(size)))
+        return reduce(reduce_fn,
+                      items,
+                      reduce_init)

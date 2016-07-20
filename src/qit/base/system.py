@@ -2,6 +2,7 @@
 from iterator import Iterator
 from domain import Domain
 
+
 class System(object):
 
     def __init__(self, init_states):
@@ -12,7 +13,8 @@ class System(object):
 
     def iterate_states(self, depth, return_depth=False):
         domain = Domain(None, False)
-        domain.create_iterator = lambda: StatesIterator(self, depth, return_depth)
+        domain.create_iterator = lambda: StatesIterator(self, depth,
+                                                        return_depth)
         return domain
 
 

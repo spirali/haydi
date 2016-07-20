@@ -57,6 +57,9 @@ class Domain(object):
     def run(self, parallel=False):
         return self.collect().run(parallel)
 
+    def create_iterator(self):
+        raise NotImplementedError()
+
     def __iter__(self):
         return self.create_iterator()
 

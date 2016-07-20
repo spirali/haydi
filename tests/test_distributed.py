@@ -1,9 +1,10 @@
 import os
 import pytest
-import signal
 import time
 
 from subprocess import Popen, PIPE
+
+import signal
 
 from testutils import init, SRC_DIR
 init()
@@ -17,13 +18,13 @@ class DCluster(object):
 
     def __init__(self, port):
         self.sched_proc = None
-        self.worker_procs = None
+        self.worker_proc = None
         self.port = port
 
     def start(self, n_workers):
         self.sched_proc = Popen(["dscheduler", "--host", "127.0.0.1",
-                            "--port", str(self.port)],
-                           stdout=PIPE, stderr=PIPE)
+                                 "--port", str(self.port)],
+                                stdout=PIPE, stderr=PIPE)
 
         time.sleep(0.3)  # wait for the scheduler to spawn
 
@@ -31,12 +32,11 @@ class DCluster(object):
         pythonpath = env["PYTHONPATH"] if "PYTHONPATH" in env else ""
         env["PYTHONPATH"] = "{}:{}".format(pythonpath, SRC_DIR)
 
-        self.worker_procs = [
-            Popen(["dworker", "--nprocs", "1", "--nthreads", "1",
-                   "127.0.0.1:{}".format(self.port)],
-                  env=env,
-                  stdout=PIPE, stderr=PIPE)
-            for _ in xrange(4)]
+        self.worker_proc = Popen(["dworker", "--nprocs",
+                                  str(n_workers), "--nthreads", "1",
+                                  "127.0.0.1:{}".format(self.port)],
+                                 env=env,
+                                 stdout=PIPE, stderr=PIPE)
 
         time.sleep(1.5)  # wait for the workers to spawn
 
@@ -46,19 +46,17 @@ class DCluster(object):
 
     def stop(self):
         if self.sched_proc:
-            # Checkt that processes are still running
+            # Check that processes are still running
             assert not self.sched_proc.poll()
-        if self.worker_procs:
-            assert not any(w.poll() for w in self.worker_procs)
-
-            for p in self.worker_procs:
-                p.kill()
+        if self.worker_proc:
+            assert not self.worker_proc.poll()
+            os.kill(self.worker_proc.pid, signal.SIGINT)
 
         if self.sched_proc:
-            self.sched_proc.kill()
+            os.kill(self.sched_proc.pid, signal.SIGINT)
 
         self.sched_proc = None
-        self.worker_procs = None
+        self.worker_proc = None
 
 
 @pytest.yield_fixture(scope="module", autouse=True)
@@ -80,7 +78,7 @@ def test_dist_map(cluster4):
 def test_dist_filter(cluster4):
     x = Range(211)
     y = x * x
-    i = x.map(lambda x: x * 10).filter(lambda x: x < 600)
+    i = y.map(lambda x: x * 10).filter(lambda x: x < 600)
     result = i.run(True)
     expect = i.run(False)
     assert result == expect

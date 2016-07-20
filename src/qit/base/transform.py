@@ -1,6 +1,4 @@
-import time
 from copy import copy
-from iterator import Iterator
 from domain import Domain, DomainIterator
 
 
@@ -31,7 +29,6 @@ class Transformation(Domain):
 
     def create_iterator(self):
         return self.iterator_class(self, self.domain.create_iterator())
-
 
 
 class TakeIterator(TransformationIterator):
@@ -122,7 +119,6 @@ class FilterTransformation(Transformation):
             x = self.domain.generate_one()
             if self.fn(x):
                 return x
-
 
 
 """

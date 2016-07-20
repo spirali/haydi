@@ -222,4 +222,3 @@ def NamedProduct(named_domains,
     del n
     del d
     return domain
-
