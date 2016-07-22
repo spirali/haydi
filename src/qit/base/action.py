@@ -8,11 +8,11 @@ class Action(object):
     global_reduce_fn = None
     global_reduce_init = None
 
-    def __init__(self, it_factory):
+    def __init__(self, domain):
         """
-        :type it_factory: qit.base.factory.IteratorFactory
+        :type domain: qit.base.factory.IteratorFactory
         """
-        self.it_factory = it_factory
+        self.domain = domain
 
     def run(self, parallel=False):
         """
@@ -20,7 +20,7 @@ class Action(object):
         :return: Returns the computed result.
         """
         ctx = session.get_context(parallel)
-        result = ctx.run(self.it_factory,
+        result = ctx.run(self.domain,
                          self.worker_reduce_fn,
                          self.worker_reduce_init,
                          self.global_reduce_fn,
@@ -36,23 +36,23 @@ class Action(object):
 
 class Collect(Action):
 
-    def __init__(self, it_factory, postprocess_fn):
+    def __init__(self, domain, postprocess_fn):
         """
-        :type it_factory: qit.base.factory.IteratorFactory
+        :type domain: qit.base.factory.IteratorFactory
         """
-        super(Collect, self).__init__(it_factory)
+        super(Collect, self).__init__(domain)
         if postprocess_fn:
             self.postprocess = postprocess_fn
 
 
 class Reduce(Action):
 
-    def __init__(self, it_factory, reduce_fn, init_value=0, associative=True):
+    def __init__(self, domain, reduce_fn, init_value=0, associative=True):
         """
-        :type it_factory: qit.base.factory.IteratorFactory
+        :type domain: qit.base.factory.IteratorFactory
         :type fn: function
         """
-        super(Reduce, self).__init__(it_factory)
+        super(Reduce, self).__init__(domain)
         if associative:
             self.worker_reduce_fn = reduce_fn
         self.global_reduce_fn = reduce_fn
@@ -61,9 +61,9 @@ class Reduce(Action):
 
 class MaxAll(Action):
 
-    def __init__(self, it_factory, key_fn):
+    def __init__(self, domain, key_fn):
         """
-        :type it_factory: qit.base.factory.IteratorFactory
+        :type domain: qit.base.factory.IteratorFactory
         :type key_fn: function
         """
 
@@ -86,7 +86,7 @@ class MaxAll(Action):
             else:
                 return pair1
 
-        super(MaxAll, self).__init__(it_factory)
+        super(MaxAll, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
         self.worker_reduce_init = (None, None)
         self.global_reduce_fn = global_fn

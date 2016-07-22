@@ -106,6 +106,10 @@ class GeneratingDomain(Domain):
     def create_iterator(self):
         return GeneratingIterator(self.generate_fn)
 
+    def set(self):
+        pass
+        # for free!
+
 
 class DomainIterator(Iterator):
 
