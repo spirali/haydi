@@ -7,6 +7,11 @@ import qit  # noqa
 def test_take():
     r = qit.Range(10)
 
+    assert r.take(7).size == 7
+    assert r.take(17).size == 10
+    assert r.take(2).take(3).take(1).size == 1
+    assert r.take(10).exact_size
+
     assert range(10) == list(r.take(100))
     assert range(5) == list(r.take(5))
 

@@ -82,7 +82,7 @@ class Domain(object):
             name = self.__class__.__name__
 
         if self.exact_size and self.size is not None:
-            items = ", ".join(map(str, self.iterate().take(ITEMS_LIMIT)))
+            items = ", ".join(map(str, self.take(ITEMS_LIMIT)))
             if len(items) > ITEMS_CHAR_LIMIT:
                 items = items[:ITEMS_CHAR_LIMIT - 5]
                 items += ", ..."
@@ -105,10 +105,6 @@ class GeneratingDomain(Domain):
 
     def create_iterator(self):
         return GeneratingIterator(self.generate_fn)
-
-    def set(self):
-        pass
-        # for free!
 
 
 class DomainIterator(Iterator):

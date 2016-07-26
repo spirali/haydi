@@ -35,7 +35,7 @@ class TakeIterator(TransformationIterator):
 
     def __init__(self, domain, parent):
         super(TakeIterator, self).__init__(domain, parent)
-        self.count = domain.count
+        self.count = domain.size
 
     def next(self):
         if self.count <= 0:
@@ -57,10 +57,9 @@ class TakeTransformation(Transformation):
 
     def __init__(self, parent, count):
         if parent.size is not None:
-            size = max(parent.size, count)
+            size = min(parent.size, count)
         else:
             size = count
-        self.count = count
         super(TakeTransformation, self).__init__(parent,
                                                  size,
                                                  parent.exact_size)

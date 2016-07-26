@@ -82,3 +82,23 @@ def test_dist_filter(cluster4):
     result = i.run(True)
     expect = i.run(False)
     assert result == expect
+
+
+def test_dist_simple_take(cluster4):
+    x = Range(10).take(3)
+    result = x.run(True)
+    assert result == [0, 1, 2]
+
+
+def test_dist_take_filter(cluster4):
+    x = Range(10).filter(lambda x: x > 5).take(3)
+    result = x.run(True)
+    assert result == [6, 7, 8]
+
+
+def test_dist_generate(cluster4):
+    x = Range(10).generate(100)
+    result = x.run(True)
+    assert len(result) == 100
+    for i in result:
+        assert 0 <= i < 10

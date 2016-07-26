@@ -49,7 +49,7 @@ class DistributedContext(object):
             raise Exception("There are no workers")
 
         batch_count = workers * 4
-        batch_size = int(round(size / float(batch_count)))
+        batch_size = max(int(round(size / float(batch_count))), 1)
         batches = []
         i = 0
 

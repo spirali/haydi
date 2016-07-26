@@ -36,7 +36,7 @@ class GeneratingIterator(Iterator):
     def reset(self):
         pass
 
-    def set(self):
+    def set(self, index):
         pass
 
 
@@ -54,5 +54,5 @@ class EmptyIterator(Iterator):
     def reset(self):
         pass
 
-    def set(self):
-        pass
+    def set(self, index):
+        assert index == 0
