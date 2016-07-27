@@ -118,15 +118,15 @@ class ProductIterator(DomainIterator):
     def __repr__(self):
         return "Product"
 
-    def set(self, index):
+    def set_step(self, index):
         self.current = None
         if index >= self.size:
             for it in self.iterators:
-                it.set(it.size)
+                it.set_step(it.size)
             return
         for it in self.iterators:
             size = it.size
-            it.set(index % size)
+            it.set_step(index % size)
             index /= size
 
 
@@ -182,7 +182,7 @@ class UnorderedProductIterator(DomainIterator):
             self.current = current
             return tuple(self.current)
 
-    def set(self, index):
+    def set_step(self, index):
         assert len(self.domain.domains) == 2
         size = self.domain.domains[1].size - 1  # -1 to ignore diagonal
         assert index < self.size
@@ -197,8 +197,8 @@ class UnorderedProductIterator(DomainIterator):
             iterators = [d.create_iterator() for d in self.domain.domains]
         else:
             iterators = self.iterators
-        iterators[0].set(x)
-        iterators[1].set(y)
+        iterators[0].set_step(x)
+        iterators[1].set_step(y)
         self.current = [next(it) for it in iterators]
         self.iterators = iterators
 

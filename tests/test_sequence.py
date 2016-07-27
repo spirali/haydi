@@ -37,7 +37,7 @@ def test_sequence_iter_set():
     b = []
     for i in xrange(p.size + 10):
         it = iter(p)
-        it.set(i)
+        it.set_step(i)
         l = list(it)
         if l:
             b.append(l[0])

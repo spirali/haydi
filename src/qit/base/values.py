@@ -36,5 +36,5 @@ class ValuesIterator(DomainIterator):
             return v
         raise StopIteration()
 
-    def set(self, index):
+    def set_step(self, index):
         self.index = index

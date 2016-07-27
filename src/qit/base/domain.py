@@ -7,6 +7,7 @@ class Domain(object):
 
     def __init__(self, size=None, exact_size=False, name=None):
         self.size = size
+        self.steps = size
         self.exact_size = exact_size
         self.name = name
 
@@ -113,6 +114,7 @@ class DomainIterator(Iterator):
         super(DomainIterator, self).__init__()
         self.domain = domain
         self.size = self.domain.size
+        self.steps = self.domain.steps
         self.exact_size = self.domain.exact_size
 
 from product import Product  # noqa

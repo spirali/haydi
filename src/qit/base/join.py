@@ -70,11 +70,11 @@ class JoinIterator(DomainIterator):
                 self.index += 1
         raise StopIteration
 
-    def set(self, index):
+    def set_step(self, index):
         for i, it in enumerate(self.iterators):
             size = it.size
             if index < size:
-                it.set(index)
+                it.set_step(index)
                 self.index = i
                 return
             index -= size

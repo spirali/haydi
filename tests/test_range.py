@@ -49,7 +49,7 @@ def test_iter_set():
     b = []
     for i in xrange(40):
         it = iter(r)
-        it.set(i)
+        it.set_step(i)
         l = list(it)
         if l:
             b.append(l[0])

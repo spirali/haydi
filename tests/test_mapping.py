@@ -72,5 +72,5 @@ def test_mapping_set():
     a = list(m)
     for i in xrange(65):
         it = iter(m)
-        it.set(i)
+        it.set_step(i)
         assert list(it) == a[i:]

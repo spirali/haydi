@@ -67,7 +67,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
     if count is not None:
         source = pda_pairs.generate(count)
     else:
-        source = pda_pairs.iterate()
+        source = pda_pairs
 
     results = source.map(compute_eqlevel_of_two_dpda).max_all(
         lambda x: x[1]).run(parallel)

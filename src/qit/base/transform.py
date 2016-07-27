@@ -1,5 +1,6 @@
 from copy import copy
 from domain import Domain, DomainIterator
+from qit.base.iterator import NoValue
 
 
 class TransformationIterator(DomainIterator):
@@ -11,8 +12,8 @@ class TransformationIterator(DomainIterator):
     def reset(self):
         self.parent.reset()
 
-    def set(self, index):
-        self.parent.set(index)
+    def set_step(self, index):
+        self.parent.set_step(index)
 
     def copy(self):
         new = copy(self)
@@ -43,9 +44,14 @@ class TakeIterator(TransformationIterator):
         self.count -= 1
         return next(self.parent)
 
-    def set(self, index):
-        assert index < self.count
-        self.parent.set(index)
+    def next_step(self):
+        v = self.parent.next_step()
+        if v is not NoValue:
+            self.count -= 1
+        return v
+
+    def set_step(self, index):
+        self.parent.set_step(index)
 
     def __repr__(self):
         return "Take {} items".format(self.count)
@@ -56,13 +62,16 @@ class TakeTransformation(Transformation):
     iterator_class = TakeIterator
 
     def __init__(self, parent, count):
+        super(TakeTransformation, self).__init__(parent,
+                                                 parent.size,
+                                                 parent.exact_size)
         if parent.size is not None:
             size = min(parent.size, count)
         else:
             size = count
-        super(TakeTransformation, self).__init__(parent,
-                                                 size,
-                                                 parent.exact_size)
+        self.size = size
+        if self.steps is None:
+            self.steps = self.size  # set steps for generators
 
     def create_iterator(self):
         return TakeIterator(self, self.domain.create_iterator())
@@ -76,6 +85,13 @@ class MapIterator(TransformationIterator):
 
     def next(self):
         return self.fn(next(self.parent))
+
+    def next_step(self):
+        v = self.parent.next_step()
+        if v is NoValue:
+            return v
+        else:
+            return self.fn(v)
 
 
 class MapTransformation(Transformation):
@@ -102,6 +118,13 @@ class FilterIterator(TransformationIterator):
         while not self.fn(v):
             v = next(self.parent)
         return v
+
+    def next_step(self):
+        v = self.parent.next_step()
+        if self.fn(v):
+            return v
+        else:
+            return NoValue
 
 
 class FilterTransformation(Transformation):

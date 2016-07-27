@@ -4,15 +4,17 @@ from tornado.ioloop import IOLoop
 import time
 import itertools
 
+from qit.base.iterator import NoValue
+
 
 class DistributedContext(object):
     io_loop = None
     io_thread = None
 
     def __init__(self,
-                 n_workers=4,
                  ip="127.0.0.1",
                  port=8787,
+                 n_workers=4,
                  spawn_workers=False):
 
         self.n_workers = n_workers
@@ -38,7 +40,7 @@ class DistributedContext(object):
     def run(self, domain,
             worker_reduce_fn, worker_reduce_init,
             global_reduce_fn, global_reduce_init):
-        size = domain.size
+        size = domain.steps
         assert size is not None  # TODO: Iterators without size
 
         workers = 0
@@ -71,6 +73,8 @@ class DistributedContext(object):
         if worker_reduce_fn is None:
             results = list(itertools.chain.from_iterable(results))
 
+        results = results[:domain.size]  # trim results to required size
+
         if global_reduce_fn is None:
             return results
         else:
@@ -92,18 +96,21 @@ class DistributedContext(object):
 def process_batch(arg):
     domain, start, size, reduce_fn, reduce_init = arg
     iterator = domain.create_iterator()
-    iterator.set(start)
+    iterator.set_step(start)
 
     items = []
     try:
         for i in xrange(size):
-            items.append(iterator.next())
+            item = iterator.next_step()
+            if item is not NoValue:
+                items.append(item)
     except StopIteration:
         pass
 
     if reduce_fn is None:
         return items
     else:
-        return reduce(reduce_fn,
-                      items,
-                      reduce_init)
+        if reduce_init is None:
+            return reduce(reduce_fn, items)
+        else:
+            return reduce(reduce_fn, items, reduce_init)

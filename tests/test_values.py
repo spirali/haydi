@@ -22,7 +22,7 @@ def test_values_iterate():
 def test_values_set():
     a = qit.Values(["a", "b", "c", "d"])
     i = iter(a)
-    i.set(2)
+    i.set_step(2)
     assert list(i) == ["c", "d"]
 
 

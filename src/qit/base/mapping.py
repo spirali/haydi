@@ -42,15 +42,15 @@ class MappingIterator(DomainIterator):
             it.reset()
         self.current = None
 
-    def set(self, index):
+    def set_step(self, index):
         self.current = None
         if index >= self.size:
             for it in self.iterators:
-                it.set(it.size)
+                it.set_step(it.size)
             return
         for it in self.iterators:
             size = it.size
-            it.set(index % size)
+            it.set_step(index % size)
             index /= size
 
     def next(self):

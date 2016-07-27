@@ -1,6 +1,11 @@
+class NoValue(object):
+    pass
+
+
 class Iterator(object):
 
     size = None
+    steps = None
     exact_size = False
 
     def __init__(self):
@@ -15,8 +20,11 @@ class Iterator(object):
     def reset(self):
         raise NotImplementedError()
 
-    def set(self, index):
+    def set_step(self, index):
         raise Exception("set not implemented for {}".format(type(self)))
+
+    def next_step(self):
+        return next(self)
 
     def to_list(self):
         return list(self)
@@ -36,13 +44,14 @@ class GeneratingIterator(Iterator):
     def reset(self):
         pass
 
-    def set(self, index):
+    def set_step(self, index):
         pass
 
 
 class EmptyIterator(Iterator):
 
     size = 0
+    steps = 0
     exact_size = True
 
     def __init__(self):
@@ -54,5 +63,5 @@ class EmptyIterator(Iterator):
     def reset(self):
         pass
 
-    def set(self, index):
+    def set_step(self, index):
         assert index == 0
