@@ -1,5 +1,8 @@
 from threading import Thread
-from distributed import Scheduler, Nanny as Worker, Executor
+from datetime import datetime
+
+import cloudpickle
+from distributed import Scheduler, Nanny as Worker, Executor, as_completed
 from tornado.ioloop import IOLoop
 import time
 import itertools
@@ -14,13 +17,16 @@ class DistributedContext(object):
     def __init__(self,
                  ip="127.0.0.1",
                  port=8787,
-                 n_workers=4,
-                 spawn_workers=False):
+                 spawn_workers=0,
+                 write_partial_results=None):
 
-        self.n_workers = n_workers
+        self.worker_count = spawn_workers
         self.ip = ip
         self.port = port
         self.active = False
+        self.write_partial_results = write_partial_results
+        self.execution_count = 0
+        self.start_time = datetime.now()
 
         if not DistributedContext.io_loop:
             DistributedContext.io_loop = IOLoop()
@@ -29,10 +35,10 @@ class DistributedContext(object):
             DistributedContext.io_thread.daemon = True
             DistributedContext.io_thread.start()
 
-        if spawn_workers:
+        if spawn_workers > 0:
             self.scheduler = self._create_scheduler()
             self.workers = [self._create_worker()
-                            for i in xrange(self.n_workers)]
+                            for i in xrange(spawn_workers)]
             time.sleep(0.5)  # wait for workers to spawn
 
         self.executor = Executor((ip, port))
@@ -52,6 +58,59 @@ class DistributedContext(object):
 
         batch_count = workers * 4
         batch_size = max(int(round(size / float(batch_count))), 1)
+        batches = self._create_batches(batch_size, size, domain,
+                                       worker_reduce_fn, worker_reduce_init)
+
+        futures = self.executor.map(process_batch, batches)
+
+        if self.write_partial_results is not None:
+            results = []
+            partial_results = []
+            partial_count = 0
+
+            for future in as_completed(futures):
+                result = future.result()
+                results.append(result)
+                partial_results.append(result)
+
+                if len(partial_results) % self.write_partial_results == 0:
+                    self._write_partial_result(partial_results, partial_count)
+                    partial_results = []
+                    partial_count += 1
+
+            self.execution_count += 1
+        else:
+            results = self.executor.gather(futures)
+
+        if worker_reduce_fn is None:
+            results = list(itertools.chain.from_iterable(results))
+
+        results = results[:domain.size]  # trim results to required size
+
+        if global_reduce_fn is None:
+            return results
+        else:
+            if global_reduce_init is None:
+                return reduce(global_reduce_fn, results)
+            else:
+                return reduce(global_reduce_fn, results, global_reduce_init)
+
+    def _create_scheduler(self):
+        scheduler = Scheduler(ip=self.ip)
+        scheduler.start(self.port)
+        return scheduler
+
+    def _create_worker(self):
+        worker = Worker(center_ip=self.ip,
+                        center_port=self.port,
+                        ncores=1)
+        worker.start(0)
+        return worker
+
+    def _create_batches(self, batch_size, size,
+                        domain,
+                        worker_reduce_fn,
+                        worker_reduce_init):
         batches = []
         i = 0
 
@@ -68,29 +127,14 @@ class DistributedContext(object):
                                 worker_reduce_fn, worker_reduce_init))
                 break
 
-        futures = self.executor.map(process_batch, batches)
-        results = self.executor.gather(futures)
-        if worker_reduce_fn is None:
-            results = list(itertools.chain.from_iterable(results))
+        return batches
 
-        results = results[:domain.size]  # trim results to required size
-
-        if global_reduce_fn is None:
-            return results
-        else:
-            return reduce(global_reduce_fn, results, global_reduce_init)
-
-    def _create_scheduler(self):
-        scheduler = Scheduler(ip=self.ip)
-        scheduler.start(self.port)
-        return scheduler
-
-    def _create_worker(self):
-        worker = Worker(center_ip=self.ip,
-                        center_port=self.port,
-                        ncores=1)
-        worker.start(0)
-        return worker
+    def _write_partial_result(self, partial_results, partial_count):
+        with open("pyqit-{}-{}-{}".format(
+                int(time.mktime(self.start_time.timetuple())),
+                self.execution_count,
+                partial_count), "w") as f:
+            cloudpickle.dump(partial_results, f)
 
 
 def process_batch(arg):

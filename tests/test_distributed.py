@@ -40,8 +40,7 @@ class DCluster(object):
 
         time.sleep(1.5)  # wait for the workers to spawn
 
-        session.set_parallel_context(DistributedContext(
-            n_workers=n_workers, port=self.port))
+        session.set_parallel_context(DistributedContext(port=self.port))
         assert len(session.parallel_context.executor.ncores()) == n_workers
 
     def stop(self):

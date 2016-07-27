@@ -18,9 +18,6 @@ class Session(object):
         else:
             return self.serial_context
 
-    def set_worker(self, worker):
-        self.worker = worker
-
     def set_parallel_context(self, ctx):
         self.parallel_context = ctx
 
