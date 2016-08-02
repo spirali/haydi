@@ -58,11 +58,11 @@ class Domain(object):
     def run(self, parallel=False):
         return self.collect().run(parallel)
 
-    def create_iterator(self):
+    def create_iterator(self, use_steps):
         raise NotImplementedError()
 
     def __iter__(self):
-        return self.create_iterator()
+        return self.create_iterator(False)
 
     def generate_one(self):
         raise NotImplementedError()
@@ -104,7 +104,7 @@ class GeneratingDomain(Domain):
         Domain.__init__(self, None, True, name)
         self.generate_fn = generate_fn
 
-    def create_iterator(self):
+    def create_iterator(self, use_steps):
         return GeneratingIterator(self.generate_fn)
 
 

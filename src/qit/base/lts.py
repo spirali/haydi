@@ -14,12 +14,15 @@ class DLTS(object):
             max_depth=None,
             return_depth=False,
             max_states=None):
+
+        def create_iterator(use_steps):
+            return BreadthFirstIterator(self,
+                                        init_state,
+                                        max_depth,
+                                        return_depth,
+                                        max_states)
         domain = Domain(None, False)
-        domain.create_iterator = lambda: BreadthFirstIterator(self,
-                                                              init_state,
-                                                              max_depth,
-                                                              return_depth,
-                                                              max_states)
+        domain.create_iterator = create_iterator
         return domain
 
     def get_enabled_actions(self, state):

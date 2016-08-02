@@ -28,11 +28,11 @@ class Product(Domain):
             if len(set(domains)) > 1:
                 raise Exception("Not implemented for discitinct domains")
 
-    def create_iterator(self):
+    def create_iterator(self, use_steps):
         if self.unordered:
-            return UnorderedProductIterator(self)
+            return UnorderedProductIterator(self, use_steps)
         else:
-            return ProductIterator(self)
+            return ProductIterator(self, use_steps)
 
     def generate_one(self):
         if self._generator_cache:
@@ -82,10 +82,11 @@ class Product(Domain):
 
 class ProductIterator(DomainIterator):
 
-    def __init__(self, domain):
+    def __init__(self, domain, use_steps):
         super(ProductIterator, self).__init__(domain)
-        self.iterators = [d.create_iterator() for d in domain.domains]
+        self.iterators = [d.create_iterator(use_steps) for d in domain.domains]
         self.current = None
+        self.use_steps = use_steps
 
     def reset(self):
         for it in self.iterators:
@@ -132,11 +133,12 @@ class ProductIterator(DomainIterator):
 
 class UnorderedProductIterator(DomainIterator):
 
-    def __init__(self, domain):
+    def __init__(self, domain, use_steps):
         super(UnorderedProductIterator, self).__init__(domain)
         assert len(set(domain.domains)) == 1
         self.iterators = None
         self.current = None
+        self.use_steps = use_steps
 
     def copy(self):
         new = copy(self)
@@ -169,7 +171,7 @@ class UnorderedProductIterator(DomainIterator):
                     continue
             raise StopIteration()
         else:
-            it = self.domain.domains[0].create_iterator()
+            it = self.domain.domains[0].create_iterator(self.use_steps)
             iterators = []
             current = []
             for d in self.domain.domains:
@@ -194,7 +196,8 @@ class UnorderedProductIterator(DomainIterator):
         x = index - y * size + ((y - 1) * y / 2) + y
 
         if not self.current:
-            iterators = [d.create_iterator() for d in self.domain.domains]
+            iterators = [d.create_iterator(self.use_steps)
+                         for d in self.domain.domains]
         else:
             iterators = self.iterators
         iterators[0].set_step(x)

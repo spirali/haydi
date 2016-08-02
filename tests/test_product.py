@@ -203,3 +203,15 @@ def test_product_cache():
 
     test_for_size(3)
     test_for_size(20)
+
+
+def test_product_steps():
+    a = qit.Range(20).take(10).filter(lambda x: x % 2 == 0).take(4)
+    p = a * a
+
+    assert a.size == 4
+    assert p.size == 16
+    assert a.steps == 10
+
+    items = [0, 2, 4, 6]
+    assert set(p) == set(itertools.product(items, items))

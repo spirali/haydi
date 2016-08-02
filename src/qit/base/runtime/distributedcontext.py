@@ -139,13 +139,13 @@ class DistributedContext(object):
 
 def process_batch(arg):
     domain, start, size, reduce_fn, reduce_init = arg
-    iterator = domain.create_iterator()
+    iterator = domain.create_iterator(True)
     iterator.set_step(start)
 
     items = []
     try:
         for i in xrange(size):
-            item = iterator.next_step()
+            item = iterator.next()
             if item is not NoValue:
                 items.append(item)
     except StopIteration:

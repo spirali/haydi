@@ -28,8 +28,9 @@ class Transformation(Domain):
         super(Transformation, self).__init__(size, exact_size, name)
         self.domain = domain
 
-    def create_iterator(self):
-        return self.iterator_class(self, self.domain.create_iterator())
+    def create_iterator(self, use_steps):
+        return self.iterator_class(self,
+                                   self.domain.create_iterator(use_steps))
 
 
 class TakeIterator(TransformationIterator):
@@ -44,12 +45,6 @@ class TakeIterator(TransformationIterator):
         self.count -= 1
         return next(self.parent)
 
-    def next_step(self):
-        v = self.parent.next_step()
-        if v is not NoValue:
-            self.count -= 1
-        return v
-
     def set_step(self, index):
         self.parent.set_step(index)
 
@@ -62,19 +57,21 @@ class TakeTransformation(Transformation):
     iterator_class = TakeIterator
 
     def __init__(self, parent, count):
-        super(TakeTransformation, self).__init__(parent,
-                                                 parent.size,
-                                                 parent.exact_size)
         if parent.size is not None:
             size = min(parent.size, count)
         else:
             size = count
         self.size = size
-        if self.steps is None:
-            self.steps = self.size  # set steps for generators
 
-    def create_iterator(self):
-        return TakeIterator(self, self.domain.create_iterator())
+        if parent.exact_size and parent.steps:
+            steps = min(size, parent.steps)
+        else:
+            steps = parent.steps
+
+        super(TakeTransformation, self).__init__(parent,
+                                                 size,
+                                                 parent.exact_size)
+        self.steps = steps
 
 
 class MapIterator(TransformationIterator):
@@ -86,8 +83,15 @@ class MapIterator(TransformationIterator):
     def next(self):
         return self.fn(next(self.parent))
 
-    def next_step(self):
-        v = self.parent.next_step()
+
+class MapIteratorBySteps(TransformationIterator):
+
+    def __init__(self, domain, parent):
+        super(MapIteratorBySteps, self).__init__(domain, parent)
+        self.fn = domain.fn
+
+    def next(self):
+        v = self.parent.next()
         if v is NoValue:
             return v
         else:
@@ -106,6 +110,14 @@ class MapTransformation(Transformation):
     def generate_one(self):
         return self.fn(self.domain.generate_one())
 
+    def create_iterator(self, use_steps):
+        if use_steps:
+            return MapIteratorBySteps(self,
+                                      self.domain.create_iterator(use_steps))
+        else:
+            return MapIterator(self,
+                               self.domain.create_iterator(use_steps))
+
 
 class FilterIterator(TransformationIterator):
 
@@ -119,17 +131,22 @@ class FilterIterator(TransformationIterator):
             v = next(self.parent)
         return v
 
-    def next_step(self):
-        v = self.parent.next_step()
-        if self.fn(v):
+
+class FilterIteratorBySteps(TransformationIterator):
+
+    def __init__(self, domain, parent):
+        super(FilterIteratorBySteps, self).__init__(domain, parent)
+        self.fn = domain.fn
+
+    def next(self):
+        v = self.parent.next()
+        if v is NoValue or self.fn(v):
             return v
         else:
             return NoValue
 
 
 class FilterTransformation(Transformation):
-
-    iterator_class = FilterIterator
 
     def __init__(self, domain, fn):
         super(FilterTransformation, self).__init__(
@@ -141,6 +158,15 @@ class FilterTransformation(Transformation):
             x = self.domain.generate_one()
             if self.fn(x):
                 return x
+
+    def create_iterator(self, use_steps):
+        if use_steps:
+            return FilterIteratorBySteps(self,
+                                         self.domain.create_iterator(use_steps))
+        else:
+            return FilterIterator(self,
+                                  self.domain.create_iterator(use_steps))
+
 
 
 """

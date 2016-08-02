@@ -11,8 +11,8 @@ class Sequence(Domain):
         self.length = length
         self.domain = domain
 
-    def create_iterator(self):
-        return SequenceIterator(self)
+    def create_iterator(self, use_steps):
+        return SequenceIterator(self, use_steps)
 
     def generate_one(self):
         return tuple(self.domain.generate_one() for i in xrange(self.length))
@@ -29,9 +29,9 @@ class Sequence(Domain):
 
 class SequenceIterator(DomainIterator):
 
-    def __init__(self, domain):
+    def __init__(self, domain, use_steps):
         super(SequenceIterator, self).__init__(domain)
-        self.iterators = [domain.domain.create_iterator()
+        self.iterators = [domain.domain.create_iterator(use_steps)
                           for i in xrange(domain.length)]
         self.current = None
 

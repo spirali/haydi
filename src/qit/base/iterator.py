@@ -23,9 +23,6 @@ class Iterator(object):
     def set_step(self, index):
         raise Exception("set not implemented for {}".format(type(self)))
 
-    def next_step(self):
-        return next(self)
-
     def to_list(self):
         return list(self)
 

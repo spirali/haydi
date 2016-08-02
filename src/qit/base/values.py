@@ -13,7 +13,7 @@ class Values(Domain):
     def generate_one(self):
         return random.choice(self.values)
 
-    def create_iterator(self):
+    def create_iterator(self, use_steps):
         return ValuesIterator(self)
 
 
