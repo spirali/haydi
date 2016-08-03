@@ -23,9 +23,9 @@ class TransformationIterator(DomainIterator):
 
 class Transformation(Domain):
 
-    def __init__(self, domain, size, exact_size):
+    def __init__(self, domain, size, exact_size, steps):
         name = type(self).__name__
-        super(Transformation, self).__init__(size, exact_size, name)
+        super(Transformation, self).__init__(size, exact_size, steps, name)
         self.domain = domain
 
     def create_iterator(self, use_steps):
@@ -39,17 +39,34 @@ class TakeIterator(TransformationIterator):
         super(TakeIterator, self).__init__(domain, parent)
         self.count = domain.size
 
+    def reset(self):
+        self.count = self.domain.size
+        self.parent.reset()
+
     def next(self):
         if self.count <= 0:
             raise StopIteration()
         self.count -= 1
         return next(self.parent)
 
-    def set_step(self, index):
-        self.parent.set_step(index)
 
-    def __repr__(self):
-        return "Take {} items".format(self.count)
+class TakeIteratorBySteps(TransformationIterator):
+
+    def __init__(self, domain, parent):
+        super(TakeIteratorBySteps, self).__init__(domain, parent)
+        self.count = domain.size
+
+    def reset(self):
+        self.count = self.domain.size
+        self.parent.reset()
+
+    def next(self):
+        if self.count <= 0:
+            raise StopIteration()
+        value = next(self.parent)
+        if value is not NoValue:
+            self.count -= 1
+        return value
 
 
 class TakeTransformation(Transformation):
@@ -70,8 +87,15 @@ class TakeTransformation(Transformation):
 
         super(TakeTransformation, self).__init__(parent,
                                                  size,
-                                                 parent.exact_size)
-        self.steps = steps
+                                                 parent.exact_size,
+                                                 steps)
+
+    def create_iterator(self, use_steps):
+        iterator = self.domain.create_iterator(use_steps)
+        if use_steps:
+            return TakeIteratorBySteps(self, iterator)
+        else:
+            return TakeIterator(self, iterator)
 
 
 class MapIterator(TransformationIterator):
@@ -104,7 +128,7 @@ class MapTransformation(Transformation):
 
     def __init__(self, domain, fn):
         super(MapTransformation, self).__init__(
-            domain, domain.size, domain.exact_size)
+            domain, domain.size, domain.exact_size, domain.steps)
         self.fn = fn
 
     def generate_one(self):
@@ -150,7 +174,7 @@ class FilterTransformation(Transformation):
 
     def __init__(self, domain, fn):
         super(FilterTransformation, self).__init__(
-            domain, domain.size, False)
+            domain, domain.size, False, domain.steps)
         self.fn = fn
 
     def generate_one(self):
@@ -161,11 +185,11 @@ class FilterTransformation(Transformation):
 
     def create_iterator(self, use_steps):
         if use_steps:
-            return FilterIteratorBySteps(self,
-                                         self.domain.create_iterator(use_steps))
+            return FilterIteratorBySteps(
+                self, self.domain.create_iterator(use_steps))
         else:
-            return FilterIterator(self,
-                                  self.domain.create_iterator(use_steps))
+            return FilterIterator(
+                self, self.domain.create_iterator(use_steps))
 
 
 

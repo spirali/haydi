@@ -1,5 +1,14 @@
-class NoValue(object):
-    pass
+class NoValueType(object):
+
+    def __init__(self):
+        # Make sure that instance is unique
+        assert NoValue is None
+
+    def __repr__(self):
+        return "NoValue"
+
+NoValue = None
+NoValue = NoValueType()
 
 
 class Iterator(object):

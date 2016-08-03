@@ -5,10 +5,10 @@ import action
 
 class Domain(object):
 
-    def __init__(self, size=None, exact_size=False, name=None):
+    def __init__(self, size=None, exact_size=False, steps=None, name=None):
         self.size = size
-        self.steps = size
         self.exact_size = exact_size
+        self.steps = steps
         self.name = name
 
     def __mul__(self, other):

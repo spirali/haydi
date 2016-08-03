@@ -17,9 +17,10 @@ class Product(Domain):
                  unordered=False,
                  cache_size=0):
         domains = tuple(domains)
-        size = self._compute_size(domains, unordered)
+        size = self._compute_size([d.size for d in domains], unordered)
+        steps = self._compute_size([d.steps for d in domains], unordered)
         exact_size = all(d.exact_size for d in domains)
-        super(Product, self).__init__(size, exact_size, name)
+        super(Product, self).__init__(size, exact_size, steps, name)
         self.domains = tuple(domains)
         self.unordered = unordered
         self.cache_size = max(len(domains), cache_size) if cache_size else 0
@@ -61,19 +62,18 @@ class Product(Domain):
         else:
             return tuple(d.generate_one() for d in self.domains)
 
-    def _compute_size(self, domains, unordered):
-        if (not domains or
-                not all([domain.size is not None for domain in domains])):
+    def _compute_size(self, sizes, unordered):
+        if any(s is None for s in sizes):
             return None
         result = 1
 
         if unordered:
-            for i, domain in enumerate(domains):
-                result *= domain.size - i
-            return result / math.factorial(len(domains))
+            for i, s in enumerate(sizes):
+                result *= s - i
+            return result / math.factorial(len(sizes))
         else:
-            for domain in domains:
-                result *= domain.size
+            for s in sizes:
+                result *= s
             return result
 
     def __mul__(self, other):

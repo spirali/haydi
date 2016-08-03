@@ -25,7 +25,7 @@ class Range(Domain):
         else:
             size = (end - start) / step
 
-        super(Range, self).__init__(size, True, name)
+        super(Range, self).__init__(size, True, size, name)
 
         self.start = start
         self.end = end
