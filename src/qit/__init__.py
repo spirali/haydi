@@ -12,3 +12,6 @@ from base.lts import DLTS, DLTSProduct  # noqa
 
 # Basic types
 from base.boolean import Boolean  # noqa
+
+# Singletons
+from base.iterator import NoValue  # noqa
