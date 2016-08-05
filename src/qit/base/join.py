@@ -13,7 +13,11 @@ class Join(Domain):
         else:
             size = None
         exact_size = all(d.exact_size for d in domains)
-        super(Join, self).__init__(size, exact_size, name)
+        if all(d.steps is not None for d in domains):
+            steps = sum(d.steps for d in domains)
+        else:
+            steps = None
+        super(Join, self).__init__(size, exact_size, steps, name)
         self.domains = domains
 
         if ratios is None:
@@ -27,11 +31,11 @@ class Join(Domain):
             ratio_sums.append(s)
         self.ratio_sums = ratio_sums
 
-    def create_iterator(self, use_steps):
+    def create_iterator(self):
         if not self.domains:
             return EmptyIterator()
         else:
-            return JoinIterator(self, use_steps)
+            return JoinIterator(self)
 
     def generate_one(self):
         c = randint(0, self.ratio_sums[-1] - 1)
@@ -46,10 +50,10 @@ class Join(Domain):
 
 class JoinIterator(DomainIterator):
 
-    def __init__(self, domain, use_steps):
+    def __init__(self, domain):
         super(JoinIterator, self).__init__(domain)
         self.index = 0
-        self.iterators = [d.create_iterator(use_steps)
+        self.iterators = [d.create_iterator()
                           for d in self.domain.domains]
 
     def copy(self):

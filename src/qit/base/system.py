@@ -13,8 +13,8 @@ class System(object):
 
     def iterate_states(self, depth, return_depth=False):
         domain = Domain(None, False)
-        domain.create_iterator = lambda use_steps: StatesIterator(self, depth,
-                                                                  return_depth)
+        domain.create_iterator = lambda: StatesIterator(
+            self, depth, return_depth)
         return domain
 
 

@@ -23,14 +23,16 @@ class TransformationIterator(DomainIterator):
 
 class Transformation(Domain):
 
+    iterator_class = None
+
     def __init__(self, domain, size, exact_size, steps):
         name = type(self).__name__
         super(Transformation, self).__init__(size, exact_size, steps, name)
         self.domain = domain
 
-    def create_iterator(self, use_steps):
+    def create_iterator(self):
         return self.iterator_class(self,
-                                   self.domain.create_iterator(use_steps))
+                                   self.domain.create_iterator())
 
 
 class TakeIterator(TransformationIterator):
@@ -47,23 +49,12 @@ class TakeIterator(TransformationIterator):
         if self.count <= 0:
             raise StopIteration()
         self.count -= 1
-        return next(self.parent)
+        return self.parent.next()
 
-
-class TakeIteratorBySteps(TransformationIterator):
-
-    def __init__(self, domain, parent):
-        super(TakeIteratorBySteps, self).__init__(domain, parent)
-        self.count = domain.size
-
-    def reset(self):
-        self.count = self.domain.size
-        self.parent.reset()
-
-    def next(self):
+    def step(self):
         if self.count <= 0:
             raise StopIteration()
-        value = next(self.parent)
+        value = self.parent.step()
         if value is not NoValue:
             self.count -= 1
         return value
@@ -90,13 +81,6 @@ class TakeTransformation(Transformation):
                                                  parent.exact_size,
                                                  steps)
 
-    def create_iterator(self, use_steps):
-        iterator = self.domain.create_iterator(use_steps)
-        if use_steps:
-            return TakeIteratorBySteps(self, iterator)
-        else:
-            return TakeIterator(self, iterator)
-
 
 class MapIterator(TransformationIterator):
 
@@ -107,15 +91,8 @@ class MapIterator(TransformationIterator):
     def next(self):
         return self.fn(next(self.parent))
 
-
-class MapIteratorBySteps(TransformationIterator):
-
-    def __init__(self, domain, parent):
-        super(MapIteratorBySteps, self).__init__(domain, parent)
-        self.fn = domain.fn
-
-    def next(self):
-        v = self.parent.next()
+    def step(self):
+        v = self.parent.step()
         if v is NoValue:
             return v
         else:
@@ -134,14 +111,6 @@ class MapTransformation(Transformation):
     def generate_one(self):
         return self.fn(self.domain.generate_one())
 
-    def create_iterator(self, use_steps):
-        if use_steps:
-            return MapIteratorBySteps(self,
-                                      self.domain.create_iterator(use_steps))
-        else:
-            return MapIterator(self,
-                               self.domain.create_iterator(use_steps))
-
 
 class FilterIterator(TransformationIterator):
 
@@ -155,15 +124,8 @@ class FilterIterator(TransformationIterator):
             v = next(self.parent)
         return v
 
-
-class FilterIteratorBySteps(TransformationIterator):
-
-    def __init__(self, domain, parent):
-        super(FilterIteratorBySteps, self).__init__(domain, parent)
-        self.fn = domain.fn
-
-    def next(self):
-        v = self.parent.next()
+    def step(self):
+        v = self.parent.step()
         if v is NoValue or self.fn(v):
             return v
         else:
@@ -171,6 +133,8 @@ class FilterIteratorBySteps(TransformationIterator):
 
 
 class FilterTransformation(Transformation):
+
+    iterator_class = FilterIterator
 
     def __init__(self, domain, fn):
         super(FilterTransformation, self).__init__(
@@ -182,16 +146,6 @@ class FilterTransformation(Transformation):
             x = self.domain.generate_one()
             if self.fn(x):
                 return x
-
-    def create_iterator(self, use_steps):
-        if use_steps:
-            return FilterIteratorBySteps(
-                self, self.domain.create_iterator(use_steps))
-        else:
-            return FilterIterator(
-                self, self.domain.create_iterator(use_steps))
-
-
 
 """
 class TimeoutTransformation(Transformation):

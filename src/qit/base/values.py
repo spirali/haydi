@@ -7,13 +7,14 @@ import random
 class Values(Domain):
 
     def __init__(self, values, name=None):
-        super(Values, self).__init__(len(values), True, name)
+        size = len(values)
+        super(Values, self).__init__(size, True, size, name)
         self.values = values
 
     def generate_one(self):
         return random.choice(self.values)
 
-    def create_iterator(self, use_steps):
+    def create_iterator(self):
         return ValuesIterator(self)
 
 

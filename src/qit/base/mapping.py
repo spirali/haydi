@@ -6,13 +6,14 @@ class Mapping(Domain):
 
     def __init__(self, key_domain, value_domain, name=None):
         size = value_domain.size ** key_domain.size
+        steps = value_domain.steps ** key_domain.steps
         exact_size = key_domain.exact_size and value_domain.exact_size
-        super(Mapping, self).__init__(size, exact_size, name)
+        super(Mapping, self).__init__(size, exact_size, steps, name)
         self.key_domain = key_domain
         self.value_domain = value_domain
 
-    def create_iterator(self, use_steps):
-        return MappingIterator(self, use_steps)
+    def create_iterator(self):
+        return MappingIterator(self)
 
     def generate_one(self):
         result = {}
@@ -24,10 +25,10 @@ class Mapping(Domain):
 
 class MappingIterator(DomainIterator):
 
-    def __init__(self, domain, use_steps):
+    def __init__(self, domain):
         super(MappingIterator, self).__init__(domain)
         self.keys = tuple(domain.key_domain)
-        self.iterators = [domain.value_domain.create_iterator(use_steps)
+        self.iterators = [domain.value_domain.create_iterator()
                           for key in self.keys]
         self.current = None
 

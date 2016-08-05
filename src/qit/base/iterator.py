@@ -35,6 +35,30 @@ class Iterator(object):
     def to_list(self):
         return list(self)
 
+    def to_step_list(self):
+        return list(StepIterator(self))
+
+    def step(self):
+        return self.next()
+
+
+class StepIterator(Iterator):
+
+    def __init__(self, iterator):
+        self.iterator = iterator
+
+    def next(self):
+        return self.iterator.step()
+
+    def step(self):
+        return self.iterator.step()
+
+    def set_step(self, index):
+        self.iterator.set_step(index)
+
+    def reset(self):
+        self.iterator.reset()
+
 
 class GeneratingIterator(Iterator):
 

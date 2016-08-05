@@ -37,7 +37,7 @@ class Range(Domain):
         else:
             return randint(0, self.size - 1) * self.step
 
-    def create_iterator(self, use_steps):
+    def create_iterator(self):
         return RangeIterator(self)
 
 
@@ -65,6 +65,9 @@ class RangeIterator(DomainIterator):
             self.value += self.domain.step
             return v
         raise StopIteration()
+
+    def step(self):
+        return self.next()
 
     def __repr__(self):
         return "{} iterator".format(str(self.domain))

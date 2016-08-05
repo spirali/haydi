@@ -214,7 +214,7 @@ def test_product_steps():
     assert a.steps == 10
     assert p.steps == 100
 
-    assert len(list(p)) == 16
+    result = list(p)
+    assert len(result) == 16
     items = [0, 2, 4, 6]
-    assert set(p) == set(itertools.product(items, items))
-
+    assert set(result) == set(itertools.product(items, items))

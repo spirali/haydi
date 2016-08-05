@@ -15,7 +15,7 @@ class DLTS(object):
             return_depth=False,
             max_states=None):
 
-        def create_iterator(use_steps):
+        def create_iterator():
             return BreadthFirstIterator(self,
                                         init_state,
                                         max_depth,
