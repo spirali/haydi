@@ -23,7 +23,6 @@ ip = sys.argv[1]
 port = int(sys.argv[2])
 worker_count = int(sys.argv[3])"""
 
-session.set_parallel_context(DistributedContext(port=9001,
-                                                spawn_workers=4))
+session.set_parallel_context(DistributedContext(port=9010))
 
 compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT, True)

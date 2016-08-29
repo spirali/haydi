@@ -9,8 +9,8 @@ N_SIZE = 2            # Number of states
 S_SIZE = 1            # Number of stack symbols
 A_SIZE = 2            # Number of actions (alphabet size)
 DEPTH = 10            # Maximal depth of state space
-MAX_STATES = 100000  # Max nodes in state space
-COUNT = 250000        # None = iterate all
+MAX_STATES = 100000   # Max nodes in state space
+COUNT = None          # None = iterate all
 
 
 def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
