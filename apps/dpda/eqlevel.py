@@ -184,5 +184,29 @@ def pda_to_graph(pda1):
     return qit.ext.automata.transition_fn_to_graph(pda1, rule_fn, 0)
 
 
+def main():
+    parallel = None
+    if len(sys.argv) == 2:
+        if sys.argv[1] != "--help" and sys.argv[1] != "-h":
+            count = int(sys.argv[1])
+            ctx = qit.DistributedContext(port=9010, spawn_workers=count)
+            qit.session.set_parallel_context(ctx)
+            parallel = True
+    elif len(sys.argv) == 3:
+        port = int(sys.arv[2])
+        ctx = qit.DistributedContext(ip=sys.arv[1], port=port)
+        qit.session.set_parallel_context(ctx)
+        parallel = True
+    elif len(sys.argv) == 1:
+        parallel = False
+
+    if parallel is None:
+        print "Usages"
+        print "{} # serial version".format(sys.argv[0])
+        print "{} <number-of-local-workers>".format(sys.argv[0])
+        print "{} <server-ip> <server-port>".format(sys.argv[0])
+        return
+    compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT, parallel)
+
 if __name__ == "__main__":
-    compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT, False)
+    main()

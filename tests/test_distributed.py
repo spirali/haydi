@@ -10,7 +10,7 @@ from testutils import init, SRC_DIR
 init()
 
 from qit import Range   # noqa
-from qit.base.session import session  # noqa
+from qit import session  # noqa
 from qit.base.runtime.distributedcontext import DistributedContext  # noqa
 
 

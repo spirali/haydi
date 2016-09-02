@@ -1,4 +1,4 @@
-from session import session
+from qitsession import session
 
 
 class Action(object):

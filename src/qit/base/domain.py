@@ -72,6 +72,9 @@ class Domain(object):
         if count is None:
             return domain
         else:
+            # The following may be considered as hack,
+            # but it is quite ok for now:)
+            domain.steps = count
             return domain.take(count)
 
     def __repr__(self):
@@ -101,7 +104,7 @@ class Domain(object):
 class GeneratingDomain(Domain):
 
     def __init__(self, generate_fn, name=None):
-        Domain.__init__(self, None, True, name)
+        Domain.__init__(self, None, True, None, name=name)
         self.generate_fn = generate_fn
 
     def create_iterator(self):

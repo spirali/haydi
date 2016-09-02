@@ -15,3 +15,7 @@ from base.boolean import Boolean  # noqa
 
 # Singletons
 from base.iterator import NoValue  # noqa
+
+# Session
+from qit.base.runtime.distributedcontext import DistributedContext  # noqa
+from qit.base.qitsession import session  # noqa

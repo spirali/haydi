@@ -7,4 +7,4 @@
 module load Python/2.7.9-GNU-5.1.0-2.25
 ~/projects/pyqit/it4i/start-dist.sh
 cd $PBS_O_WORKDIR
-python eqlevel_dist.py
+python eqlevel_dist.py 127.0.0.1 9010
