@@ -2,6 +2,7 @@ from threading import Thread
 from datetime import datetime
 
 import cloudpickle
+import distributed
 from distributed import Scheduler, Nanny as Worker, Executor, as_completed
 from tornado.ioloop import IOLoop
 import time
@@ -18,13 +19,15 @@ class DistributedContext(object):
                  ip="127.0.0.1",
                  port=8787,
                  spawn_workers=0,
-                 write_partial_results=None):
+                 write_partial_results=None,
+                 track_progress=False):
 
         self.worker_count = spawn_workers
         self.ip = ip
         self.port = port
         self.active = False
         self.write_partial_results = write_partial_results
+        self.track_progress = track_progress
         self.execution_count = 0
         self.start_time = datetime.now()
 
@@ -62,6 +65,9 @@ class DistributedContext(object):
                                        worker_reduce_fn, worker_reduce_init)
 
         futures = self.executor.map(process_batch, batches)
+
+        if self.track_progress:
+            distributed.diagnostics.progress(futures)
 
         if self.write_partial_results is not None:
             results = []
