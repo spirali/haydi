@@ -25,6 +25,19 @@ class DLTS(object):
         domain.create_iterator = create_iterator
         return domain
 
+    def bfs_path(self,
+                 init_state,
+                 max_depth=None,
+                 max_states=None):
+        def create_iterator():
+            return BreadthFirstIterator2(self,
+                                         init_state,
+                                         max_depth,
+                                         max_states)
+        domain = Domain(None, False)
+        domain.create_iterator = create_iterator
+        return domain
+
     def get_enabled_actions(self, state):
         return self.actions
 
@@ -60,6 +73,15 @@ class DLTS(object):
 
     def step(self, state, action):
         raise NotImplementedError()
+
+    def make_path(self, state, actions):
+        result = [state]
+        for a in actions:
+            state = self.step(state, a)
+            if state is None:
+                return result
+            result.append(state)
+        return result
 
     def __mul__(self, lts):
         return DLTSProduct(self, lts)
@@ -132,6 +154,51 @@ class BreadthFirstIterator(Iterator):
                     if new_state not in self.found:
                         self.found.add(new_state)
                         self.nexts.append(new_state)
+                        to_report += 1
+                self.to_report = to_report
+                if (self.max_states is not None and
+                        len(self.states) > self.max_states):
+                    raise StopIteration()
+                continue
+
+            self.depth += 1
+            if self.depth > self.max_depth or not self.nexts:
+                raise StopIteration()
+            tmp = self.states
+            self.states = self.nexts
+            self.nexts = tmp
+
+
+class BreadthFirstIterator2(Iterator):
+
+    def __init__(self, lts, init_state, max_depth, max_states):
+        super(BreadthFirstIterator2, self).__init__()
+        self.lts = lts
+        self.depth = 0
+        self.max_depth = max_depth
+        self.max_states = max_states
+        self.nexts = [(init_state, ())]
+        self.to_report = 1
+        self.states = []
+        self.found = set(self.nexts)
+
+    def next(self):
+        while True:
+            if self.to_report:
+                i = self.to_report
+                self.to_report -= 1
+                return self.nexts[-i]
+
+            if self.states:
+                state, path = self.states.pop()
+                to_report = 0
+                for a in self.lts.get_enabled_actions(state):
+                    new_state = self.lts.step(state, a)
+                    if new_state is None:
+                        continue
+                    if new_state not in self.found:
+                        self.found.add(new_state)
+                        self.nexts.append((new_state, path + (a,)))
                         to_report += 1
                 self.to_report = to_report
                 if (self.max_states is not None and
