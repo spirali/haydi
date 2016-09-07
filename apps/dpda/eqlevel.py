@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(0, "../../src")
-import qit
-import qit.ext.automata
-from pprint import pprint
+import qit # noqa
+import qit.ext.automata # noqa
+from pprint import pprint # noqa
 
 
 N_SIZE = 2            # Number of states

@@ -1,14 +1,58 @@
 from threading import Thread
 from datetime import datetime
+import time
+import itertools
+import logging
 
 import cloudpickle
 import distributed
 from distributed import Scheduler, Nanny as Worker, Executor, as_completed
 from tornado.ioloop import IOLoop
-import time
-import itertools
 
 from qit.base.iterator import NoValue
+
+
+class ResultSaver(object):
+    def __init__(self, id, write_count):
+        """
+        :type id: int
+        :type write_count: int
+        """
+        self.time = datetime.now()
+        self.id = id
+        self.write_count = write_count
+        self.results = []
+        self.counter = 0
+
+    def handle_result(self, result):
+        self.results.append(result)
+
+        if len(self.results) % self.write_count == 0:
+            self._write_partial_result(self.results, self.counter)
+            self.results = []
+            self.counter += 1
+
+    def _write_partial_result(self, results, counter):
+        filename = "pyqit-{}-{}-{}".format(
+                int(time.mktime(self.time.timetuple())),
+                self.id,
+                counter)
+        with open(filename, "w") as f:
+            cloudpickle.dump(results, f)
+        logging.info("Qit: Writing file {} ({} results)".format(
+            filename, len(results)))
+
+
+class TimeoutManager(object):
+    def __init__(self, timeout):
+        """
+        :type timeout: int
+        """
+        self.timeout = timeout
+        self.start = datetime.now()
+
+    def is_finished(self):
+        return (datetime.now() - self.start).seconds >= self.timeout
 
 
 class DistributedContext(object):
@@ -20,7 +64,8 @@ class DistributedContext(object):
                  port=8787,
                  spawn_workers=0,
                  write_partial_results=None,
-                 track_progress=False):
+                 track_progress=False,
+                 time_limit=None):
 
         self.worker_count = spawn_workers
         self.ip = ip
@@ -29,7 +74,7 @@ class DistributedContext(object):
         self.write_partial_results = write_partial_results
         self.track_progress = track_progress
         self.execution_count = 0
-        self.start_time = datetime.now()
+        self.timeout = TimeoutManager(time_limit) if time_limit else None
 
         if not DistributedContext.io_loop:
             DistributedContext.io_loop = IOLoop()
@@ -64,32 +109,46 @@ class DistributedContext(object):
         batches = self._create_batches(batch_size, size, domain,
                                        worker_reduce_fn, worker_reduce_init)
 
+        logging.info("Qit: starting {} batches with size {}".format(
+            batch_count, batch_size))
+
         futures = self.executor.map(process_batch, batches)
 
         if self.track_progress:
             distributed.diagnostics.progress(futures)
 
         if self.write_partial_results is not None:
-            results = []
-            partial_results = []
-            partial_count = 0
-
-            for future in as_completed(futures):
-                result = future.result()
-                results.append(result)
-                partial_results.append(result)
-
-                if len(partial_results) % self.write_partial_results == 0:
-                    self._write_partial_result(partial_results, partial_count)
-                    partial_results = []
-                    partial_count += 1
-
-            self.execution_count += 1
+            result_saver = ResultSaver(self.execution_count,
+                                       self.write_partial_results)
         else:
-            results = self.executor.gather(futures)
+            result_saver = None
+
+        timeouted = False
+        results = []
+
+        for future in as_completed(futures):
+            result = future.result()
+            if result_saver is not None:
+                result_saver.handle_result(result)
+
+            results.append(result)
+
+            if self.timeout and self.timeout.is_finished():
+                logging.info("Qit: timeouted after {} seconds".format(
+                    self.timeout.timeout))
+                timeouted = True
+                break
+
+        if not timeouted:
+            results = self.executor.gather(futures)  # order results
+
+        self.execution_count += 1
 
         if worker_reduce_fn is None:
             results = list(itertools.chain.from_iterable(results))
+
+        logging.info("Qit: finished run with size {} (taking {})".format(
+            len(results), domain.size))
 
         results = results[:domain.size]  # trim results to required size
 
@@ -107,8 +166,8 @@ class DistributedContext(object):
         return scheduler
 
     def _create_worker(self):
-        worker = Worker(center_ip=self.ip,
-                        center_port=self.port,
+        worker = Worker(scheduler_ip=self.ip,
+                        scheduler_port=self.port,
                         ncores=1)
         worker.start(0)
         return worker
@@ -134,13 +193,6 @@ class DistributedContext(object):
                 break
 
         return batches
-
-    def _write_partial_result(self, partial_results, partial_count):
-        with open("pyqit-{}-{}-{}".format(
-                int(time.mktime(self.start_time.timetuple())),
-                self.execution_count,
-                partial_count), "w") as f:
-            cloudpickle.dump(partial_results, f)
 
 
 def process_batch(arg):
