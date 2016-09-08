@@ -6,11 +6,11 @@ from pprint import pprint
 
 
 N_SIZE = 2            # Number of states
-S_SIZE = 1            # Number of stack symbols
+S_SIZE = 2            # Number of stack symbols
 A_SIZE = 2            # Number of actions (alphabet size)
-DEPTH = 10            # Maximal depth of state space
+DEPTH = 22            # Maximal depth of state space
 MAX_STATES = 100000   # Max nodes in state space
-COUNT = None          # None = iterate all
+COUNT = 2000000       # None = iterate all
 
 
 def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
@@ -27,7 +27,12 @@ def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
     lrule = states * symbols * actions
     rrule = states * stack_change
     pda = qit.Mapping(lrule, rrule)
-    pda_pairs = qit.Product((pda, pda), unordered=True, cache_size=50)
+
+    def is_pda_normed(pda):
+        return NormDecomposition(pda, n_size, s_size).is_all_finite()
+
+    normed_pda = pda.filter(is_pda_normed)
+    pda_pairs = qit.Product((normed_pda, normed_pda), unordered=True, cache_size=50)
     init_state = ((0, 0), (0, 0))
 
     def is_witness_pair(conf_depth_pair):
@@ -36,16 +41,6 @@ def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
         return c1 != c2 and (c1 == 1 or c2 == 1)
 
     def compute_eqlevel_of_two_dpda(pda_pair):
-        normdecomp = NormDecomposition(pda_pair[0], n_size, s_size)
-        norm1 = normdecomp.get_norms(0, (0,))
-        if norm1 is None:
-            return (pda_pair, -1)
-        normdecomp = NormDecomposition(pda_pair[1], n_size, s_size)
-        norm2 = normdecomp.get_norms(0, (0,))
-        if norm2 is None:
-            return (pda_pair, -1)
-        if norm1 != norm2:
-            return (pda_pair, -1)
         pda1 = PdaLTS(pda_pair[0], actions)
         pda2 = PdaLTS(pda_pair[1], actions)
         x = (pda1 * pda2).bfs(init_state, depth, True, max_states=max_states) \
@@ -106,7 +101,7 @@ class NormDecomposition(object):
         self.n_states = n_states
         for rule in pda.items():
             lrule, rrule = rule
-            if len(rrule[1]) > 1:
+            if rrule[1]:
                 rules.append(rule)
             else:
                 state, symbol, action = lrule
@@ -130,6 +125,12 @@ class NormDecomposition(object):
                 current_norms[i] = new
                 changed = True
         return changed
+
+    def is_all_finite(self):
+        for n in self.norms:
+            if not any(n):
+                return False
+        return True
 
     def get_norms(self, state, stack):
         norms = self.get_norms_to_states(state, stack)
