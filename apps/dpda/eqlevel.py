@@ -194,8 +194,8 @@ def main():
             qit.session.set_parallel_context(ctx)
             parallel = True
     elif len(sys.argv) == 3:
-        port = int(sys.arv[2])
-        ctx = qit.DistributedContext(ip=sys.arv[1], port=port)
+        port = int(sys.argv[2])
+        ctx = qit.DistributedContext(ip=sys.argv[1], port=port)
         qit.session.set_parallel_context(ctx)
         parallel = True
     elif len(sys.argv) == 1:
