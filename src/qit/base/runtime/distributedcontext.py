@@ -148,19 +148,16 @@ def process_batch(arg):
     iterator = domain.create_iterator()
     iterator.set_step(start)
 
-    items = []
-    try:
+    def helper():
         for i in xrange(size):
             item = iterator.step()
             if item is not NoValue:
-                items.append(item)
-    except StopIteration:
-        pass
+                yield item
 
     if reduce_fn is None:
-        return items
+        return list(helper())
     else:
         if reduce_init is None:
-            return reduce(reduce_fn, items)
+            return reduce(reduce_fn, helper())
         else:
-            return reduce(reduce_fn, items, reduce_init)
+            return reduce(reduce_fn, helper(), reduce_init)
