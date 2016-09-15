@@ -12,7 +12,8 @@ init()
 
 from qit import Range   # noqa
 from qit import session  # noqa
-from qit.base.runtime.distributedcontext import DistributedContext  # noqa
+from qit.base.runtime.distributedcontext import DistributedContext, \
+    JobObserver  # noqa
 import qit  # noqa
 
 
@@ -132,3 +133,25 @@ def test_dist_samples(cluster4):
                 "C": ["C"] * 3,
                 "D": ["D"] * 10}
     assert result == expected
+
+
+def test_dist_observer(cluster4):
+    size = 1024
+
+    class Observer(JobObserver):
+        def __init__(self):
+            self.batch_count = None
+            self.jobs = []
+
+        def on_computation_start(self, batch_count, batch_size):
+            self.batch_count = batch_count
+            assert batch_count * batch_size == size
+
+        def on_job_completed(self, job):
+            self.jobs.append(job)
+
+    observer = Observer()
+    session.parallel_context.job_observer = observer
+
+    qit.Range(size).map(lambda x: x + 1).run(True)
+    assert observer.batch_count == len(observer.jobs)

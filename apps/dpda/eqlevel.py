@@ -32,7 +32,9 @@ def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
         return NormDecomposition(pda, n_size, s_size).is_all_finite()
 
     normed_pda = pda.filter(is_pda_normed)
-    pda_pairs = qit.Product((normed_pda, normed_pda), unordered=True, cache_size=50)
+    pda_pairs = qit.Product((normed_pda, normed_pda),
+                            unordered=True,
+                            cache_size=50)
     init_state = ((0, 0), (0, 0))
 
     def is_witness_pair(conf_depth_pair):

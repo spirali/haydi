@@ -1,11 +1,14 @@
+import os
 from threading import Thread
 from datetime import datetime
 import time
 import itertools
 import logging
+import socket
 
 import cloudpickle
 import distributed
+import resource
 from distributed import Scheduler, Nanny as Worker, Executor, as_completed
 from tornado.ioloop import IOLoop
 
@@ -55,6 +58,39 @@ class TimeoutManager(object):
         return (datetime.now() - self.start).seconds >= self.timeout
 
 
+class Job(object):
+    def __init__(self, worker_id, start_index, size):
+        """
+        :type worker_id: str
+        :type start_index: int
+        :type size: int
+        """
+        self.worker_id = worker_id
+        self.start_index = start_index
+        self.size = size
+        self.result = None
+        self.start_time = datetime.now()
+        self.end_time = None
+        self.memory_snapshot = None
+
+    def finish(self, result):
+        self.result = result
+        self.end_time = datetime.now()
+        self.memory_snapshot = resource.getrusage(
+            resource.RUSAGE_SELF).ru_maxrss
+
+
+class JobObserver(object):
+    def on_computation_start(self, batch_count, batch_size):
+        pass
+
+    def on_job_completed(self, job):
+        """
+        :type job: Job
+        """
+        pass
+
+
 class DistributedContext(object):
     io_loop = None
     io_thread = None
@@ -65,7 +101,17 @@ class DistributedContext(object):
                  spawn_workers=0,
                  write_partial_results=None,
                  track_progress=False,
-                 time_limit=None):
+                 time_limit=None,
+                 job_observer=None):
+        """
+        :type ip: string
+        :type port: int
+        :type spawn_workers: int
+        :type write_partial_results: int
+        :type track_progress: bool
+        :type time_limit: int
+        :type job_observer: JobObserver
+        """
 
         self.worker_count = spawn_workers
         self.ip = ip
@@ -75,6 +121,7 @@ class DistributedContext(object):
         self.track_progress = track_progress
         self.execution_count = 0
         self.timeout = TimeoutManager(time_limit) if time_limit else None
+        self.job_observer = job_observer
 
         if not DistributedContext.io_loop:
             DistributedContext.io_loop = IOLoop()
@@ -112,6 +159,9 @@ class DistributedContext(object):
         logging.info("Qit: starting {} batches with size {}".format(
             batch_count, batch_size))
 
+        if self.job_observer:
+            self.job_observer.on_computation_start(batch_count, batch_size)
+
         futures = self.executor.map(process_batch, batches)
 
         if self.track_progress:
@@ -127,11 +177,13 @@ class DistributedContext(object):
         results = []
 
         for future in as_completed(futures):
-            result = future.result()
-            if result_saver is not None:
-                result_saver.handle_result(result)
+            job = future.result()
+            if result_saver:
+                result_saver.handle_result(job.result)
+            if self.job_observer:
+                self.job_observer.on_job_completed(job)
 
-            results.append(result)
+            results.append(job.result)
 
             if self.timeout and self.timeout.is_finished():
                 logging.info("Qit: timeouted after {} seconds".format(
@@ -139,8 +191,9 @@ class DistributedContext(object):
                 timeouted = True
                 break
 
+        # order results
         if not timeouted:
-            results = self.executor.gather(futures)  # order results
+            results = [j.result for j in self.executor.gather(futures)]
 
         self.execution_count += 1
 
@@ -196,20 +249,29 @@ class DistributedContext(object):
 
 
 def process_batch(arg):
+    """
+    :param arg:
+    :rtype: Job
+    """
     domain, start, size, reduce_fn, reduce_init = arg
+    job = Job("{}#{}".format(socket.gethostname(), os.getpid()), start, size)
+
     iterator = domain.create_iterator()
     iterator.set_step(start)
 
-    def helper():
+    def item_generator():
         for i in xrange(size):
             item = iterator.step()
             if item is not NoValue:
                 yield item
 
     if reduce_fn is None:
-        return list(helper())
+        result = list(item_generator())
     else:
         if reduce_init is None:
-            return reduce(reduce_fn, helper())
+            result = reduce(reduce_fn, item_generator())
         else:
-            return reduce(reduce_fn, helper(), reduce_init)
+            result = reduce(reduce_fn, item_generator(), reduce_init)
+
+    job.finish(result)
+    return job
