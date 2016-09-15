@@ -1,6 +1,7 @@
 import os
 import pytest
 import time
+import random
 
 from subprocess import Popen, PIPE
 
@@ -12,6 +13,7 @@ init()
 from qit import Range   # noqa
 from qit import session  # noqa
 from qit.base.runtime.distributedcontext import DistributedContext  # noqa
+import qit  # noqa
 
 
 class DCluster(object):
@@ -101,3 +103,32 @@ def test_dist_generate(cluster4):
     assert len(result) == 100
     for i in result:
         assert 0 <= i < 10
+
+
+def test_dist_samples(cluster4):
+    a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
+    random.shuffle(a)
+
+    result = qit.Values(a).samples(lambda x: x, 1).run(True)
+    assert {"A": ["A"], "B": ["B"], "C": ["C"], "D": ["D"]} == result
+
+    result = qit.Values(a).samples(lambda x: x, 10).run(True)
+    expected = {"A": ["A"] * 10,
+                "B": ["B"] * 10,
+                "C": ["C"] * 3,
+                "D": ["D"] * 10}
+    assert result == expected
+
+    result = qit.Values(a).samples(lambda x: x, 150).run(True)
+    expected = {"A": ["A"] * 150,
+                "B": ["B"] * 100,
+                "C": ["C"] * 3,
+                "D": ["D"] * 10}
+    assert result == expected
+
+    result = qit.Values(a).samples(lambda x: x, 1500).run(True)
+    expected = {"A": ["A"] * 200,
+                "B": ["B"] * 100,
+                "C": ["C"] * 3,
+                "D": ["D"] * 10}
+    assert result == expected

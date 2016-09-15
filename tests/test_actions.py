@@ -29,3 +29,16 @@ def test_max_all():
     result = list(v.filter(
         lambda x: x[1] < 20).max_all(lambda x: x[1]))
     assert result == [("A", 10), ("A", 10), ("C", 10)]
+
+
+def test_samples():
+    f = [("A", 10), ("A", 10), ("B", 20),
+         ("C", 10), ("D", 20), ("E", 5), ("Z", None), ("S", 10)]
+    v = qit.Values(f)
+    result = v.samples(lambda x: x[1], 2).run()
+    expected = {
+        10: [("A", 10), ("A", 10)],
+        20: [("B", 20), ("D", 20)],
+        5: [("E", 5)],
+    }
+    assert expected == result

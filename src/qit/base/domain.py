@@ -22,6 +22,9 @@ class Domain(object):
     def max_all(self, key_fn):
         return action.MaxAll(self, key_fn)
 
+    def samples(self, key_fn, max_samples_per_key):
+        return action.Samples(self, key_fn, max_samples_per_key)
+
     def collect(self, postprocess_fn=None):
         return action.Collect(self, postprocess_fn)
 
