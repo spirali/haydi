@@ -2,6 +2,7 @@ import sys
 sys.path.insert(0, "../../src")
 import qit # noqa
 import qit.ext.automata # noqa
+from qit.ext.xenv import ExperimentEnv # noqa
 from pprint import pprint # noqa
 
 
@@ -10,10 +11,13 @@ S_SIZE = 2            # Number of stack symbols
 A_SIZE = 2            # Number of actions (alphabet size)
 DEPTH = 22            # Maximal depth of state space
 MAX_STATES = 100000   # Max nodes in state space
-COUNT = 2000000       # None = iterate all
+COUNT = 100000        # None = iterate all
+
+MIN_LEVEL = 7
+MAX_SAMPLES_PER_LEVEL = 300
 
 
-def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
+def compute(n_size, s_size, a_size, depth, max_states, count):
 
     states = qit.Range(n_size)
     symbols = qit.Range(s_size)
@@ -56,19 +60,18 @@ def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
         lts = pda1 * pda2
         lts.make_graph(init_state, depth).write(filename)
 
-    print "n =", n_size, "; s =", s_size, "; a_size =", a_size
-    print "depth =", depth, "; max_states =", max_states
-    print "count =", count
-    print "total =", pda_pairs.size
-
     if count is not None:
         source = pda_pairs.generate(count)
     else:
         source = pda_pairs
 
-    results = source.map(compute_eqlevel_of_two_dpda).max_all(
-        lambda x: x[1]).run(parallel)
+    results = source.map(compute_eqlevel_of_two_dpda)
+    results = results.filter(lambda x: x[1] >= MIN_LEVEL)
+    results = results.samples(lambda x: x[1],
+                              MAX_SAMPLES_PER_LEVEL)
+    return results
 
+    """
     (p1, p2), value = results[0]
     print "Value {}, Found: {}".format(value, len(results))
     save_lts(p1, p2, value, "result-lts.dot")
@@ -85,6 +88,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count, parallel=False):
         print "Pda2:"
         pprint(p1)
         print "-" * 79
+    """
 
 
 def min_null(a, b):
@@ -188,28 +192,26 @@ def pda_to_graph(pda1):
 
 
 def main():
-    parallel = None
-    if len(sys.argv) == 2:
-        if sys.argv[1] != "--help" and sys.argv[1] != "-h":
-            count = int(sys.argv[1])
-            ctx = qit.DistributedContext(port=9010, spawn_workers=count)
-            qit.session.set_parallel_context(ctx)
-            parallel = True
-    elif len(sys.argv) == 3:
-        port = int(sys.argv[2])
-        ctx = qit.DistributedContext(ip=sys.argv[1], port=port)
-        qit.session.set_parallel_context(ctx)
-        parallel = True
-    elif len(sys.argv) == 1:
-        parallel = False
+    env = ExperimentEnv("ndpda",
+                        globals(),
+                        ["N_SIZE", "S_SIZE", "A_SIZE",
+                         "DEPTH", "MAX_STATES", "COUNT",
+                         "MIN_LEVEL", "MAX_SAMPLES_PER_LEVEL"])
+    env.parse_args()
+    results = env.run(
+       compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT),
+       write=True)
 
-    if parallel is None:
-        print "Usages"
-        print "{} # serial version".format(sys.argv[0])
-        print "{} <number-of-local-workers>".format(sys.argv[0])
-        print "{} <server-ip> <server-port>".format(sys.argv[0])
-        return
-    compute(N_SIZE, S_SIZE, A_SIZE, DEPTH, MAX_STATES, COUNT, parallel)
+    keys = results.keys()
+    keys.sort(reverse=True)
+    for key in keys:
+        print "Level {}: {} samples".format(key, len(results[key]))
+
+    if results:
+        best = max(results.keys())
+        print "Example of level {}:".format(best)
+        pprint(results[best][0])
 
 if __name__ == "__main__":
     main()
+
