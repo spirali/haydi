@@ -128,3 +128,41 @@ class Samples(Action):
         self.worker_reduce_fn = worker_fn
         self.worker_reduce_init = {}
         self.global_reduce_fn = global_fn
+
+
+class SamplesAndCounts(Action):
+
+    def __init__(self, domain, key_fn, max_samples_per_key):
+        def worker_fn(samples, item):
+            value = key_fn(item)
+            if value is None:
+                return samples
+            items = samples.get(value)
+            if items is None:
+                samples[value] = [1, item]
+            elif len(items) <= max_samples_per_key:
+                items.append(item)
+                items[0] += 1
+            else:
+                items[0] += 1
+            return samples
+
+        def global_fn(samples1, samples2):
+            for key, items1 in samples1.items():
+                items2 = samples2.get(key)
+                if items2:
+                    items1[0] += items2[0]
+                    r = max_samples_per_key - (len(items1) - 1)
+                    if r > 0:
+                        items1.extend(items2[1:r+1])
+
+            keys = set(samples2.keys())
+            keys.difference_update(samples1.keys())
+            for key in keys:
+                samples1[key] = samples2[key]
+            return samples1
+
+        super(SamplesAndCounts, self).__init__(domain)
+        self.worker_reduce_fn = worker_fn
+        self.worker_reduce_init = {}
+        self.global_reduce_fn = global_fn

@@ -134,6 +134,36 @@ def test_dist_samples(cluster4):
                 "D": ["D"] * 10}
     assert result == expected
 
+def test_dist_samples_and_counts(cluster4):
+    a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
+    random.shuffle(a)
+
+    result = qit.Values(a).samples_and_counts(lambda x: x, 1).run(True)
+    assert {"A": [200, "A"], "B": [100, "B"], "C": [3, "C"], "D": [10, "D"]} == result
+
+    result = qit.Values(a).samples_and_counts(lambda x: x, 10).run(True)
+    expected = {"A": [200] + ["A"] * 10,
+                "B": [100] + ["B"] * 10,
+                "C": [3] + ["C"] * 3,
+                "D": [10] + ["D"] * 10}
+    assert result == expected
+
+    result = qit.Values(a).samples_and_counts(lambda x: x, 150).run(True)
+    expected = {"A": [200] + ["A"] * 150,
+                "B": [100] +["B"] * 100,
+                "C": [3] + ["C"] * 3,
+                "D": [10] + ["D"] * 10}
+    assert result == expected
+
+    result = qit.Values(a).samples_and_counts(lambda x: x, 1500).run(True)
+    expected = {"A": [200] + ["A"] * 200,
+                "B": [100] + ["B"] * 100,
+                "C": [3] + ["C"] * 3,
+                "D": [10] + ["D"] * 10}
+    assert result == expected
+
+
+
 
 def test_dist_observer(cluster4):
     size = 1024

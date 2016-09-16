@@ -25,6 +25,9 @@ class Domain(object):
     def samples(self, key_fn, max_samples_per_key):
         return action.Samples(self, key_fn, max_samples_per_key)
 
+    def samples_and_counts(self, key_fn, max_samples_per_key):
+        return action.SamplesAndCounts(self, key_fn, max_samples_per_key)
+
     def collect(self, postprocess_fn=None):
         return action.Collect(self, postprocess_fn)
 

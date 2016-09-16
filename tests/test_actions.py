@@ -42,3 +42,16 @@ def test_samples():
         5: [("E", 5)],
     }
     assert expected == result
+
+
+def test_samples_counts():
+    f = [("A", 10), ("A", 10), ("B", 20),
+         ("C", 10), ("D", 20), ("E", 5), ("Z", None), ("S", 10)]
+    v = qit.Values(f)
+    result = v.samples_and_counts(lambda x: x[1], 2).run()
+    expected = {
+        10: [4, ("A", 10), ("A", 10)],
+        20: [2, ("B", 20), ("D", 20)],
+        5: [1, ("E", 5)],
+    }
+    assert expected == result
