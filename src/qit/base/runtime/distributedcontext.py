@@ -219,8 +219,8 @@ class DistributedContext(object):
         return scheduler
 
     def _create_worker(self):
-        worker = Worker(scheduler_ip=self.ip,
-                        scheduler_port=self.port,
+        worker = Worker(self.ip,
+                        self.port,
                         ncores=1)
         worker.start(0)
         return worker
