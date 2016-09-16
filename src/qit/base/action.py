@@ -56,7 +56,7 @@ class Reduce(Action):
         if associative:
             self.worker_reduce_fn = reduce_fn
         self.global_reduce_fn = reduce_fn
-        self.global_reduce_init = init_value
+        self.global_reduce_init = lambda: init_value
 
 
 class MaxAll(Action):
@@ -88,7 +88,7 @@ class MaxAll(Action):
 
         super(MaxAll, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
-        self.worker_reduce_init = (None, None)
+        self.worker_reduce_init = lambda: (None, None)
         self.global_reduce_fn = global_fn
 
     def postprocess(self, value):
@@ -126,7 +126,7 @@ class Samples(Action):
 
         super(Samples, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
-        self.worker_reduce_init = {}
+        self.worker_reduce_init = lambda: {}
         self.global_reduce_fn = global_fn
 
 
@@ -164,5 +164,5 @@ class SamplesAndCounts(Action):
 
         super(SamplesAndCounts, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
-        self.worker_reduce_init = {}
+        self.worker_reduce_init = lambda: {}
         self.global_reduce_fn = global_fn

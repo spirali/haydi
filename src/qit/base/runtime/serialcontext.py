@@ -11,9 +11,9 @@ class SerialContext(object):
                     if global_reduce_fn is None:
                         return []
                     else:
-                        return global_reduce_init
+                        return global_reduce_init()
             else:
-                first = worker_reduce_init
+                first = worker_reduce_init()
             result = reduce(worker_reduce_fn, it, first)
         else:
             result = list(domain.create_iterator())
@@ -26,6 +26,6 @@ class SerialContext(object):
                     return None
                 return reduce(global_reduce_fn, result)
             else:
-                return reduce(global_reduce_fn, result, global_reduce_init)
+                return reduce(global_reduce_fn, result, global_reduce_init())
         else:
             return result

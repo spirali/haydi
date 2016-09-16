@@ -211,7 +211,7 @@ class DistributedContext(object):
             if global_reduce_init is None:
                 return reduce(global_reduce_fn, results)
             else:
-                return reduce(global_reduce_fn, results, global_reduce_init)
+                return reduce(global_reduce_fn, results, global_reduce_init())
 
     def _create_scheduler(self):
         scheduler = Scheduler(ip=self.ip)
@@ -271,7 +271,7 @@ def process_batch(arg):
         if reduce_init is None:
             result = reduce(reduce_fn, item_generator())
         else:
-            result = reduce(reduce_fn, item_generator(), reduce_init)
+            result = reduce(reduce_fn, item_generator(), reduce_init())
 
     job.finish(result)
     return job
