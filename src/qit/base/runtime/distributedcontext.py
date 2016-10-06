@@ -5,14 +5,20 @@ import time
 import itertools
 import logging
 import socket
-
-import cloudpickle
-import distributed
 import resource
-from distributed import Scheduler, Nanny as Worker, Executor, as_completed
-from tornado.ioloop import IOLoop
 
+from qit.base.exception import QitException
 from qit.base.iterator import NoValue
+
+try:
+    import cloudpickle
+    import distributed
+    from distributed import Scheduler, Nanny as Worker, Executor, as_completed
+    from tornado.ioloop import IOLoop
+
+    DistributedImportError = None
+except Exception as e:
+    DistributedImportError = e
 
 
 class ResultSaver(object):
@@ -139,6 +145,12 @@ class DistributedContext(object):
         :type time_limit: int
         :type job_observer: JobObserver
         """
+
+        if DistributedImportError:
+            raise QitException("distributed must be properly installed in "
+                               "order to use the DistributedContext\n"
+                               "Error:\n{}"
+                               .format(DistributedImportError))
 
         self.worker_count = spawn_workers
         self.ip = ip
