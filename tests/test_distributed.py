@@ -12,8 +12,7 @@ init()
 
 from qit import Range   # noqa
 from qit import session  # noqa
-from qit.base.runtime.distributedcontext import DistributedContext, \
-    JobObserver  # noqa
+from qit.base.runtime.distributedcontext import DistributedContext  # noqa
 import qit  # noqa
 
 
@@ -134,12 +133,14 @@ def test_dist_samples(cluster4):
                 "D": ["D"] * 10}
     assert result == expected
 
+
 def test_dist_samples_and_counts(cluster4):
     a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
     random.shuffle(a)
 
     result = qit.Values(a).samples_and_counts(lambda x: x, 1).run(True)
-    assert {"A": [200, "A"], "B": [100, "B"], "C": [3, "C"], "D": [10, "D"]} == result
+    assert {"A": [200, "A"], "B": [100, "B"], "C": [3, "C"],
+            "D": [10, "D"]} == result
 
     result = qit.Values(a).samples_and_counts(lambda x: x, 10).run(True)
     expected = {"A": [200] + ["A"] * 10,
@@ -150,7 +151,7 @@ def test_dist_samples_and_counts(cluster4):
 
     result = qit.Values(a).samples_and_counts(lambda x: x, 150).run(True)
     expected = {"A": [200] + ["A"] * 150,
-                "B": [100] +["B"] * 100,
+                "B": [100] + ["B"] * 100,
                 "C": [3] + ["C"] * 3,
                 "D": [10] + ["D"] * 10}
     assert result == expected
@@ -161,27 +162,3 @@ def test_dist_samples_and_counts(cluster4):
                 "C": [3] + ["C"] * 3,
                 "D": [10] + ["D"] * 10}
     assert result == expected
-
-
-
-
-def test_dist_observer(cluster4):
-    size = 1024
-
-    class Observer(JobObserver):
-        def __init__(self):
-            self.batch_count = None
-            self.jobs = []
-
-        def on_computation_start(self, batch_count, batch_size):
-            self.batch_count = batch_count
-            assert batch_count * batch_size == size
-
-        def on_job_completed(self, job):
-            self.jobs.append(job)
-
-    observer = Observer()
-    session.parallel_context.job_observer = observer
-
-    qit.Range(size).map(lambda x: x + 1).run(True)
-    assert observer.batch_count == len(observer.jobs)

@@ -14,9 +14,10 @@ class Action(object):
         """
         self.domain = domain
 
-    def run(self, parallel=False):
+    def run(self, parallel=False, timeout=None):
         """
         :type parallel: bool
+        :type timeout: int
         :return: Returns the computed result.
         """
         ctx = session.get_context(parallel)
@@ -24,7 +25,8 @@ class Action(object):
                          self.worker_reduce_fn,
                          self.worker_reduce_init,
                          self.global_reduce_fn,
-                         self.global_reduce_init)
+                         self.global_reduce_init,
+                         timeout)
         return self.postprocess(result)
 
     def postprocess(self, value):

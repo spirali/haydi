@@ -153,14 +153,10 @@ class Domain(object):
         """
         return transform.FilterTransformation(self, fn)
 
-    def timeout(self, timeout):
-        return transform.TimeoutTransformation(self, timeout)
-
     # Others
-
-    def run(self, parallel=False):
+    def run(self, parallel=False, timeout=None):
         """A shortuct for ``self.collect.run(parallel)``"""
-        return self.collect().run(parallel)
+        return self.collect().run(parallel, timeout)
 
     def create_iterator(self):
         """Creates an interator over all elements of domain"""

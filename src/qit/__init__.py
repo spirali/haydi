@@ -18,5 +18,5 @@ from .base.boolean import Boolean  # noqa
 from .base.iterator import NoValue  # noqa
 
 # Session
-from .base.runtime.distributedcontext import DistributedContext, JobObserver  # noqa
+from .base.runtime.distributedcontext import DistributedContext  # noqa
 from .base.qitsession import session  # noqa

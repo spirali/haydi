@@ -1,7 +1,7 @@
 class SerialContext(object):
 
     def run(self, domain, worker_reduce_fn, worker_reduce_init,
-            global_reduce_fn, global_reduce_init):
+            global_reduce_fn, global_reduce_init, timeout=None):
         if worker_reduce_fn:
             it = domain.create_iterator()
             if worker_reduce_init is None:
