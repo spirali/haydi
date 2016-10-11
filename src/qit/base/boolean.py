@@ -1,4 +1,4 @@
-from values import Values
+from .values import Values
 
 
 class Boolean(Values):

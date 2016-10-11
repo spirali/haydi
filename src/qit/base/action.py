@@ -1,4 +1,4 @@
-from qitsession import session
+from .qitsession import session
 
 
 class Action(object):
@@ -96,9 +96,9 @@ class MaxAll(Action):
             return value[1]
 
 
-class Samples(Action):
+class Groups(Action):
 
-    def __init__(self, domain, key_fn, max_samples_per_key):
+    def __init__(self, domain, key_fn, max_items_per_group):
         def worker_fn(samples, item):
             value = key_fn(item)
             if value is None:
@@ -106,13 +106,13 @@ class Samples(Action):
             items = samples.get(value)
             if items is None:
                 samples[value] = [item]
-            elif len(items) < max_samples_per_key:
+            elif len(items) < max_items_per_group:
                 items.append(item)
             return samples
 
         def global_fn(samples1, samples2):
             for key, items1 in samples1.items():
-                r = max_samples_per_key - len(items1)
+                r = max_items_per_group - len(items1)
                 if r > 0:
                     items2 = samples2.get(key)
                     if items2:
@@ -124,15 +124,15 @@ class Samples(Action):
                 samples1[key] = samples2[key]
             return samples1
 
-        super(Samples, self).__init__(domain)
+        super(Groups, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
         self.worker_reduce_init = lambda: {}
         self.global_reduce_fn = global_fn
 
 
-class SamplesAndCounts(Action):
+class GroupsAndCounts(Action):
 
-    def __init__(self, domain, key_fn, max_samples_per_key):
+    def __init__(self, domain, key_fn, max_items_per_group):
         def worker_fn(samples, item):
             value = key_fn(item)
             if value is None:
@@ -140,7 +140,7 @@ class SamplesAndCounts(Action):
             items = samples.get(value)
             if items is None:
                 samples[value] = [1, item]
-            elif len(items) <= max_samples_per_key:
+            elif len(items) <= max_items_per_group:
                 items.append(item)
                 items[0] += 1
             else:
@@ -152,7 +152,7 @@ class SamplesAndCounts(Action):
                 items2 = samples2.get(key)
                 if items2:
                     items1[0] += items2[0]
-                    r = max_samples_per_key - (len(items1) - 1)
+                    r = max_items_per_group - (len(items1) - 1)
                     if r > 0:
                         items1.extend(items2[1:r+1])
 
@@ -162,7 +162,7 @@ class SamplesAndCounts(Action):
                 samples1[key] = samples2[key]
             return samples1
 
-        super(SamplesAndCounts, self).__init__(domain)
+        super(GroupsAndCounts, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
         self.worker_reduce_init = lambda: {}
         self.global_reduce_fn = global_fn

@@ -1,24 +1,46 @@
 
-from domain import Domain, DomainIterator
-from random import randint
+from .domain import Domain, DomainIterator
 
+from random import randint
 from copy import copy
 
 
 class Range(Domain):
+    """Range of integers
+
+    It is domain with a similar interface as :func:`xrange`.
+
+    It may be called only just as ``Range(stop)`` that behaves like ``Range(0,
+    stop).``
+
+    Args:
+        start (int): Start of the range
+        end (int): End of the range (not included)
+        step (int): Step between two numbers
+
+    Examples:
+
+        >>> Range(4)
+        <Range size=4 {0, 1, 2, 3}>
+
+        >>> list(Range(4))
+        [0, 1, 2, 3]
+
+        >>> qit.Range(10, 20)  # From 10 upto 20
+        <Range size=10 {10, 11, 12, 13, ...}>
+
+        >>> qit.Range(4, 15, 3)  # From 4 upto 15, step 3
+        <Range size=3 {4, 7, 10}>
+
+    """
 
     exact_size = True
 
-    def __init__(self, start, end=None, step=None, name=None):
+    def __init__(self, start, end=None, step=1, name=None):
         if end is None:
             end = start
             start = 0
         end = max(start, end)
-        if step is None:
-            step = 1
-        else:
-            step = step
-            assert step >= 0
 
         if step == 1 and end == 1:
             size = end

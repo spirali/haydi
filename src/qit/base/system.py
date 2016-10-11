@@ -1,6 +1,6 @@
 
-from iterator import Iterator
-from domain import Domain
+from .iterator import Iterator
+from .domain import Domain
 
 
 class System(object):

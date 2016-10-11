@@ -1,7 +1,7 @@
 
-from iterator import Iterator
-from graph import Graph
-from domain import Domain
+from .iterator import Iterator
+from .graph import Graph
+from .domain import Domain
 
 
 class DLTS(object):

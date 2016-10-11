@@ -1,9 +1,32 @@
 
-from iterator import GeneratingIterator, Iterator
-import action
+from .iterator import GeneratingIterator, Iterator
+from . import action
 
 
 class Domain(object):
+    """
+    Base class for all domains
+
+    If you do not want to create a domain by yourself,
+    you do not have to care about parameters of the constructor.
+
+    Args:
+        size(Optiona[int]): The number of elements in domain
+            (for exact meaning) see the next argument
+        exact_size(bool): The argument has the following meaning:
+
+            - If `size` is ``int``
+                - If `exact_size` is ``True`` then `size` is the number
+                  of elements in the domain.
+                - If `exact_size` is ``False`` then `size` is the upperbound
+                  of elements in the domain.
+            - If `size` is ``None``
+                - If `exact_size` is ``True`` then domain is infinite.
+                - If `exact_size` is ``False`` then the number of elements
+                  is not a priori known.
+        steps(int): Number of internal steps of domain
+        name(Optional[str]): Name of domain (for debug messages)
+    """
 
     def __init__(self, size=None, exact_size=False, steps=None, name=None):
         self.size = size
@@ -12,26 +35,66 @@ class Domain(object):
         self.name = name
 
     def __mul__(self, other):
+        """Creates a cartesian product of domains.
+
+        It is equivalent to
+        ``Product((self, other))``, see :class:`qit.Product`
+        """
         return Product((self, other))
 
     def __add__(self, other):
+        """Join two domains
+
+        It is equivalent to
+        ``Join((self, other))``, see :class:`qit.Join`
+        """
         return Join((self, other))
 
     # Actions
 
     def max_all(self, key_fn):
+        """
+        Action: Get all maximal elements from domain
+        """
         return action.MaxAll(self, key_fn)
 
-    def samples(self, key_fn, max_samples_per_key):
-        return action.Samples(self, key_fn, max_samples_per_key)
+    def groups(self, key_fn, max_items_per_group=None):
+        """
+        Action: It groups elements by keys
 
-    def samples_and_counts(self, key_fn, max_samples_per_key):
-        return action.SamplesAndCounts(self, key_fn, max_samples_per_key)
+        Args:
+            key_fn(callable): Function applied on each element to get the key
+            max_items_per_group(int): The limit of elements for each group.
+               Elements over the limit are thrown away.
+        """
+        return action.Groups(self, key_fn, max_items_per_group)
+
+    def groups_counts(self, key_fn, max_items_per_group):
+        """
+        Action: The same idea as method :meth:`groups` but remembers also total
+        count of all elements (even forgotten)
+        """
+        return action.GroupsAndCounts(self, key_fn, max_items_per_group)
 
     def collect(self, postprocess_fn=None):
+        """
+        Action: Materialize all elements in domain.
+
+        Example:
+            >>> qit.Range(4).collect().run()
+            [0, 1, 2, 3]
+        """
         return action.Collect(self, postprocess_fn)
 
     def first(self, fn=None, default=None):
+        """
+        Action: Take the first element of the collection
+
+        Takes first element of collection. If `fn` is not ``None`` then
+        collection is first filtered by `fn`.
+
+        If domain is empty then `default` is returned.
+        """
         def helper(value):
             if value:
                 return value[0]
@@ -43,17 +106,51 @@ class Domain(object):
         return f.take(1).collect(postprocess_fn=helper)
 
     def reduce(self, reduce_fn, init_value=0, associative=True):
+        """
+        Action: Reduce domain
+
+        Example:
+            >>> Range(4).reduce(lambda x, y: x + y, init_value=10).run()
+            16
+        """
         return action.Reduce(self, reduce_fn, init_value, associative)
 
     # Transformations
 
     def take(self, count):
+        """
+        Transformation: Take first `count` elements from domain
+
+        Example:
+            >>> list(Range(10).take(3))
+            [0, 1, 2]
+        """
         return transform.TakeTransformation(self, count)
 
     def map(self, fn):
+        """
+        Transformation: Map a function `fn` over elements of domain
+
+        Example:
+            >>> list(Range(4).map(lambda x: x + 10))
+            [10, 11, 12, 13]
+        """
         return transform.MapTransformation(self, fn)
 
     def filter(self, fn):
+        """
+        Transformation: Filters elements from domain
+
+        It calls function `fn` on each element, if the function
+        returns ``False`` then the element is filtered out.
+
+        Note, that the resulting domain has `exact_size` set to ``False``,
+        since we do not know in advance how many elements is filtered out.
+
+        Example:
+            >>> list(Range(4).map(filter x: x % 2 == 1))
+            [1, 3]
+        """
         return transform.FilterTransformation(self, fn)
 
     def timeout(self, timeout):
@@ -62,18 +159,31 @@ class Domain(object):
     # Others
 
     def run(self, parallel=False):
+        """A shortuct for ``self.collect.run(parallel)``"""
         return self.collect().run(parallel)
 
     def create_iterator(self):
+        """Creates an interator over all elements of domain"""
         raise NotImplementedError()
 
     def __iter__(self):
         return self.create_iterator()
 
     def generate_one(self):
+        """Generate a random element from the domain"""
         raise NotImplementedError()
 
     def generate(self, count=None):
+        """
+        Create a domain from random elements of `self`
+
+        If `count` is ``None`` then the resulting domain is infinite, otherwise
+        `count` serves as the number of elements for domain.
+
+        Example:
+           >>> list(Range(4).generate(5))
+           [1, 3, 3, 2, 0]
+        """
         domain = GeneratingDomain(self.generate_one)
         if count is None:
             return domain
@@ -126,6 +236,6 @@ class DomainIterator(Iterator):
         self.steps = self.domain.steps
         self.exact_size = self.domain.exact_size
 
-from product import Product  # noqa
-from join import Join  # noqa
-import transform  # noqa
+from .product import Product  # noqa
+from .join import Join  # noqa
+from . import transform  # noqa

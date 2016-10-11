@@ -211,6 +211,7 @@ def main():
         best = max(results.keys())
         print "Example of level {}:".format(best)
         pprint(results[best][0])
+        pda_to_graph(results[best][0][0][0]).write("test.dot")
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,8 @@
+
+from .domain import Domain, DomainIterator
+from .iterator import NoValue
+
 from copy import copy
-from domain import Domain, DomainIterator
-from qit.base.iterator import NoValue
 
 
 class TransformationIterator(DomainIterator):

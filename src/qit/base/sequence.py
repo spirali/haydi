@@ -1,5 +1,6 @@
 
-from domain import Domain, DomainIterator
+from .domain import Domain, DomainIterator
+
 from copy import copy
 
 

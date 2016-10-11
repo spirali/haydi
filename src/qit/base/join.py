@@ -1,7 +1,7 @@
-from domain import Domain, DomainIterator
-from random import randint
-from iterator import EmptyIterator
+from .domain import Domain, DomainIterator
+from .iterator import EmptyIterator
 
+from random import randint
 from copy import copy
 
 

@@ -1,6 +1,6 @@
 
-from domain import Domain, DomainIterator
-from values import Values
+from .domain import Domain, DomainIterator
+from .values import Values
 
 from copy import copy
 import math
