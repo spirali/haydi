@@ -45,14 +45,14 @@ class MappingIterator(DomainIterator):
 
     def set_step(self, index):
         self.current = None
-        if index >= self.size:
+        if index >= self.steps:
             for it in self.iterators:
-                it.set_step(it.size)
+                it.set_step(it.steps)
             return
         for it in self.iterators:
-            size = it.size
-            it.set_step(index % size)
-            index /= size
+            steps = it.steps
+            it.set_step(index % steps)
+            index /= steps
 
     def next(self):
         if self.current is not None:

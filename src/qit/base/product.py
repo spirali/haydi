@@ -120,14 +120,14 @@ class ProductIterator(DomainIterator):
 
     def set_step(self, index):
         self.current = None
-        if index >= self.size:
+        if index >= self.steps:
             for it in self.iterators:
-                it.set_step(it.size)
+                it.set_step(it.steps)
             return
         for it in self.iterators:
-            size = it.size
-            it.set_step(index % size)
-            index /= size
+            steps = it.steps
+            it.set_step(index % steps)
+            index /= steps
 
 
 class UnorderedProductIterator(DomainIterator):
@@ -184,14 +184,14 @@ class UnorderedProductIterator(DomainIterator):
 
     def set_step(self, index):
         assert len(self.domain.domains) == 2
-        size = self.domain.domains[1].size - 1  # -1 to ignore diagonal
-        assert index < self.size
+        steps = self.domain.domains[1].steps - 1  # -1 to ignore diagonal
+        assert index < self.steps
         # The root of y * size - ((y - 1) * y) / 2 - index
         # y * size = full rectangle
         # ((y-1) * y) / 2 = missing elements to full rectangle
-        y = int(0.5 * (-math.sqrt(-8 * index + 4 * size**2 + 4 * size + 1) +
-                       2 * size + 1))
-        x = index - y * size + ((y - 1) * y / 2) + y
+        y = int(0.5 * (-math.sqrt(-8 * index + 4 * steps**2 + 4 * steps + 1) +
+                       2 * steps + 1))
+        x = index - y * steps + ((y - 1) * y / 2) + y
 
         if not self.current:
             iterators = [d.create_iterator()
