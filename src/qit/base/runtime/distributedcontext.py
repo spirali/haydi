@@ -1,26 +1,18 @@
-import atexit
 import os
-from threading import Thread
 from datetime import datetime
 import time
 import itertools
 import logging
 import socket
 import resource
-import collections
 import math
 
-from distributed.http import HTTPScheduler
-
-from qit.base.qitsession import session
 from qit.base.exception import QitException
 from qit.base.iterator import NoValue
 
 try:
     import cloudpickle
-    from distributed import Scheduler, Nanny as Worker, Executor,\
-        as_completed, LocalCluster
-    from tornado.ioloop import IOLoop
+    from distributed import Client, as_completed, LocalCluster
 
     DistributedImportError = None
 except Exception as e:
@@ -42,8 +34,8 @@ class ResultSaver(object):
         self.results = []
         self.counter = 0
 
-    def handle_result(self, result):
-        self.results.append(result)
+    def handle_job(self, job):
+        self.results.append(job.result)
 
         if len(self.results) % self.write_count == 0:
             self._write_partial_result(self.results, self.counter)
@@ -143,6 +135,7 @@ class JobScheduler(object):
         # <made-up amount> of minutes per batch is "optimal"
         self.target_time = 60 * 2
         self.completed_jobs = []
+        self.job_callback = None
 
     # davat joby do fronty po kazdem jobu
     def iterate_jobs(self):
@@ -251,7 +244,8 @@ class JobScheduler(object):
             if job_size > 0:
                 start = self.index_scheduled
                 batches.append((self.domain, start, job_size,
-                            self.worker_reduce_fn, self.worker_reduce_init))
+                                self.worker_reduce_fn,
+                                self.worker_reduce_init))
                 self.index_scheduled = start + job_size
 
         if len(batches) > 0:
@@ -264,6 +258,8 @@ class JobScheduler(object):
     def _add_job(self, job):
         self.completed_jobs.append(job)
         self.index_completed += job.size
+        if self.job_callback:
+            self.job_callback(job)
 
     def _get_remaining_work(self):
         if self.size:
@@ -341,9 +337,9 @@ class DistributedContext(object):
                                         n_workers=spawn_workers,
                                         threads_per_worker=1,
                                         diagnostics_port=None)
-            self.executor = Executor(self.cluster)
+            self.executor = Client(self.cluster)
         else:
-            self.executor = Executor((ip, port))
+            self.executor = Client((ip, port))
 
     def run(self, domain,
             worker_reduce_fn, worker_reduce_init,
@@ -351,24 +347,16 @@ class DistributedContext(object):
             timeout=None):
         size = domain.steps
 
-        if self.write_partial_results is not None:
-            result_saver = ResultSaver(self.execution_count,
-                                       self.write_partial_results)
-        else:
-            result_saver = None
-
         scheduler = JobScheduler(self.executor,
                                  self._get_worker_count(),
                                  timeout, domain,
                                  worker_reduce_fn, worker_reduce_init)
 
+        if self.write_partial_results is not None:
+            result_saver = ResultSaver(self.execution_count,
+                                       self.write_partial_results)
+            scheduler.job_callback = lambda job: result_saver.handle_job(job)
         jobs = scheduler.iterate_jobs()
-        """for job in :
-            result = job.result
-            print("Received job: {}".format(job))
-            jobs.append(job)
-            if result_saver:
-                result_saver.handle_result(result)"""
 
         # order the results
         start = time.time()

@@ -1,13 +1,7 @@
-import os
 import pytest
-import time
 import random
 
-from subprocess import Popen, PIPE
-
-import signal
-
-from testutils import init, SRC_DIR
+from testutils import init
 init()
 
 from qit import Range   # noqa
@@ -19,45 +13,25 @@ import qit  # noqa
 class DCluster(object):
 
     def __init__(self, port):
-        self.sched_proc = None
-        self.worker_proc = None
         self.port = port
+        self.cluster = None
 
     def start(self, n_workers):
-        self.sched_proc = Popen(["dscheduler", "--host", "127.0.0.1",
-                                 "--port", str(self.port)],
-                                stdout=PIPE, stderr=PIPE)
+        import distributed
 
-        time.sleep(0.3)  # wait for the scheduler to spawn
-
-        env = os.environ.copy()
-        pythonpath = env["PYTHONPATH"] if "PYTHONPATH" in env else ""
-        env["PYTHONPATH"] = "{}:{}".format(pythonpath, SRC_DIR)
-
-        self.worker_proc = Popen(["dworker", "--nprocs",
-                                  str(n_workers), "--nthreads", "1",
-                                  "127.0.0.1:{}".format(self.port)],
-                                 env=env,
-                                 stdout=PIPE, stderr=PIPE)
-
-        time.sleep(1.5)  # wait for the workers to spawn
+        self.cluster = distributed.LocalCluster(
+            n_workers=n_workers,
+            threads_per_worker=1,
+            scheduler_port=self.port,
+            diagnostics_port=None
+        )
 
         session.set_parallel_context(DistributedContext(port=self.port))
         assert len(session.parallel_context.executor.ncores()) == n_workers
 
     def stop(self):
-        if self.sched_proc:
-            # Check that processes are still running
-            assert not self.sched_proc.poll()
-        if self.worker_proc:
-            assert not self.worker_proc.poll()
-            os.kill(self.worker_proc.pid, signal.SIGINT)
-
-        if self.sched_proc:
-            os.kill(self.sched_proc.pid, signal.SIGINT)
-
-        self.sched_proc = None
-        self.worker_proc = None
+        if self.cluster:
+            self.cluster.close()
 
 
 @pytest.yield_fixture(scope="module", autouse=True)
