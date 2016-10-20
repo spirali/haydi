@@ -1,3 +1,4 @@
+import atexit
 import os
 from threading import Thread
 from datetime import datetime
@@ -7,20 +8,26 @@ import logging
 import socket
 import resource
 import collections
-
 import math
 
+from distributed.http import HTTPScheduler
+
+from qit.base.qitsession import session
 from qit.base.exception import QitException
 from qit.base.iterator import NoValue
 
 try:
     import cloudpickle
-    from distributed import Scheduler, Nanny as Worker, Executor, as_completed
+    from distributed import Scheduler, Nanny as Worker, Executor,\
+        as_completed, LocalCluster
     from tornado.ioloop import IOLoop
 
     DistributedImportError = None
 except Exception as e:
     DistributedImportError = e
+
+
+qitLogger = logging.getLogger("Qit")
 
 
 class ResultSaver(object):
@@ -90,6 +97,12 @@ class Job(object):
     def get_duration(self):
         return (self.end_time - self.start_time).total_seconds()
 
+    def __str__(self):
+        return "Job(worker={}, from={}, to={}".format(
+            self.worker_id,
+            self.start_index,
+            self.start_index + self.size)
+
 
 class JobScheduler(object):
     """
@@ -106,7 +119,8 @@ class JobScheduler(object):
         """
         :param executor: distributed executor
         :param worker_count: number of workers in the cluster
-        :param timeout: timeout in seconds
+        :type timeout: datetime.timedelta
+        :param timeout: timeout for the computation
         :param domain: domain to be iterated
         :param worker_reduce_fn:
         :param worker_reduce_init:
@@ -117,104 +131,146 @@ class JobScheduler(object):
         self.domain = domain
         self.worker_reduce_fn = worker_reduce_fn
         self.worker_reduce_init = worker_reduce_init
-        self.job_histogram = collections.deque(maxlen=10)
         self.index_scheduled = 0
         self.index_completed = 0
-        self.batch_size = None
-        self.timeout_mgr = TimeoutManager(timeout) if timeout else None
+        self.job_size = None
+        self.timeout_mgr = TimeoutManager(timeout.total_seconds())\
+            if timeout else None
         self.ordered_futures = []
-        self.active_futures = self._create_first_batch()
+        self.backlog_per_worker = 4
+        self.active_futures = self._init_futures(self.backlog_per_worker)
+        self.next_futures = []
         # <made-up amount> of minutes per batch is "optimal"
         self.target_time = 60 * 2
+        self.completed_jobs = []
 
+    # davat joby do fronty po kazdem jobu
     def iterate_jobs(self):
         """
         Iterate through all jobs until the domain size is depleted or
         time runs out.
-        :return: completed future
+        :return: completed job
         """
+        if len(self.next_futures) > 0:
+            self.active_futures = self.next_futures
+            self.next_futures = []
+
+        iterated = 0
         for future in as_completed(self.active_futures):
             job = future.result()
             self._add_job(job)
-            yield future
+            iterated += 1
 
             if self.timeouted():
-                return
-        self._schedule()
+                return self.completed_jobs
+
+            if iterated / self.worker_count >= 2:
+                if self._has_more_work():
+                    self.next_futures += self._schedule(
+                        self.backlog_per_worker / 2)
+
         if self._has_more_work():
-            self.active_futures = self._schedule()
-            for future in self.iterate_jobs():
-                yield future
+            self.next_futures += self._schedule(self.backlog_per_worker / 2)
+            return self.iterate_jobs()
+        else:
+            return self.completed_jobs
 
     def timeouted(self):
         return self.timeout_mgr and self.timeout_mgr.is_finished()
 
-    def _schedule(self):
+    def _schedule(self, count_per_worker):
         """
         Adjust batch size according to the average duration of recent jobs
         and create new futures.
+        :param count_per_worker: how many jobs should be spawned per worker
         :rtype: list of distributed.client.Future
         :return: newly scheduled futures
         """
         duration = self._get_avg_duration()
         delta = duration / float(self.target_time)
         delta = self._clamp(delta, 0.1, 1.2)
-        self.batch_size = int(self.batch_size / delta)
+        self.job_size = int(self.job_size / delta)
 
-        return self._create_futures(self._get_batch_count(), self.batch_size)
+        return self._create_futures(self._create_distribution(
+            self.worker_count * count_per_worker, self.job_size))
 
     def _clamp(self, value, minimum, maximum):
         return min(maximum, max(minimum, value))
 
     def _get_avg_duration(self):
-        total_duration = sum([j.get_duration() for j in self.job_histogram])
-        return total_duration / float(len(self.job_histogram))
+        job_histogram = self.completed_jobs[-10:]
+        total_duration = sum([j.get_duration() for j in job_histogram])
+        return total_duration / float(len(job_histogram))
 
-    def _create_first_batch(self):
-        batch_count = self._get_batch_count()
+    def _init_futures(self, count_per_worker):
+        job_count = self.worker_count * count_per_worker
 
         if self.size:
-            total_size = int(math.ceil(self.size / float(batch_count)))
+            total_size = int(math.ceil(self.size / float(job_count)))
             if total_size < 100:
-                self.batch_size = total_size
+                self.job_size = total_size
             else:
-                self.batch_size = min(total_size, self._batch_size(0.05))
+                self.job_size = min(total_size, int(self.size * 0.05))
         else:
-            self.batch_size = self._batch_size(0.01)
+            self.job_size = 50
 
-        return self._create_futures(batch_count, self.batch_size)
+        return self._create_futures(self._create_distribution(
+            self.worker_count * count_per_worker, self.job_size))
 
-    def _get_batch_count(self):
-        return self.worker_count * 4
+    def _create_distribution(self, job_count, job_size):
+        return [job_size] * job_count
 
-    def _create_futures(self, batch_count, batch_size):
-        batches = self._create_batches(batch_count, batch_size)
-        futures = self.executor.map(process_batch, batches)
-        self.ordered_futures += futures
-        return futures
+    def _truncate(self, job_distribution):
+        """
+        :type job_distribution: list of int
+        :return:
+        """
+        if self.size:
+            remaining = self._get_remaining_work()
+            expected = sum(job_distribution)
+            if expected > remaining:
+                per_job = remaining / len(job_distribution)
+                job_distribution = self._create_distribution(
+                    len(job_distribution), per_job)
+                leftover = remaining - (per_job * len(job_distribution))
+                job_distribution[0] += leftover
+                assert sum(job_distribution) == remaining
+
+        return job_distribution
+
+    def _create_futures(self, job_distribution):
+        """
+        :type job_distribution: list of int
+        :return:
+        """
+        job_distribution = self._truncate(job_distribution)
+        batches = []
+        for job_size in job_distribution:
+            if job_size > 0:
+                start = self.index_scheduled
+                batches.append((self.domain, start, job_size,
+                            self.worker_reduce_fn, self.worker_reduce_init))
+                self.index_scheduled = start + job_size
+
+        if len(batches) > 0:
+            futures = self.executor.map(process_batch, batches)
+            self.ordered_futures += futures
+            return futures
+        else:
+            return []
 
     def _add_job(self, job):
-        self.job_histogram.append(job)
+        self.completed_jobs.append(job)
         self.index_completed += job.size
 
-    def _has_more_work(self):
-        return not self.size or self.index_completed < self.size
-
-    def _batch_size(self, percent):
+    def _get_remaining_work(self):
         if self.size:
-            return int(self.size * percent)
+            return self.size - self.index_scheduled
         else:
-            return int(percent * 1000)
+            return -1
 
-    def _create_batches(self, count, batch_size):
-        batches = []
-        for _ in xrange(count):
-            start = self.index_scheduled
-            batches.append((self.domain, start, batch_size,
-                            self.worker_reduce_fn, self.worker_reduce_init))
-            self.index_scheduled = start + batch_size
-
-        return batches
+    def _has_more_work(self):
+        return not self.size or self.index_scheduled < self.size
 
 
 class DistributedContext(object):
@@ -244,8 +300,6 @@ class DistributedContext(object):
             - If `write_partial_results` is ``n``
                 - partial results are saved after every ``n-th`` job
     """
-    io_loop = None
-    io_thread = None
 
     def __init__(self,
                  ip="127.0.0.1",
@@ -279,20 +333,15 @@ class DistributedContext(object):
         self.write_partial_results = write_partial_results
         self.execution_count = 0
 
-        if not DistributedContext.io_loop:
-            DistributedContext.io_loop = IOLoop()
-            DistributedContext.io_thread = Thread(
-                target=DistributedContext.io_loop.start)
-            DistributedContext.io_thread.daemon = True
-            DistributedContext.io_thread.start()
-
         if spawn_workers > 0:
-            self.scheduler = self._create_scheduler()
-            self.workers = [self._create_worker()
-                            for i in xrange(spawn_workers)]
-            time.sleep(0.5)  # wait for workers to spawn
-
-        self.executor = Executor((ip, port))
+            self.cluster = LocalCluster(ip=ip,
+                                        scheduler_port=port,
+                                        n_workers=spawn_workers,
+                                        threads_per_worker=1,
+                                        diagnostics_port=None)
+            self.executor = Executor(self.cluster)
+        else:
+            self.executor = Executor((ip, port))
 
     def run(self, domain,
             worker_reduce_fn, worker_reduce_init,
@@ -306,21 +355,24 @@ class DistributedContext(object):
         else:
             result_saver = None
 
-        scheduler = JobScheduler(self.executor, self._get_worker_count(),
+        scheduler = JobScheduler(self.executor,
+                                 self._get_worker_count(),
                                  timeout, domain,
                                  worker_reduce_fn, worker_reduce_init)
 
-        results = []
-        for future in scheduler.iterate_jobs():
-            result = future.result().result
-            results.append(result)
+        jobs = scheduler.iterate_jobs()
+        """for job in :
+            result = job.result
+            print("Received job: {}".format(job))
+            jobs.append(job)
             if result_saver:
-                result_saver.handle_result(result)
+                result_saver.handle_result(result)"""
 
-        # order the results if not timeouted
-        if not scheduler.timeouted():
-            results = [j.result for j in self.executor.gather(
-                scheduler.ordered_futures)]
+        # order the results
+        start = time.time()
+        jobs.sort(key=lambda job: job.start_index)
+        results = [job.result for job in jobs]
+        qitLogger.info("Qit: ordering took {} ms".format(time.time() - start))
 
         self.execution_count += 1
 
@@ -328,14 +380,14 @@ class DistributedContext(object):
             results = list(itertools.chain.from_iterable(results))
 
         if size:
-            logging.info("Qit: finished run with size {} (taking {})".format(
+            qitLogger.info("Qit: finished run with size {} (taking {})".format(
                 len(results), domain.size))
 
             results = results[:domain.size]  # trim results to required size
         else:
-            logging.info("Qit: finished run")
+            qitLogger.info("Qit: finished run")
 
-        if global_reduce_fn is None:
+        if global_reduce_fn is None or len(results) == 0:
             return results
         else:
             if global_reduce_init is None:
@@ -353,18 +405,6 @@ class DistributedContext(object):
 
         return workers
 
-    def _create_scheduler(self):
-        scheduler = Scheduler(ip=self.ip)
-        scheduler.start(self.port)
-        return scheduler
-
-    def _create_worker(self):
-        worker = Worker(self.ip,
-                        self.port,
-                        ncores=1)
-        worker.start(0)
-        return worker
-
 
 def process_batch(arg):
     """
@@ -373,6 +413,8 @@ def process_batch(arg):
     """
     domain, start, size, reduce_fn, reduce_init = arg
     job = Job("{}#{}".format(socket.gethostname(), os.getpid()), start, size)
+
+    print(job)
 
     iterator = domain.create_iterator()
     iterator.set_step(start)
