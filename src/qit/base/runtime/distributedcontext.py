@@ -172,6 +172,8 @@ class JobScheduler(object):
         if self._has_more_work():
             self.next_futures += self._schedule(self.backlog_per_worker / 2)
             return self.iterate_jobs()
+        elif self.index_completed < self.index_scheduled:
+            return self.iterate_jobs()
         else:
             return self.completed_jobs
 
@@ -413,8 +415,6 @@ def process_batch(arg):
     """
     domain, start, size, reduce_fn, reduce_init = arg
     job = Job("{}#{}".format(socket.gethostname(), os.getpid()), start, size)
-
-    print(job)
 
     iterator = domain.create_iterator()
     iterator.set_step(start)
