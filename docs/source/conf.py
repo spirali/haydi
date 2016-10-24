@@ -44,7 +44,11 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.doctest'
 ]
+
+doctest_path = [SRC_DIR]
+doctest_global_setup = "import qit"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

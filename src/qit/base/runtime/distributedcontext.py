@@ -92,6 +92,30 @@ class JobObserver(object):
 
 
 class DistributedContext(object):
+    """
+    Parallel context that uses the
+    `distributed <http://distributed.readthedocs.io>`_ library to distribute
+    work amongst workers in a cluster to speed up the computation.
+
+    It can either connect to an already running cluster or create a new one.
+
+    Partial results can be saved to disk during the computation
+    to avoid losing all results if the program ends abruptly.
+
+    Args:
+        ip (string): IP address of a distributed cluster
+        port (int): TCP port of a distributed cluster
+        spawn_workers (int):
+            - If `spawn_workers` is ``0``
+                - connect to an existing cluster located at (ip, port)
+            - If `spawn_workers` is ``n``
+                - create a local cluster with ``n`` workers
+        write_partial_results (int):
+            - If `write_partial_results` is ``None``
+                - no partial results can be saved
+            - If `write_partial_results` is ``n``
+                - partial results are saved after every ``n-th`` job
+    """
     io_loop = None
     io_thread = None
 
@@ -104,6 +128,7 @@ class DistributedContext(object):
                  time_limit=None,
                  job_observer=None):
         """
+
         :type ip: string
         :type port: int
         :type spawn_workers: int
