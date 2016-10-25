@@ -20,16 +20,16 @@ class Range(Domain):
 
     Examples:
 
-        >>> Range(4)
+        >>> hd.Range(4)
         <Range size=4 {0, 1, 2, 3}>
 
-        >>> list(Range(4))
+        >>> list(hd.Range(4))
         [0, 1, 2, 3]
 
-        >>> qit.Range(10, 20)  # From 10 upto 20
+        >>> hd.Range(10, 20)  # From 10 upto 20
         <Range size=10 {10, 11, 12, 13, ...}>
 
-        >>> qit.Range(4, 15, 3)  # From 4 upto 15, step 3
+        >>> hd.Range(4, 15, 3)  # From 4 upto 15, step 3
         <Range size=3 {4, 7, 10}>
 
     """

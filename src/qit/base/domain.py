@@ -81,7 +81,7 @@ class Domain(object):
         Action: Materialize all elements in domain.
 
         Example:
-            >>> qit.Range(4).collect().run()
+            >>> hd.Range(4).collect().run()
             [0, 1, 2, 3]
         """
         return action.Collect(self, postprocess_fn)
@@ -110,7 +110,7 @@ class Domain(object):
         Action: Reduce domain
 
         Example:
-            >>> Range(4).reduce(lambda x, y: x + y, init_value=10).run()
+            >>> hd.Range(4).reduce(lambda x, y: x + y, init_value=10).run()
             16
         """
         return action.Reduce(self, reduce_fn, init_value, associative)
@@ -122,7 +122,7 @@ class Domain(object):
         Transformation: Take first `count` elements from domain
 
         Example:
-            >>> list(Range(10).take(3))
+            >>> list(hd.Range(10).take(3))
             [0, 1, 2]
         """
         return transform.TakeTransformation(self, count)
@@ -132,7 +132,7 @@ class Domain(object):
         Transformation: Map a function `fn` over elements of domain
 
         Example:
-            >>> list(Range(4).map(lambda x: x + 10))
+            >>> list(hd.Range(4).map(lambda x: x + 10))
             [10, 11, 12, 13]
         """
         return transform.MapTransformation(self, fn)
@@ -148,7 +148,7 @@ class Domain(object):
         since we do not know in advance how many elements is filtered out.
 
         Example:
-            >>> list(Range(4).map(filter x: x % 2 == 1))
+            >>> list(hd.Range(4).filter(lambda x: x % 2 == 1))
             [1, 3]
         """
         return transform.FilterTransformation(self, fn)
@@ -181,7 +181,7 @@ class Domain(object):
         `count` serves as the number of elements for domain.
 
         Example:
-           >>> list(Range(4).generate(5))
+           >>> list(hd.Range(4).generate(5)) # doctest: +SKIP
            [1, 3, 3, 2, 0]
         """
         domain = GeneratingDomain(self.generate_one)

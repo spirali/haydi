@@ -48,7 +48,7 @@ extensions = [
 ]
 
 doctest_path = [SRC_DIR]
-doctest_global_setup = "import qit"
+doctest_global_setup = "import qit as hd"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
