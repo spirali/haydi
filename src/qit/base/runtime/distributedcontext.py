@@ -137,7 +137,6 @@ class JobScheduler(object):
         self.completed_jobs = []
         self.job_callback = None
 
-    # davat joby do fronty po kazdem jobu
     def iterate_jobs(self):
         """
         Iterate through all jobs until the domain size is depleted or
@@ -164,8 +163,8 @@ class JobScheduler(object):
 
         if self._has_more_work():
             self.next_futures += self._schedule(self.backlog_per_worker / 2)
-            return self.iterate_jobs()
-        elif self.index_completed < self.index_scheduled:
+
+        if self.index_completed < self.index_scheduled:
             return self.iterate_jobs()
         else:
             return self.completed_jobs
@@ -173,7 +172,7 @@ class JobScheduler(object):
     def timeouted(self):
         return self.timeout_mgr and self.timeout_mgr.is_finished()
 
-    def _schedule(self, count_per_worker):
+    def  _schedule(self, count_per_worker):
         """
         Adjust batch size according to the average duration of recent jobs
         and create new futures.
@@ -356,7 +355,11 @@ class DistributedContext(object):
             result_saver = ResultSaver(self.execution_count,
                                        self.write_partial_results)
             scheduler.job_callback = lambda job: result_saver.handle_job(job)
-        jobs = scheduler.iterate_jobs()
+
+        try:
+            jobs = scheduler.iterate_jobs()
+        except KeyboardInterrupt:
+            jobs = scheduler.completed_jobs
 
         # order the results
         start = time.time()
@@ -370,12 +373,9 @@ class DistributedContext(object):
             results = list(itertools.chain.from_iterable(results))
 
         if size:
-            qitLogger.info("Qit: finished run with size {} (taking {})".format(
-                len(results), domain.size))
-
             results = results[:domain.size]  # trim results to required size
-        else:
-            qitLogger.info("Qit: finished run")
+
+        qitLogger.info("Qit: finished run with size {}".format(domain.size))
 
         if global_reduce_fn is None or len(results) == 0:
             return results
