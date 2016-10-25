@@ -97,7 +97,9 @@ class DistributedContext(object):
     `distributed <http://distributed.readthedocs.io>`_ library to distribute
     work amongst workers in a cluster to speed up the computation.
 
-    It can either connect to an already running cluster or create a new one.
+    It can either connect to an already running cluster or create a local one.
+    If a local cluster is created, every worker will be spawned in a single
+    process with one thread.
 
     Partial results can be saved to disk during the computation
     to avoid losing all results if the program ends abruptly.
