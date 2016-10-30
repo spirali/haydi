@@ -83,24 +83,24 @@ def test_dist_samples(cluster4):
     a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
     random.shuffle(a)
 
-    result = qit.Values(a).samples(lambda x: x, 1).run(True)
+    result = qit.Values(a).groups(lambda x: x, 1).run(True)
     assert {"A": ["A"], "B": ["B"], "C": ["C"], "D": ["D"]} == result
 
-    result = qit.Values(a).samples(lambda x: x, 10).run(True)
+    result = qit.Values(a).groups(lambda x: x, 10).run(True)
     expected = {"A": ["A"] * 10,
                 "B": ["B"] * 10,
                 "C": ["C"] * 3,
                 "D": ["D"] * 10}
     assert result == expected
 
-    result = qit.Values(a).samples(lambda x: x, 150).run(True)
+    result = qit.Values(a).groups(lambda x: x, 150).run(True)
     expected = {"A": ["A"] * 150,
                 "B": ["B"] * 100,
                 "C": ["C"] * 3,
                 "D": ["D"] * 10}
     assert result == expected
 
-    result = qit.Values(a).samples(lambda x: x, 1500).run(True)
+    result = qit.Values(a).groups(lambda x: x, 1500).run(True)
     expected = {"A": ["A"] * 200,
                 "B": ["B"] * 100,
                 "C": ["C"] * 3,
@@ -112,25 +112,25 @@ def test_dist_samples_and_counts(cluster4):
     a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
     random.shuffle(a)
 
-    result = qit.Values(a).samples_and_counts(lambda x: x, 1).run(True)
+    result = qit.Values(a).groups_counts(lambda x: x, 1).run(True)
     assert {"A": [200, "A"], "B": [100, "B"], "C": [3, "C"],
             "D": [10, "D"]} == result
 
-    result = qit.Values(a).samples_and_counts(lambda x: x, 10).run(True)
+    result = qit.Values(a).groups_counts(lambda x: x, 10).run(True)
     expected = {"A": [200] + ["A"] * 10,
                 "B": [100] + ["B"] * 10,
                 "C": [3] + ["C"] * 3,
                 "D": [10] + ["D"] * 10}
     assert result == expected
 
-    result = qit.Values(a).samples_and_counts(lambda x: x, 150).run(True)
+    result = qit.Values(a).groups_counts(lambda x: x, 150).run(True)
     expected = {"A": [200] + ["A"] * 150,
                 "B": [100] + ["B"] * 100,
                 "C": [3] + ["C"] * 3,
                 "D": [10] + ["D"] * 10}
     assert result == expected
 
-    result = qit.Values(a).samples_and_counts(lambda x: x, 1500).run(True)
+    result = qit.Values(a).groups_counts(lambda x: x, 1500).run(True)
     expected = {"A": [200] + ["A"] * 200,
                 "B": [100] + ["B"] * 100,
                 "C": [3] + ["C"] * 3,
