@@ -13,6 +13,7 @@ from qit.base.iterator import NoValue
 try:
     import cloudpickle
     from distributed import Client, as_completed, LocalCluster
+    from distributed.http import HTTPScheduler
 
     distributed_import_error = None
 except Exception as e:
@@ -335,7 +336,9 @@ class DistributedContext(object):
                                         scheduler_port=port,
                                         n_workers=spawn_workers,
                                         threads_per_worker=1,
-                                        diagnostics_port=None)
+                                        diagnostics_port=None,
+                                        services=
+                                        {("http", port + 1): HTTPScheduler})
             self.executor = Client(self.cluster)
         else:
             self.executor = Client((ip, port))

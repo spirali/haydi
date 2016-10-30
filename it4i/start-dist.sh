@@ -7,15 +7,17 @@ export PATH=~/.local/bin:$PATH
 source ~/.local/bin/virtualenvwrapper.sh
 
 PORT=9010
+HTTP_PORT=9011
 MASTER=`hostname`:${PORT}
 
 WORKER_ARGS=$@
 
 workon pypy
 
-dscheduler --port ${PORT} &> dscheduler.log &
+dscheduler --port ${PORT} --http-port ${HTTP_PORT} &> dscheduler.log &
 echo "Pid of scheduler: $!"
 echo "Url: ${MASTER}"
+echo "HTTP port: ${HTTP_PORT}"
 
 sleep 1
 
