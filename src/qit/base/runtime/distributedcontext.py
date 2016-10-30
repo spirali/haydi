@@ -14,9 +14,9 @@ try:
     import cloudpickle
     from distributed import Client, as_completed, LocalCluster
 
-    DistributedImportError = None
+    distributed_import_error = None
 except Exception as e:
-    DistributedImportError = e
+    distributed_import_error = e
 
 
 qitLogger = logging.getLogger("Qit")
@@ -317,11 +317,11 @@ class DistributedContext(object):
             None -> no temporary results will be stored
         """
 
-        if DistributedImportError:
+        if distributed_import_error:
             raise QitException("distributed must be properly installed in "
                                "order to use the DistributedContext\n"
                                "Error:\n{}"
-                               .format(DistributedImportError))
+                               .format(distributed_import_error))
 
         self.worker_count = spawn_workers
         self.ip = ip
