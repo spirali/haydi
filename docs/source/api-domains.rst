@@ -4,14 +4,14 @@ Domains
 Base class for Domains
 ----------------------
 
-.. autoclass:: qit.Domain
+.. autoclass:: haydi.Domain
    :members:
 
 
 Standard domains
 ----------------
 
-.. autoclass:: qit.Range
+.. autoclass:: haydi.Range
    :show-inheritance:
 
 

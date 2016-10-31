@@ -1,11 +1,11 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_take():
-    r = qit.Range(10)
+    r = hd.Range(10)
 
     assert r.take(7).size == 7
     assert r.take(17).size == 10
@@ -17,12 +17,12 @@ def test_take():
 
 
 def test_map():
-    r = qit.Range(5)
+    r = hd.Range(5)
     assert [0, 2, 4, 6, 8] == list(r.map(lambda x: x * 2))
 
 
 def test_filter():
-    r = qit.Range(10)
+    r = hd.Range(10)
 
     assert list(r.filter(lambda x: False)) == []
     assert list(r.filter(lambda x: True)) == range(10)

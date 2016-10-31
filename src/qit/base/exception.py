@@ -1,4 +1,0 @@
-
-
-class QitException(BaseException):
-    pass

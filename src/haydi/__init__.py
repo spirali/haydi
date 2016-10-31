@@ -19,4 +19,4 @@ from .base.iterator import NoValue  # noqa
 
 # Session
 from .base.runtime.distributedcontext import DistributedContext  # noqa
-from .base.qitsession import session  # noqa
+from .base.haydisession import session  # noqa

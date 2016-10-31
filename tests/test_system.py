@@ -1,21 +1,21 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_system_no_rules():
-    s = qit.System([])
+    s = hd.System([])
     result = list(s.iterate_states(10))
     assert result == []
 
-    s = qit.System(["a", "b"])
+    s = hd.System(["a", "b"])
     result = list(s.iterate_states(10))
     assert result == ["a", "b"]
 
 
 def test_system_basic():
-    class MySystem(qit.System):
+    class MySystem(hd.System):
         def compute_next(self, state):
             result = []
             result.append(state * 10)

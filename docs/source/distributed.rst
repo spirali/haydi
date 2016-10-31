@@ -3,7 +3,7 @@ Running in a distributed environment
 ====================================
 
 Haydi can parallelize computation by using a cluster of workers to iterate
-through a domain. First you have to create a :class:`qit.DistributedContext`
+through a domain. First you have to create a :class:`haydi.DistributedContext`
 and assign it to a global ``session`` object that keeps track of which
 parallel context is currently active.
 

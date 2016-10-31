@@ -38,7 +38,7 @@ class Domain(object):
         """Creates a cartesian product of domains.
 
         It is equivalent to
-        ``Product((self, other))``, see :class:`qit.Product`
+        ``Product((self, other))``, see :class:`haydi.Product`
         """
         return Product((self, other))
 
@@ -46,7 +46,7 @@ class Domain(object):
         """Join two domains
 
         It is equivalent to
-        ``Join((self, other))``, see :class:`qit.Join`
+        ``Join((self, other))``, see :class:`haydi.Join`
         """
         return Join((self, other))
 

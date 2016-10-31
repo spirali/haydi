@@ -1,10 +1,12 @@
-import qit
+import haydi as hd
 import argparse
+from datetime import datetime
+
 try:
     import cPickle as pickle
 except:
     import pickle
-from datetime import datetime
+
 
 class ExperimentEnv(object):
 
@@ -33,9 +35,9 @@ class ExperimentEnv(object):
 
         for name in self.config_names:
             parser.add_argument("--" + name,
-                               metavar="INT",
-                               type=int,
-                               default=self.config_dict[name])
+                                metavar="INT",
+                                type=int,
+                                default=self.config_dict[name])
 
         args = parser.parse_args()
 
@@ -45,13 +47,14 @@ class ExperimentEnv(object):
         ctx = None
 
         if args.local:
-            ctx = qit.DistributedContext(port=args.port, spawn_workers=args.local)
+            ctx = hd.DistributedContext(port=args.port,
+                                        spawn_workers=args.local)
 
         if args.scheduler:
-            ctx = qit.DistributedContext(port=args.port, ip=args.scheduler)
+            ctx = hd.DistributedContext(port=args.port, ip=args.scheduler)
 
         if ctx:
-            qit.session.set_parallel_context(ctx)
+            hd.session.set_parallel_context(ctx)
             self.parallel = True
 
     def run(self, action, write=False):

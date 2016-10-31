@@ -1,4 +1,4 @@
-from .qitsession import session
+from .haydisession import session
 
 
 class Action(object):
@@ -10,7 +10,7 @@ class Action(object):
 
     def __init__(self, domain):
         """
-        :type domain: qit.base.factory.IteratorFactory
+        :type domain: haydi.base.factory.IteratorFactory
         """
         self.domain = domain
 
@@ -40,7 +40,7 @@ class Collect(Action):
 
     def __init__(self, domain, postprocess_fn):
         """
-        :type domain: qit.base.factory.IteratorFactory
+        :type domain: haydi.base.factory.IteratorFactory
         """
         super(Collect, self).__init__(domain)
         if postprocess_fn:
@@ -51,7 +51,7 @@ class Reduce(Action):
 
     def __init__(self, domain, reduce_fn, init_value=0, associative=True):
         """
-        :type domain: qit.base.factory.IteratorFactory
+        :type domain: haydi.base.factory.IteratorFactory
         :type fn: function
         """
         super(Reduce, self).__init__(domain)
@@ -65,7 +65,7 @@ class MaxAll(Action):
 
     def __init__(self, domain, key_fn):
         """
-        :type domain: qit.base.factory.IteratorFactory
+        :type domain: haydi.base.factory.IteratorFactory
         :type key_fn: function
         """
 

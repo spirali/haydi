@@ -1,14 +1,14 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_join_range_iterate():
-    d1 = qit.Range(3)
-    d2 = qit.Range(0)
-    d3 = qit.Range(0)
-    d4 = qit.Range(5)
+    d1 = hd.Range(3)
+    d2 = hd.Range(0)
+    d3 = hd.Range(0)
+    d4 = hd.Range(5)
 
     expected = list(range(3)) + list(range(5))
     j = d1 + d2 + d3 + d4
@@ -19,16 +19,16 @@ def test_join_range_iterate():
 
 
 def test_join_non_exact_size():
-    d1 = qit.Range(3)
-    d2 = qit.Range(3).filter(lambda x: True)
+    d1 = hd.Range(3)
+    d2 = hd.Range(3).filter(lambda x: True)
     j = d1 + d2
     assert j.size == 6
     assert not j.exact_size
 
 
 def test_join_empty_iterate():
-    d2 = qit.Range(0)
-    d3 = qit.Range(0)
+    d2 = hd.Range(0)
+    d3 = hd.Range(0)
 
     j = d2 + d3
     result = list(j)
@@ -36,8 +36,8 @@ def test_join_empty_iterate():
 
 
 def test_join_int_generate():
-    r1 = qit.Range(2)
-    r2 = qit.Range(2, 4)
+    r1 = hd.Range(2)
+    r2 = hd.Range(2, 4)
     j = r1 + r2
 
     result = list(j.generate().take(1000))
@@ -45,9 +45,9 @@ def test_join_int_generate():
 
 
 def test_join_int_generate2():
-    r1 = qit.Values([5000])
-    r2 = qit.Range(1000)
-    r3 = qit.Values([5001, 5002])
+    r1 = hd.Values([5000])
+    r2 = hd.Range(1000)
+    r3 = hd.Values([5001, 5002])
 
     j = r1 + r2 + r3
 
@@ -58,20 +58,20 @@ def test_join_int_generate2():
 
 
 def test_join_int_generate3():
-    r1 = qit.Range(2)
-    r2 = qit.Range(2, 4)
-    r3 = qit.Range(4, 6)
+    r1 = hd.Range(2)
+    r2 = hd.Range(2, 4)
+    r3 = hd.Range(4, 6)
 
-    j = qit.Join((r1, r2, r3), ratios=(1, 0, 1))
+    j = hd.Join((r1, r2, r3), ratios=(1, 0, 1))
 
     result = list(j.generate().take(1000))
     assert set(result) == set((0, 1, 4, 5))
 
 
 def test_join_iter_set():
-    r1 = qit.Values([5000])
-    r2 = qit.Range(10)
-    r3 = qit.Values([5001, 5002])
+    r1 = hd.Values([5000])
+    r2 = hd.Range(10)
+    r3 = hd.Values([5001, 5002])
     p = r1 + r2 + r3
     a = list(p)
     b = []
@@ -85,9 +85,9 @@ def test_join_iter_set():
 
 
 def test_join_copy():
-    r1 = qit.Range(0, 5)
-    r2 = qit.Range(5, 10)
-    r3 = qit.Range(10, 15)
+    r1 = hd.Range(0, 5)
+    r2 = hd.Range(5, 10)
+    r3 = hd.Range(10, 15)
 
     p = r1 + r2 + r3
 
@@ -97,5 +97,5 @@ def test_join_copy():
 
 
 def test_join_name():
-    j = qit.Join((qit.Range(10), qit.Range(10)), name="TestJoin")
+    j = hd.Join((hd.Range(10), hd.Range(10)), name="TestJoin")
     assert j.name == "TestJoin"

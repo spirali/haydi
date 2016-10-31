@@ -1,7 +1,7 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_domain_map():
@@ -9,7 +9,7 @@ def test_domain_map():
     def fn(x):
         return (x + 1) * 10
 
-    d = qit.Range(5).map(fn)
+    d = hd.Range(5).map(fn)
     result = list(d)
     assert result == [10, 20, 30, 40, 50]
 
@@ -17,7 +17,7 @@ def test_domain_map():
     for x in result:
         assert x in [10, 20, 30, 40, 50]
 
-    result = list(qit.Product((d, d), unordered=True))
+    result = list(hd.Product((d, d), unordered=True))
     assert set(result) == set(((20, 10), (30, 10), (40, 10), (50, 10),
                                (30, 20), (40, 20), (50, 20),
                                (40, 30), (50, 30), (50, 40)))
@@ -30,7 +30,7 @@ def test_domain_filter():
     def fn(x):
         return x > 2 and x < 5
 
-    r = qit.Range(6)
+    r = hd.Range(6)
     d = r.filter(fn)
     result = list(d)
     assert result == [3, 4]
@@ -51,15 +51,15 @@ def test_domain_filter():
     assert not p.exact_size
     assert (r * r).exact_size
 
-    assert not qit.Sequence(d, 2).exact_size
-    assert qit.Sequence(r, 2).exact_size
+    assert not hd.Sequence(d, 2).exact_size
+    assert hd.Sequence(r, 2).exact_size
 
-    assert not qit.Mapping(d, r).exact_size
-    assert not qit.Mapping(r, d).exact_size
-    assert qit.Mapping(r, r).exact_size
+    assert not hd.Mapping(d, r).exact_size
+    assert not hd.Mapping(r, d).exact_size
+    assert hd.Mapping(r, r).exact_size
 
-    assert not qit.Product((d, d), unordered=True).exact_size
-    assert qit.Product((r, r), unordered=True).exact_size
+    assert not hd.Product((d, d), unordered=True).exact_size
+    assert hd.Product((r, r), unordered=True).exact_size
 
-    result = list(qit.Product((d, d), unordered=True))
+    result = list(hd.Product((d, d), unordered=True))
     assert set(result) == set(((4, 3),))

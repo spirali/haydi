@@ -1,11 +1,11 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_lts_basic():
-    class MyLTS(qit.DLTS):
+    class MyLTS(hd.DLTS):
         def step(self, state, action):
             if action == 0:
                 return state * 10
@@ -17,7 +17,7 @@ def test_lts_basic():
                 return -state
 
         def get_enabled_actions(self, state):
-            return qit.Range(4)
+            return hd.Range(4)
 
     s = MyLTS()
     result = list(s.bfs(10, 0))
@@ -32,20 +32,20 @@ def test_lts_basic():
 
 
 def test_lts_product1():
-    class MyLTS1(qit.DLTS):
+    class MyLTS1(hd.DLTS):
         def __init__(self):
-            qit.DLTS.__init__(self)
+            hd.DLTS.__init__(self)
 
         def step(self, state, action):
             assert action == 0
             return state + 1
 
         def get_enabled_actions(self, state):
-            return qit.Range(1)
+            return hd.Range(1)
 
-    class MyLTS2(qit.DLTS):
+    class MyLTS2(hd.DLTS):
         def __init__(self):
-            qit.DLTS.__init__(self, qit.Range(1))
+            hd.DLTS.__init__(self, hd.Range(1))
 
         def step(self, state, action):
             assert action == 0
@@ -60,17 +60,17 @@ def test_lts_product1():
 
 def test_lts_product2():
 
-    class MyLTS1(qit.DLTS):
+    class MyLTS1(hd.DLTS):
         def __init__(self):
-            qit.DLTS.__init__(self, qit.Range(1))
+            hd.DLTS.__init__(self, hd.Range(1))
 
         def step(self, state, action):
             assert action == 0
             return state + 1
 
-    class MyLTS2(qit.DLTS):
+    class MyLTS2(hd.DLTS):
         def __init__(self):
-            qit.DLTS.__init__(self, qit.Range(1))
+            hd.DLTS.__init__(self, hd.Range(1))
 
         def step(self, state, action):
             assert action == 0
@@ -84,9 +84,9 @@ def test_lts_product2():
 
 
 def test_lts_graph():
-    class MyLTS(qit.DLTS):
+    class MyLTS(hd.DLTS):
         def __init__(self):
-            qit.DLTS.__init__(self, qit.Range(2))
+            hd.DLTS.__init__(self, hd.Range(2))
 
         def step(self, state, action):
             if action == 0:

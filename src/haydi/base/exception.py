@@ -1,0 +1,2 @@
+class HaydiException(BaseException):
+    pass

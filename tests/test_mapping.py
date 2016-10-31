@@ -1,7 +1,7 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def dict_to_sorted_items(d):
@@ -15,8 +15,8 @@ def check_eq_list_of_dicts(list1, list2):
 
 
 def test_mapping_int_int():
-    r = qit.Range(2)
-    m = qit.Mapping(r, r)
+    r = hd.Range(2)
+    m = hd.Mapping(r, r)
     result = list(m)
     check_eq_list_of_dicts(result,
                            [{0: 0, 1: 0}, {0: 1, 1: 0},
@@ -25,13 +25,13 @@ def test_mapping_int_int():
 
 
 def test_mapping_size():
-    m = qit.Mapping(qit.Range(10), qit.Range(2))
+    m = hd.Mapping(hd.Range(10), hd.Range(2))
     assert m.size == 1024
 
 
 def test_mapping_generate():
-    r1 = qit.Range(2)
-    p = qit.Mapping(r1, r1)
+    r1 = hd.Range(2)
+    p = hd.Mapping(r1, r1)
 
     result = list(p.generate(200))
     for r in result:
@@ -41,9 +41,9 @@ def test_mapping_generate():
 
 
 def test_mapping_copy():
-    r1 = qit.Range(4)
-    r2 = qit.Range(3)
-    p = qit.Mapping(r1, r2)
+    r1 = hd.Range(4)
+    r2 = hd.Range(3)
+    p = hd.Mapping(r1, r2)
 
     it = iter(p)
     it2 = it.copy()
@@ -52,22 +52,22 @@ def test_mapping_copy():
 
 
 def test_mapping_name():
-    r = qit.Range(10)
-    m = qit.Mapping(r, r, name="TestMapping")
+    r = hd.Range(10)
+    m = hd.Mapping(r, r, name="TestMapping")
     assert m.name == "TestMapping"
 
 
 def test_mapping_exact_size():
-    d1 = qit.Range(3)
-    d2 = qit.Range(3).filter(lambda x: True)
-    assert not qit.Mapping(d1, d2).exact_size
-    assert qit.Mapping(d1, d1).exact_size
+    d1 = hd.Range(3)
+    d2 = hd.Range(3).filter(lambda x: True)
+    assert not hd.Mapping(d1, d2).exact_size
+    assert hd.Mapping(d1, d1).exact_size
 
 
 def test_mapping_set():
-    d1 = qit.Range(3)
-    d2 = qit.Range(4)
-    m = qit.Mapping(d1, d2)
+    d1 = hd.Range(3)
+    d2 = hd.Range(4)
+    m = hd.Mapping(d1, d2)
 
     a = list(m)
     for i in xrange(65):

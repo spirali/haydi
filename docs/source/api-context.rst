@@ -2,7 +2,7 @@ Contexts
 ========
 Context defines how a computation is executed.
 The default (serial) context simply iterates over a domain sequentially.
-:class:`qit.DistributedContext` can parallelize the computation to provide
+:class:`haydi.DistributedContext` can parallelize the computation to provide
 speed-up.
 
 To use a parallel context, you have to assign it to a global
@@ -11,4 +11,4 @@ To use a parallel context, you have to assign it to a global
 Distributed context
 -------------------
 
-.. autoclass:: qit.DistributedContext
+.. autoclass:: haydi.DistributedContext

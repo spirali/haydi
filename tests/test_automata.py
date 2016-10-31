@@ -1,7 +1,7 @@
 from testutils import init
 init()
 
-from qit.ext.automata import transition_fn_to_graph  # noqa
+from haydi.ext.automata import transition_fn_to_graph  # noqa
 
 
 def test_automata_tfn_to_graph():

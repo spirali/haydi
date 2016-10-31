@@ -1,14 +1,14 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 import itertools  # noqa
 
 
 def test_product_iterate():
-    r1 = qit.Range(4)
-    r2 = qit.Range(2)
-    p = qit.Product((r1, r1, r2))
+    r1 = hd.Range(4)
+    r2 = hd.Range(2)
+    p = hd.Product((r1, r1, r2))
     expected = list(itertools.product(range(4), range(4), range(2)))
 
     assert set(p) == set(expected)
@@ -17,9 +17,9 @@ def test_product_iterate():
 
 
 def test_product_generate():
-    r1 = qit.Range(4)
-    r2 = qit.Range(2)
-    p = qit.Product((r1, r1, r2))
+    r1 = hd.Range(4)
+    r2 = hd.Range(2)
+    p = hd.Product((r1, r1, r2))
 
     result = list(p.generate(200))
     for r in result:
@@ -30,8 +30,8 @@ def test_product_generate():
 
 
 def test_product_mul():
-    r1 = qit.Range(4)
-    r2 = qit.Range(2)
+    r1 = hd.Range(4)
+    r2 = hd.Range(2)
     result = list((r1 * r2))
     expected = itertools.product(range(4), range(2))
     assert set(result) == set(expected)
@@ -44,8 +44,8 @@ def test_product_mul():
 
 
 def test_product_iter_set():
-    r1 = qit.Range(3)
-    r2 = qit.Range(4)
+    r1 = hd.Range(3)
+    r2 = hd.Range(4)
     p = r1 * r2
 
     a = list(p)
@@ -60,8 +60,8 @@ def test_product_iter_set():
 
 
 def test_uproduct_iterate():
-    r1 = qit.Range(4)
-    p = qit.Product((r1, r1), unordered=True)
+    r1 = hd.Range(4)
+    p = hd.Product((r1, r1), unordered=True)
 
     result = list(p)
     assert set(result) == set(
@@ -73,7 +73,7 @@ def test_uproduct_iterate():
          (3, 2)])
     assert len(result) == p.size
 
-    p = qit.Product((r1, r1, r1), unordered=True)
+    p = hd.Product((r1, r1, r1), unordered=True)
     result = list(p)
     assert set(result) == set(
         [(2, 1, 0),
@@ -83,7 +83,7 @@ def test_uproduct_iterate():
          ])
     assert len(result) == p.size
 
-    p = qit.Product((r1, r1, r1, r1), unordered=True)
+    p = hd.Product((r1, r1, r1, r1), unordered=True)
     result = list(p)
     assert set(result) == set([(3, 2, 1, 0)])
     assert len(result) == p.size
@@ -91,8 +91,8 @@ def test_uproduct_iterate():
 
 def test_product_iter_copy():
 
-    r1 = qit.Range(3)
-    r2 = qit.Range(10)
+    r1 = hd.Range(3)
+    r2 = hd.Range(10)
     p = r1 * r2
 
     it = iter(p)
@@ -103,8 +103,8 @@ def test_product_iter_copy():
 
 def test_uproduct_iter_copy():
 
-    r1 = qit.Range(10)
-    p = qit.Product((r1, r1), unordered=True)
+    r1 = hd.Range(10)
+    p = hd.Product((r1, r1), unordered=True)
 
     it = iter(p)
     it2 = it.copy()
@@ -113,8 +113,8 @@ def test_uproduct_iter_copy():
 
 
 def test_uproduct_iter_set():
-    r = qit.Range(10)
-    p = qit.Product((r, r), unordered=True)
+    r = hd.Range(10)
+    p = hd.Product((r, r), unordered=True)
 
     a = list(p)
     it = iter(p)
@@ -123,8 +123,8 @@ def test_uproduct_iter_set():
         l = list(it)
         assert a[i:] == l
 
-    r = qit.Range(899)
-    p = qit.Product((r, r), unordered=True)
+    r = hd.Range(899)
+    p = hd.Product((r, r), unordered=True)
 
     a = list(p)
     it = iter(p)
@@ -139,29 +139,29 @@ def test_uproduct_iter_set():
 
 def test_named_product():
 
-    r = qit.Range(10)
-    a = qit.NamedProduct([("a", r), ("b", r * r)])
+    r = hd.Range(10)
+    a = hd.NamedProduct([("a", r), ("b", r * r)])
     result = list(a)[0]
     assert result.a == 0
     assert result.b == (0, 0)
 
-    r = qit.Range(10)
-    a = qit.NamedProduct([("a", r), ("b", r)], unordered=True)
+    r = hd.Range(10)
+    a = hd.NamedProduct([("a", r), ("b", r)], unordered=True)
     result = list(a)[0]
     assert result.a == 1
     assert result.b == 0
 
 
 def test_product_name():
-    r = qit.Range(10)
-    p = qit.Product((r, r), name="TestProduct")
+    r = hd.Range(10)
+    p = hd.Product((r, r), name="TestProduct")
     assert p.name == "TestProduct"
 
-    r = qit.Range(10)
-    p = qit.Product((r, r), name="TestUProduct", unordered=True)
+    r = hd.Range(10)
+    p = hd.Product((r, r), name="TestUProduct", unordered=True)
     assert p.name == "TestUProduct"
 
-    p = qit.NamedProduct([("a", r), ("b", r * r)], name="TestNamedProduct")
+    p = hd.NamedProduct([("a", r), ("b", r * r)], name="TestNamedProduct")
     assert p.name == "TestNamedProduct"
 
 
@@ -169,8 +169,8 @@ def test_product_cache_unordered():
     size = 1000
 
     def test_for_size(cache_size):
-        r = qit.Range(10000)
-        p = qit.Product((r, r), unordered=True, cache_size=cache_size)
+        r = hd.Range(10000)
+        p = hd.Product((r, r), unordered=True, cache_size=cache_size)
         result = list(p.generate(size))
         cache_pairs = (cache_size * (cache_size - 1)) / 2
         for i in xrange(size / cache_pairs):
@@ -188,8 +188,8 @@ def test_product_cache():
     size = 1000
 
     def test_for_size(cache_size):
-        r = qit.Range(10000)
-        p = qit.Product((r, r), cache_size=cache_size)
+        r = hd.Range(10000)
+        p = hd.Product((r, r), cache_size=cache_size)
         result = list(p.generate(size))
 
         cache_pairs = cache_size * cache_size
@@ -206,7 +206,7 @@ def test_product_cache():
 
 
 def test_product_steps():
-    a = qit.Range(20).take(10).filter(lambda x: x % 2 == 0).take(4)
+    a = hd.Range(20).take(10).filter(lambda x: x % 2 == 0).take(4)
     p = a * a
 
     assert a.size == 4

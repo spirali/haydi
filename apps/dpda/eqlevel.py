@@ -1,9 +1,9 @@
 import sys
 sys.path.insert(0, "../../src")
-import qit # noqa
-import qit.ext.automata # noqa
-from qit.ext.xenv import ExperimentEnv # noqa
-from pprint import pprint # noqa
+import haydi as hd  # noqa
+import haydi.ext.automata  # noqa
+from haydi.ext.xenv import ExperimentEnv  # noqa
+from pprint import pprint  # noqa
 
 
 N_SIZE = 2            # Number of states
@@ -19,26 +19,26 @@ MAX_SAMPLES_PER_LEVEL = 300
 
 def compute(n_size, s_size, a_size, depth, max_states, count):
 
-    states = qit.Range(n_size)
-    symbols = qit.Range(s_size)
-    actions = qit.Range(a_size)
+    states = hd.Range(n_size)
+    symbols = hd.Range(s_size)
+    actions = hd.Range(a_size)
 
-    stack_change = qit.Join((qit.Sequence(symbols, 0),
-                             qit.Sequence(symbols, 1),
-                             qit.Sequence(symbols, 2)),
-                            ratios=(1, 1, 1))
+    stack_change = hd.Join((hd.Sequence(symbols, 0),
+                            hd.Sequence(symbols, 1),
+                            hd.Sequence(symbols, 2)),
+                           ratios=(1, 1, 1))
 
     lrule = states * symbols * actions
     rrule = states * stack_change
-    pda = qit.Mapping(lrule, rrule)
+    pda = hd.Mapping(lrule, rrule)
 
     def is_pda_normed(pda):
         return NormDecomposition(pda, n_size, s_size).is_all_finite()
 
     normed_pda = pda.filter(is_pda_normed)
-    pda_pairs = qit.Product((normed_pda, normed_pda),
-                            unordered=True,
-                            cache_size=50)
+    pda_pairs = hd.Product((normed_pda, normed_pda),
+                           unordered=True,
+                           cache_size=50)
     init_state = ((0, 0), (0, 0))
 
     def is_witness_pair(conf_depth_pair):
@@ -67,7 +67,7 @@ def compute(n_size, s_size, a_size, depth, max_states, count):
 
     results = source.map(compute_eqlevel_of_two_dpda)
     results = results.filter(lambda x: x[1] >= MIN_LEVEL)
-    results = results.samples(lambda x: x[1],
+    results = results.groups(lambda x: x[1],
                               MAX_SAMPLES_PER_LEVEL)
     return results
 
@@ -163,10 +163,10 @@ class NormDecomposition(object):
         return self.norms[index]
 
 
-class PdaLTS(qit.DLTS):
+class PdaLTS(hd.DLTS):
 
     def __init__(self, pda, actions):
-        qit.DLTS.__init__(self, actions)
+        hd.DLTS.__init__(self, actions)
         self.pda = pda
 
     def step(self, conf, action):
@@ -188,7 +188,7 @@ def pda_to_graph(pda1):
         new_symbols = ",".join(map(str, new_symbols))
         label = "{},{}/{}".format(symbol, action, new_symbols)
         return (state, label, new_state)
-    return qit.ext.automata.transition_fn_to_graph(pda1, rule_fn, 0)
+    return haydi.ext.automata.transition_fn_to_graph(pda1, rule_fn, 0)
 
 
 def main():
@@ -215,4 +215,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,11 +1,11 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_immutable_domain():
-    r = qit.Range(10)
+    r = hd.Range(10)
     a = list(r)
     b = list(r)
 
@@ -13,7 +13,7 @@ def test_immutable_domain():
 
 
 def test_immutable_iterate():
-    r = qit.Range(10)
+    r = hd.Range(10)
     a = list(r)
     b = list(r)
 
@@ -21,7 +21,7 @@ def test_immutable_iterate():
 
 
 def test_immutable_factory():
-    r = qit.Range(10).filter(lambda x: x % 2 == 0)
+    r = hd.Range(10).filter(lambda x: x % 2 == 0)
     a = r.map(lambda x: x + 1)
 
     assert list(r) == [0, 2, 4, 6, 8]
@@ -29,7 +29,7 @@ def test_immutable_factory():
 
 
 def test_immutable_action():
-    r = qit.Range(10).collect()
+    r = hd.Range(10).collect()
     a = list(r)
     b = list(r)
 

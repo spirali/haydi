@@ -1,12 +1,12 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_values_iterate():
 
-    a = qit.Values(["a", "b", "c"])
+    a = hd.Values(["a", "b", "c"])
 
     assert a.exact_size
     assert a.size == 3
@@ -14,18 +14,18 @@ def test_values_iterate():
     for x in a.generate(100):
         assert x in ("a", "b", "c")
 
-    b = qit.Values([])
+    b = hd.Values([])
     assert b.size == 0
     assert list(b) == []
 
 
 def test_values_set():
-    a = qit.Values(["a", "b", "c", "d"])
+    a = hd.Values(["a", "b", "c", "d"])
     i = iter(a)
     i.set_step(2)
     assert list(i) == ["c", "d"]
 
 
 def test_values_name():
-    a = qit.Values(["a", "b", "c", "d"], name="ListTest")
+    a = hd.Values(["a", "b", "c", "d"], name="ListTest")
     assert a.name == "ListTest"

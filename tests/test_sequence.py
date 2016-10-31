@@ -2,12 +2,12 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 import itertools  # noqa
 
 
 def test_sequence_iterate():
-    s = qit.Sequence(qit.Range(3), 2)
+    s = hd.Sequence(hd.Range(3), 2)
     result = list(s)
     expected = list(itertools.product(range(3), range(3)))
     assert set(result) == set(expected)
@@ -16,11 +16,11 @@ def test_sequence_iterate():
 
 
 def test_sequence_iterate_empty():
-    assert list(qit.Sequence(qit.Range(3), 0)) == [()]
+    assert list(hd.Sequence(hd.Range(3), 0)) == [()]
 
 
 def test_sequence_generate():
-    s = qit.Sequence(qit.Range(3), 5)
+    s = hd.Sequence(hd.Range(3), 5)
     result = list(s.generate(200))
     assert len(result)
     for r in result:
@@ -30,8 +30,8 @@ def test_sequence_generate():
 
 
 def test_sequence_iter_set():
-    r2 = qit.Range(4)
-    p = qit.Sequence(r2, 3)
+    r2 = hd.Range(4)
+    p = hd.Sequence(r2, 3)
 
     a = list(p)
     b = []
@@ -45,8 +45,8 @@ def test_sequence_iter_set():
 
 
 def test_sequence_iter_copy():
-    r2 = qit.Range(3)
-    s = qit.Sequence(r2, 4)
+    r2 = hd.Range(3)
+    s = hd.Sequence(r2, 4)
 
     it = iter(s)
     it2 = it.copy()
@@ -55,5 +55,5 @@ def test_sequence_iter_copy():
 
 
 def test_sequence_name():
-    s = qit.Sequence(qit.Range(10), 2, "TestSequence")
+    s = hd.Sequence(hd.Range(10), 2, "TestSequence")
     assert s.name == "TestSequence"

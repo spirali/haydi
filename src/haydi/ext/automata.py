@@ -1,5 +1,4 @@
-
-from qit.base.graph import Graph
+from haydi.base.graph import Graph
 
 
 def transition_fn_to_graph(

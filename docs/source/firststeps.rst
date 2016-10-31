@@ -25,7 +25,7 @@ from it.
 >>> r = hd.Range(4)
 >>> list(r)
 [0, 1, 2, 3]
->>> r.generate_one()
+>>> r.generate_one() # doctest: +SKIP
 2
 
 
@@ -42,10 +42,10 @@ A simple example is cartesian product:
 :class:`haydi.Product` is a domain, hence its elements
 may be iterated or generated.
 
->>> p = hd.Product(hd.Range(2), hd.Range(3))
+>>> p = hd.Product((hd.Range(2), hd.Range(3)))
 >>> list(p)
 [(0, 0), (1, 0), (0, 1), (1, 1), (0, 2), (1, 2)]
->>> p.generate_one()
+>>> p.generate_one() # doctest: +SKIP
 (0, 2)
 
 

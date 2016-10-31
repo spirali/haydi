@@ -1,42 +1,42 @@
 from testutils import init
 init()
 
-import qit  # noqa
+import haydi as hd # noqa
 
 
 def test_range_iterate():
-    assert list(qit.Range(10)) == list(range(10))
-    assert list(qit.Range(0)) == []
-    assert list(qit.Range(-1)) == []
-    assert list(qit.Range(-5, -1)) == list(range(-5, -1))
-    assert list(qit.Range(-5, 10, 2)) == list(range(-5, 10, 2))
-    assert list(qit.Range(-5, 11, 2)) == list(range(-5, 11, 2))
+    assert list(hd.Range(10)) == list(range(10))
+    assert list(hd.Range(0)) == []
+    assert list(hd.Range(-1)) == []
+    assert list(hd.Range(-5, -1)) == list(range(-5, -1))
+    assert list(hd.Range(-5, 10, 2)) == list(range(-5, 10, 2))
+    assert list(hd.Range(-5, 11, 2)) == list(range(-5, 11, 2))
 
 
 def test_range_size():
-    assert qit.Range(20).size == 20
-    assert qit.Range(0).size == 0
-    assert qit.Range(-1).size == 0
+    assert hd.Range(20).size == 20
+    assert hd.Range(0).size == 0
+    assert hd.Range(-1).size == 0
 
 
 def test_range_generate():
-    result = list(qit.Range(10).generate().take(200))
+    result = list(hd.Range(10).generate().take(200))
     assert len(result) == 200
     for r in result:
         assert 0 <= r < 10
 
-    result = list(qit.Range(-5, 10).generate().take(200))
+    result = list(hd.Range(-5, 10).generate().take(200))
     assert len(result) == 200
     for r in result:
         assert -5 <= r < 10
 
-    result = list(qit.Range(0, 10, 2).generate().take(200))
+    result = list(hd.Range(0, 10, 2).generate().take(200))
     assert len(result) == 200
     for r in result:
         assert 0 <= r < 10
         assert r % 2 == 0
 
-    result = list(qit.Range(0, 10, 3).generate().take(200))
+    result = list(hd.Range(0, 10, 3).generate().take(200))
     assert len(result) == 200
     for r in result:
         assert 0 <= r < 10
@@ -44,7 +44,7 @@ def test_range_generate():
 
 
 def test_iter_set():
-    r = qit.Range(20, 30, 3)
+    r = hd.Range(20, 30, 3)
     a = list(r)
     b = []
     for i in xrange(40):
@@ -57,7 +57,7 @@ def test_iter_set():
 
 
 def test_range_iter_copy():
-    r = qit.Range(3, 10, 2)
+    r = hd.Range(3, 10, 2)
 
     it = iter(r)
     it2 = it.copy()
@@ -66,5 +66,5 @@ def test_range_iter_copy():
 
 
 def test_range_name():
-    r = qit.Range(3, 10, 5, name="Test")
+    r = hd.Range(3, 10, 5, name="Test")
     assert r.name == "Test"

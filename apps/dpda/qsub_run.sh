@@ -3,7 +3,7 @@
 #PBS -lselect=4:ncpus=24,walltime=01:00:00
 #PBS -q qexp
 #XPBS -A IT4I-8-2
-#PBS -N qit-test
+#PBS -N haydi-test
 
 source /etc/profile
 

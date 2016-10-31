@@ -1,11 +1,11 @@
 from testutils import init
 init()
 
-import qit.base.graph  # noqa
+import haydi.base.graph  # noqa
 
 
 def test_graph_merge_args():
-    g = qit.base.graph.Graph()
+    g = haydi.base.graph.Graph()
     n1 = g.node("A")
     n2 = g.node("B")
     n3 = g.node("C")

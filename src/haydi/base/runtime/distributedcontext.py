@@ -7,8 +7,8 @@ import socket
 import resource
 import math
 
-from qit.base.exception import QitException
-from qit.base.iterator import NoValue
+from haydi.base.exception import HaydiException
+from haydi.base.iterator import NoValue
 
 try:
     import cloudpickle
@@ -20,7 +20,7 @@ except Exception as e:
     distributed_import_error = e
 
 
-qitLogger = logging.getLogger("Qit")
+haydi_logger = logging.getLogger("Haydi")
 
 
 class ResultSaver(object):
@@ -44,13 +44,13 @@ class ResultSaver(object):
             self.counter += 1
 
     def _write_partial_result(self, results, counter):
-        filename = "pyqit-{}-{}-{}".format(
+        filename = "haydi-{}-{}-{}".format(
                 int(time.mktime(self.time.timetuple())),
                 self.id,
                 counter)
         with open(filename, "w") as f:
             cloudpickle.dump(results, f)
-        logging.info("Qit: Writing file {} ({} results)".format(
+        haydi_logger.info("Writing file {} ({} results)".format(
             filename, len(results)))
 
 
@@ -173,7 +173,7 @@ class JobScheduler(object):
     def timeouted(self):
         return self.timeout_mgr and self.timeout_mgr.is_finished()
 
-    def  _schedule(self, count_per_worker):
+    def _schedule(self, count_per_worker):
         """
         Adjust batch size according to the average duration of recent jobs
         and create new futures.
@@ -319,10 +319,10 @@ class DistributedContext(object):
         """
 
         if distributed_import_error:
-            raise QitException("distributed must be properly installed in "
-                               "order to use the DistributedContext\n"
-                               "Error:\n{}"
-                               .format(distributed_import_error))
+            raise HaydiException("distributed must be properly installed in"
+                                 "order to use the DistributedContext\n"
+                                 "Error:\n{}"
+                                 .format(distributed_import_error))
 
         self.worker_count = spawn_workers
         self.ip = ip
@@ -337,8 +337,9 @@ class DistributedContext(object):
                                         n_workers=spawn_workers,
                                         threads_per_worker=1,
                                         diagnostics_port=None,
-                                        services=
-                                        {("http", port + 1): HTTPScheduler})
+                                        services={
+                                            ("http", port + 1): HTTPScheduler
+                                        })
             self.executor = Client(self.cluster)
         else:
             self.executor = Client((ip, port))
@@ -368,7 +369,7 @@ class DistributedContext(object):
         start = time.time()
         jobs.sort(key=lambda job: job.start_index)
         results = [job.result for job in jobs]
-        qitLogger.info("Qit: ordering took {} ms".format(time.time() - start))
+        haydi_logger.info("Ordering took {} ms".format(time.time() - start))
 
         self.execution_count += 1
 
@@ -378,7 +379,7 @@ class DistributedContext(object):
         if size:
             results = results[:domain.size]  # trim results to required size
 
-        qitLogger.info("Qit: finished run with size {}".format(domain.size))
+        haydi_logger.info("Finished run with size {}".format(domain.size))
 
         if global_reduce_fn is None or len(results) == 0:
             return results
@@ -394,7 +395,7 @@ class DistributedContext(object):
             workers += value
 
         if workers == 0:
-            raise QitException("There are no workers")
+            raise HaydiException("There are no workers")
 
         return workers
 

@@ -29,7 +29,7 @@ deactivate - reverts to system Python
 
 #####Run locally
 1) `workon pypy`
-2) `export PYTHONPATH=<path_to_qit/src>:<path_to_qit/apps/dpda>:${PYTHONPATH}`
+2) `export PYTHONPATH=<path_to_haydi/src>:<path_to_haydi/apps/dpda>:${PYTHONPATH}`
 3) `dscheduler --port <port> &`
 4) `dworker --nthreads=1 --nprocs=24 <scheduler hostname>:<scheduler port> &`
 5) `deactivate`
