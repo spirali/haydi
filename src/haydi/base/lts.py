@@ -85,42 +85,53 @@ class DLTS(object):
             result.append(state)
         return result
 
-    def __mul__(self, lts):
-        return DLTSProduct(self, lts)
+    def __mul__(self, other):
+        return DLTSProduct((self, other))
 
 
 class DLTSProduct(DLTS):
 
-    def __init__(self, lts1, lts2):
-        actions1 = lts1.actions
-        actions2 = lts2.actions
-        if actions1 is not None and actions2 is not None:
-            if actions1 is not actions2:
-                actions1 = frozenset(actions1)
-                actions1 = actions1.intersection(actions2)
+    def __init__(self, systems):
+        if any(lts.actions is None for lts in systems):
+            actions = None
         else:
-            actions1 = None
-        DLTS.__init__(self, actions1)
-        self.lts1 = lts1
-        self.lts2 = lts2
+            it = iter(frozenset(lts.actions) for lts in systems)
+            actions = it.next()
+            for a in it:
+                actions = actions.intersection(a)
+
+        super(DLTSProduct, self).__init__( actions)
+        self.systems = systems
 
     def get_enabled_actions(self, state):
         if self.actions is not None:
+            # if all systems have defined actions then all such actions
+            # are enabled in every state
             return self.actions
-        actions = frozenset(self.lts1.get_enabled_actions(state))
-        return actions.intersection(
-            frozenset(self.lts2.get_enabled_actions(state)))
+
+        # when actions are none compute enabled from all enabled over the systems
+        it = iter(frozenset(list(lts.get_enabled_actions(state[idx])))
+                                 for idx, lts in enumerate(self.systems))
+        enabled = it.next()
+        for en_a in it:
+            enabled = enabled.intersection(en_a)
+        return enabled
 
     def step(self, state, action):
-        s1 = self.lts1.step(state[0], action)
-        s2 = self.lts2.step(state[1], action)
-        if s1 is not None and s2 is not None:
-            return (s1, s2)
+        next_states = [lts.step(state[idx], action)
+                       for idx, lts in enumerate(self.systems)]
+
+        if any(map(lambda s: s is None, next_states)):
+            return None
+
+        return tuple(next_states)
 
     def make_label(self, state):
-        return "{}\\n{}".format(self.lts1.make_label(state[0]),
-                                self.lts2.make_label(state[1]))
+        return "\\n".join(lts.make_label(state[idx])
+                          for idx, lts in enumerate(self.systems))
 
+    def __mul__(self, other):
+        return DLTSProduct(self.systems + (other,))
 
 class BreadthFirstIterator(Iterator):
 
