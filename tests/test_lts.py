@@ -83,6 +83,40 @@ def test_lts_product2():
     assert result == [(3, 7), (4, 9), (5, 11)]
 
 
+def test_lts_product3():
+    class MyLTS1(hd.DLTS):
+        def __init__(self):
+            super(MyLTS1, self).__init__(hd.Range(1))
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 1
+
+    class MyLTS2(hd.DLTS):
+        def __init__(self):
+            super(MyLTS2, self).__init__(hd.Range(1))
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 2
+
+    s1 = MyLTS1() * MyLTS2() * MyLTS1()
+    assert s1.actions is not None
+
+    s2 = s1 * MyLTS1()
+    assert s2.actions is not None
+
+    s3 = s2 * (MyLTS2() * MyLTS1())
+    assert s3.actions is not None
+
+    results = list(s3.bfs((2, 3, 5, 7, (9, 11)), 2))
+
+                      # +1 +2 +1 +1 +2 +1
+    assert results == [(2, 3, 5, 7, (9, 11)),
+                       (3, 5, 6, 8, (11, 12)),
+                       (4, 7, 7, 9, (13, 13))]
+
+
 def test_lts_graph():
     class MyLTS(hd.DLTS):
         def __init__(self):
