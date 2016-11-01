@@ -117,6 +117,32 @@ def test_lts_product3():
                        (4, 7, 7, 9, (13, 13))]
 
 
+def test_lts_product4():
+    class MyLTS1(hd.DLTS):
+        def __init__(self):
+            super(MyLTS1, self).__init__(hd.Range(1))
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 1
+
+    class MyLTS2(hd.DLTS):
+        def __init__(self):
+            super(MyLTS2, self).__init__()
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 2
+
+        def get_enabled_actions(self, state):
+            return hd.Range(0) # empty enabled actions
+
+    s = MyLTS1() * MyLTS2()
+
+    result = list(s.bfs( (0, 0) ))
+    assert result == [(0, 0)]
+
+
 def test_lts_graph():
     class MyLTS(hd.DLTS):
         def __init__(self):
