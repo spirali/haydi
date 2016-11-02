@@ -3,6 +3,8 @@ from .iterator import Iterator
 from .graph import Graph
 from .domain import Domain
 
+import sys
+
 
 class DLTS(object):
 
@@ -11,9 +13,9 @@ class DLTS(object):
 
     def bfs(self,
             init_state,
-            max_depth=None,
+            max_depth=sys.maxint,
             return_depth=False,
-            max_states=None):
+            max_states=sys.maxint):
 
         def create_iterator():
             return BreadthFirstIterator(self,
@@ -27,8 +29,8 @@ class DLTS(object):
 
     def bfs_path(self,
                  init_state,
-                 max_depth=None,
-                 max_states=None):
+                 max_depth=sys.maxint,
+                 max_states=sys.maxint):
         def create_iterator():
             return BreadthFirstIterator2(self,
                                          init_state,
@@ -41,14 +43,14 @@ class DLTS(object):
     def get_enabled_actions(self, state):
         return self.actions
 
-    def make_graph(self, init_state, max_depth=None):
+    def make_graph(self, init_state, max_depth=sys.maxint):
         graph = Graph()
         new_nodes = [graph.node(init_state)]
         new_nodes[0].fillcolor = "gray"
         new_nodes[0].label = self.make_label(new_nodes[0].key)
         depth = 0
 
-        while new_nodes and (max_depth is None or depth < max_depth):
+        while new_nodes and depth < max_depth:
             nodes = new_nodes
             new_nodes = []
             depth += 1
@@ -156,8 +158,7 @@ class BreadthFirstIterator(Iterator):
                         self.nexts.append(new_state)
                         to_report += 1
                 self.to_report = to_report
-                if (self.max_states is not None and
-                        len(self.states) > self.max_states):
+                if len(self.states) > self.max_states:
                     raise StopIteration()
                 continue
 
@@ -201,13 +202,14 @@ class BreadthFirstIterator2(Iterator):
                         self.nexts.append((new_state, path + (a,)))
                         to_report += 1
                 self.to_report = to_report
-                if (self.max_states is not None and
-                        len(self.states) > self.max_states):
+                if len(self.states) > self.max_states:
                     raise StopIteration()
                 continue
 
             self.depth += 1
             if self.depth > self.max_depth or not self.nexts:
                 raise StopIteration()
+
+            tmp = self.states
             self.states = self.nexts
-            self.nexts = []
+            self.nexts = tmp
