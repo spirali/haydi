@@ -9,19 +9,21 @@ from pprint import pprint # noqa
 N_SIZE = 4 # Number of states
 A_SIZE = 2 # Number of actions (alphabet size)
 
+COUNT = None        # None = iterate all
+
 MIN_LEVEL = 3
 MAX_SAMPLES_PER_LEVEL = 300
 
-class DfaUtils(object):
-    def __init__(self, actions, states):
-        self.states = states
-        self.actions = actions
+def compute(n_size, a_size, count):
+    states = hd.Range(n_size)
+    actions = hd.Range(a_size)
 
-        self.first_state = states.first().run()
+    dfa = hd.Mapping((states * actions), states)
 
-    def are_all_states_covered(self, dfa):
-        new_states = set([ self.first_state ])
+    def are_all_states_covered(dfa):
+        new_states = set([ 0 ]) # 0 is used as starting state
         processed = []
+
         while new_states:
             cs = new_states.pop()
             processed.append(cs)
@@ -29,30 +31,29 @@ class DfaUtils(object):
             if len(processed) == N_SIZE:
                 break
 
-            for a in self.actions:
+            for a in actions:
                 ns = dfa[(cs, a)]
                 if ns not in processed:
                     new_states.add(ns)
 
         processed.sort()
-        return processed == list(self.states)
+        return processed == list(states)
 
-    def is_synchronizable(self, dfa):
-        if (not self.are_all_states_covered(dfa)):
+    def is_synchronizable(dfa):
+        if not are_all_states_covered(dfa):
             return False
 
         max = N_SIZE ** 2
-        dfa_lts = DfaLTS(dfa, self.actions)
+        dfa_lts = DfaLTS(dfa, actions)
         synchronizable_pairs = set()
 
         def are_states_synchronizeable((s1, s2)):
             # both states represents the same one or
             # they alredy been marked as synchronizable
-            # return s1 == s2
             return (s1 == s2) or (s1, s2) in synchronizable_pairs
 
         lts_pair = dfa_lts * dfa_lts
-        state_pairs = hd.Product((self.states, self.states), unordered=True)
+        state_pairs = hd.Product((states, states), unordered=True)
         for spair in state_pairs:
             witness = lts_pair.bfs(spair, max) \
                         .filter(are_states_synchronizeable) \
@@ -64,11 +65,10 @@ class DfaUtils(object):
 
             # mark the pair of states as synchronizeable
             synchronizable_pairs.add(spair)
-
         return True
 
-    def compute_shortes_sword(self, dfa):
-        dfa_lts = DfaLTS(dfa, self.actions)
+    def compute_shortes_sword(dfa):
+        dfa_lts = DfaLTS(dfa, actions)
         lts_n_tuple = hd.DLTSProduct(tuple(dfa_lts for i in xrange(N_SIZE)))
 
         def same_states(states_path_pair):
@@ -79,8 +79,22 @@ class DfaUtils(object):
                                     .filter(same_states) \
                                     .max_all(lambda (states, path): -len(path)) \
                                     .run()
+
         # (dfa, the length, [(sync_state, path)])
-        return (dfa, len(witnesses[0][1]), [(states[0], path) for (states, path) in witnesses])
+        return (dfa, len(witnesses[0][1]), [(states[0], path)
+                                            for (states, path) in witnesses])
+
+    if count is not None:
+        source = dfa.generate(count)
+    else:
+        source = dfa
+
+    results = source.filter(is_synchronizable).map(compute_shortes_sword)
+    results = results.filter(lambda x: x[1] >= MIN_LEVEL)
+    results = results.groups(lambda x: x[1], MAX_SAMPLES_PER_LEVEL)
+
+    return results
+
 
 class DfaLTS(hd.DLTS):
     def __init__(self, dfa, actions):
@@ -90,28 +104,16 @@ class DfaLTS(hd.DLTS):
     def step(self, state, action):
         return self.dfa[(state, action)]
 
-def compute(n_size, a_size):
-    states = hd.Range(n_size)
-    actions = hd.Range(a_size)
-
-    utils = DfaUtils(actions, states)
-    dfas = hd.Mapping((states * actions), states)
-
-    results = dfas.filter(utils.is_synchronizable).map(utils.compute_shortes_sword)
-    results = results.filter(lambda x: x[1] >= MIN_LEVEL)
-    results = results.groups(lambda x: x[1], MAX_SAMPLES_PER_LEVEL)
-
-    return results
 
 def main():
     env = ExperimentEnv("dfa",
                         globals(),
-                        [ "N_SIZE", "A_SIZE",
+                        [ "N_SIZE", "A_SIZE", "COUNT",
                           "MIN_LEVEL", "MAX_SAMPLES_PER_LEVEL" ])
 
     env.parse_args()
     results = env.run(
-        compute(N_SIZE, A_SIZE),
+        compute(N_SIZE, A_SIZE, COUNT),
         write=True)
 
     keys = results.keys()
