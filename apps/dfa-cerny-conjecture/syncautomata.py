@@ -98,7 +98,7 @@ def compute(n_size, a_size, count):
 
 class DfaLTS(hd.DLTS):
     def __init__(self, dfa, actions):
-        super(DfaLTS, self).__init__(actions)
+        hd.DLTS.__init__(self, actions)
         self.dfa = dfa
 
     def step(self, state, action):
