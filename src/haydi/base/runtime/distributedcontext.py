@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import itertools
 import logging
@@ -57,13 +57,21 @@ class ResultSaver(object):
 class TimeoutManager(object):
     def __init__(self, timeout):
         """
-        :type timeout: int
+        :type timeout: int | timedelta
         """
+        if isinstance(timeout, timedelta):
+            timeout = timeout.total_seconds()
         self.timeout = timeout
         self.start = datetime.now()
 
     def is_finished(self):
-        return (datetime.now() - self.start).seconds >= self.timeout
+        return self.get_remaining_time() <= 0
+
+    def get_total_time(self):
+        return self.timeout
+
+    def get_remaining_time(self):
+        return self.timeout - (datetime.now() - self.start).total_seconds()
 
 
 class Job(object):
@@ -127,14 +135,14 @@ class JobScheduler(object):
         self.index_scheduled = 0
         self.index_completed = 0
         self.job_size = None
-        self.timeout_mgr = TimeoutManager(timeout.total_seconds())\
-            if timeout else None
+        self.timeout_mgr = TimeoutManager(timeout) if timeout else None
         self.ordered_futures = []
         self.backlog_per_worker = 4
         self.active_futures = self._init_futures(self.backlog_per_worker)
         self.next_futures = []
         # <made-up amount> of minutes per batch is "optimal"
         self.target_time = 60 * 2
+        self.target_time_active = self.target_time
         self.completed_jobs = []
         self.job_callback = None
 
@@ -181,13 +189,26 @@ class JobScheduler(object):
         :rtype: list of distributed.client.Future
         :return: newly scheduled futures
         """
+        self._check_falloff()
         duration = self._get_avg_duration()
-        delta = duration / float(self.target_time)
+        delta = duration / float(self.target_time_active)
         delta = self._clamp(delta, 0.1, 1.2)
         self.job_size = int(self.job_size / delta)
 
         return self._create_futures(self._create_distribution(
             self.worker_count * count_per_worker, self.job_size))
+
+    def _check_falloff(self):
+        if not self.timeout_mgr:
+            return
+
+        total = self.timeout_mgr.get_total_time()
+        remaining = self.timeout_mgr.get_remaining_time()
+        scale = total / 2.0
+
+        if remaining < scale:
+            ratio = remaining / float(scale)
+            self.target_time_active = self.target_time * ratio
 
     def _clamp(self, value, minimum, maximum):
         return min(maximum, max(minimum, value))
