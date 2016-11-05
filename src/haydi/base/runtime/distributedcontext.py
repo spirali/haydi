@@ -35,7 +35,7 @@ class ResultSaver(object):
         self.results = []
         self.counter = 0
 
-    def handle_job(self, job):
+    def handle_job(self, scheduler, job):
         self.results.append(job.result)
 
         if len(self.results) % self.write_count == 0:
@@ -72,6 +72,31 @@ class TimeoutManager(object):
 
     def get_remaining_time(self):
         return self.timeout - (datetime.now() - self.start).total_seconds()
+
+    def reset(self):
+        self.start = datetime.now()
+
+
+class ProgressLogger(object):
+    def __init__(self, log_repeat):
+        self.timeout_mgr = TimeoutManager(log_repeat)
+        self.last_percent = 0
+
+    def handle_job(self, scheduler, job):
+        self._log_progress(scheduler)
+
+    def _log_progress(self, scheduler):
+        if scheduler.size:
+            percent = (scheduler.index_completed / float(scheduler.size)) * 100
+            if percent - self.last_percent >= 5.0:
+                haydi_logger.info("Iterated {} % ({} elements)".format(
+                    percent, scheduler.index_completed))
+                self.last_percent = percent
+        else:
+            if self.timeout_mgr.is_finished():
+                self.timeout_mgr.reset()
+                haydi_logger.info("Generated {} elements".format(
+                    scheduler.index_completed))
 
 
 class Job(object):
@@ -144,7 +169,7 @@ class JobScheduler(object):
         self.target_time = 60 * 2
         self.target_time_active = self.target_time
         self.completed_jobs = []
-        self.job_callback = None
+        self.job_callbacks = []
 
     def iterate_jobs(self):
         """
@@ -180,6 +205,9 @@ class JobScheduler(object):
 
     def timeouted(self):
         return self.timeout_mgr and self.timeout_mgr.is_finished()
+
+    def add_job_callback(self, callback):
+        self.job_callbacks.append(callback)
 
     def _schedule(self, count_per_worker):
         """
@@ -279,8 +307,9 @@ class JobScheduler(object):
     def _add_job(self, job):
         self.completed_jobs.append(job)
         self.index_completed += job.size
-        if self.job_callback:
-            self.job_callback(job)
+
+        for cb in self.job_callbacks:
+            cb(self, job)
 
     def _get_remaining_work(self):
         if self.size:
@@ -379,7 +408,10 @@ class DistributedContext(object):
         if self.write_partial_results is not None:
             result_saver = ResultSaver(self.execution_count,
                                        self.write_partial_results)
-            scheduler.job_callback = lambda job: result_saver.handle_job(job)
+            scheduler.add_job_callback(result_saver.handle_job)
+
+        progress_logger = ProgressLogger(timedelta(seconds=3))
+        scheduler.add_job_callback(progress_logger.handle_job)
 
         try:
             jobs = scheduler.iterate_jobs()
