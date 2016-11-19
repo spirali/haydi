@@ -88,7 +88,7 @@ class ProgressLogger(object):
     def _log_progress(self, scheduler):
         if scheduler.size:
             percent = (scheduler.index_completed / float(scheduler.size)) * 100
-            if percent - self.last_percent >= 5.0:
+            if percent - self.last_percent >= 1.0:
                 haydi_logger.info("Iterated {} % ({} elements)".format(
                     percent, scheduler.index_completed))
                 self.last_percent = percent
@@ -184,7 +184,7 @@ class JobScheduler(object):
         iterated = 0
         for future in as_completed(self.active_futures):
             job = future.result()
-            self._add_job(job)
+            self._mark_job_completed(job)
             iterated += 1
 
             if self.timeouted():
@@ -248,15 +248,12 @@ class JobScheduler(object):
 
     def _init_futures(self, count_per_worker):
         job_count = self.worker_count * count_per_worker
+        self.job_size = 50
 
         if self.size:
             total_size = int(math.ceil(self.size / float(job_count)))
-            if total_size < 100:
+            if total_size < self.job_size:
                 self.job_size = total_size
-            else:
-                self.job_size = min(total_size, int(self.size * 0.05))
-        else:
-            self.job_size = 50
 
         return self._create_futures(self._create_distribution(
             self.worker_count * count_per_worker, self.job_size))
@@ -304,7 +301,7 @@ class JobScheduler(object):
         else:
             return []
 
-    def _add_job(self, job):
+    def _mark_job_completed(self, job):
         self.completed_jobs.append(job)
         self.index_completed += job.size
 
