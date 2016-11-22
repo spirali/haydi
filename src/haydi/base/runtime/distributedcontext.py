@@ -397,6 +397,8 @@ class DistributedContext(object):
             timeout=None):
         size = domain.steps
 
+        haydi_logger.info("Starting run with size {}".format(size))
+
         scheduler = JobScheduler(self.executor,
                                  self._get_worker_count(),
                                  timeout, domain,
