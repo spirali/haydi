@@ -71,7 +71,10 @@ class TimeoutManager(object):
         return self.timeout
 
     def get_remaining_time(self):
-        return self.timeout - (datetime.now() - self.start).total_seconds()
+        return self.timeout - self.get_time_from_start()
+
+    def get_time_from_start(self):
+        return (datetime.now() - self.start).total_seconds()
 
     def reset(self):
         self.start = datetime.now()
@@ -177,31 +180,32 @@ class JobScheduler(object):
         time runs out.
         :return: completed job
         """
-        if len(self.next_futures) > 0:
+        while (self._has_more_work() or
+               self.index_completed < self.index_scheduled):
+            iterated = 0
+            for future in as_completed(self.active_futures):
+                job = future.result()
+                self._mark_job_completed(job)
+                iterated += 1
+
+                if self.timeouted():
+                    haydi_logger.info("Run timeouted after {} seconds".format(
+                        self.timeout_mgr.get_time_from_start()))
+                    return self.completed_jobs
+
+                if iterated / self.worker_count >= 2:
+                    if self._has_more_work():
+                        self.next_futures += self._schedule(
+                            self.backlog_per_worker / 2)
+
+            if self._has_more_work():
+                self.next_futures += self._schedule(
+                    self.backlog_per_worker / 2)
+
             self.active_futures = self.next_futures
             self.next_futures = []
 
-        iterated = 0
-        for future in as_completed(self.active_futures):
-            job = future.result()
-            self._mark_job_completed(job)
-            iterated += 1
-
-            if self.timeouted():
-                return self.completed_jobs
-
-            if iterated / self.worker_count >= 2:
-                if self._has_more_work():
-                    self.next_futures += self._schedule(
-                        self.backlog_per_worker / 2)
-
-        if self._has_more_work():
-            self.next_futures += self._schedule(self.backlog_per_worker / 2)
-
-        if self.index_completed < self.index_scheduled:
-            return self.iterate_jobs()
-        else:
-            return self.completed_jobs
+        return self.completed_jobs
 
     def timeouted(self):
         return self.timeout_mgr and self.timeout_mgr.is_finished()
