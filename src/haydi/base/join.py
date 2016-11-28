@@ -1,11 +1,10 @@
-from .domain import Domain, DomainIterator
-from .iterator import EmptyIterator
+from .domain import Domain
 
 from random import randint
-from copy import copy
 
 
 class Join(Domain):
+
     def __init__(self, domains, ratios=None, name=None):
         domains = tuple(domains)
         if all(d.size is not None for d in domains):
@@ -31,11 +30,24 @@ class Join(Domain):
             ratio_sums.append(s)
         self.ratio_sums = ratio_sums
 
-    def create_iterator(self):
+    def create_iter(self, step=0):
         if not self.domains:
-            return EmptyIterator()
-        else:
-            return JoinIterator(self)
+            return
+
+        if step >= self.steps:
+            return
+
+        index = 0
+        while step > self.domains[index].steps:
+            step -= self.domains[index].steps
+            index += 1
+
+        while index < len(self.domains):
+            it = self.domains[index].create_iter(step)
+            step = 0
+            for v in it:
+                yield v
+            index += 1
 
     def generate_one(self):
         c = randint(0, self.ratio_sums[-1] - 1)
@@ -46,42 +58,3 @@ class Join(Domain):
 
     def __add__(self, other):
         return Join(self.domains + (other,))
-
-
-class JoinIterator(DomainIterator):
-
-    def __init__(self, domain):
-        super(JoinIterator, self).__init__(domain)
-        self.index = 0
-        self.iterators = [d.create_iterator()
-                          for d in self.domain.domains]
-
-    def copy(self):
-        new = copy(self)
-        new.iterators = [it.copy() for it in self.iterators]
-        return new
-
-    def reset(self):
-        self.index = 0
-        for it in self.iterators:
-            it.reset()
-
-    def next(self):
-        while self.index < len(self.domain.domains):
-            try:
-                return next(self.iterators[self.index])
-            except StopIteration:
-                self.index += 1
-        raise StopIteration
-
-    def set_step(self, index):
-        for i, it in enumerate(self.iterators):
-            size = it.size
-            if index < size:
-                it.set_step(index)
-                self.index = i
-                return
-            index -= size
-
-        self.index = len(self.domain.domains)
-        self.iterator = None

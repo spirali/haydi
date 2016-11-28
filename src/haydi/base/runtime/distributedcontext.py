@@ -8,7 +8,6 @@ import resource
 import math
 
 from haydi.base.exception import HaydiException
-from haydi.base.iterator import NoValue
 
 try:
     import cloudpickle
@@ -24,6 +23,7 @@ haydi_logger = logging.getLogger("Haydi")
 
 
 class ResultSaver(object):
+
     def __init__(self, id, write_count):
         """
         :type id: int
@@ -55,6 +55,7 @@ class ResultSaver(object):
 
 
 class TimeoutManager(object):
+
     def __init__(self, timeout):
         """
         :type timeout: int
@@ -408,22 +409,14 @@ def process_batch(arg):
     domain, start, size, reduce_fn, reduce_init = arg
     job = Job("{}#{}".format(socket.gethostname(), os.getpid()), start, size)
 
-    iterator = domain.create_iterator()
-    iterator.set_step(start)
-
-    def item_generator():
-        for i in xrange(size):
-            item = iterator.step()
-            if item is not NoValue:
-                yield item
+    iterator = domain.iterate_steps(start, start + size)
 
     if reduce_fn is None:
-        result = list(item_generator())
+        result = list(iterator)
+    elif reduce_init is None:
+        result = reduce(reduce_fn, iterator)
     else:
-        if reduce_init is None:
-            result = reduce(reduce_fn, item_generator())
-        else:
-            result = reduce(reduce_fn, item_generator(), reduce_init())
+        result = reduce(reduce_fn, iterator, reduce_init())
 
     job.finish(result)
     return job

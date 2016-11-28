@@ -1,5 +1,4 @@
 
-from .iterator import Iterator
 from .domain import Domain
 
 
@@ -12,13 +11,15 @@ class System(object):
         return None
 
     def iterate_states(self, depth, return_depth=False):
+        def create_iter(step=0):
+            assert step == 0
+            return StatesIterator(self, depth, return_depth)
         domain = Domain(None, False)
-        domain.create_iterator = lambda: StatesIterator(
-            self, depth, return_depth)
+        domain.create_iter = create_iter
         return domain
 
 
-class StatesIterator(Iterator):
+class StatesIterator(object):
 
     def __init__(self, system, max_depth, return_depth):
         super(StatesIterator, self).__init__()

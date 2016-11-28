@@ -76,24 +76,11 @@ def test_join_iter_set():
     a = list(p)
     b = []
     for i in xrange(p.size + 10):
-        it = iter(p)
-        it.set_step(i)
+        it = p.create_iter(i)
         l = list(it)
         if l:
             b.append(l[0])
     assert a == b
-
-
-def test_join_copy():
-    r1 = hd.Range(0, 5)
-    r2 = hd.Range(5, 10)
-    r3 = hd.Range(10, 15)
-
-    p = r1 + r2 + r3
-
-    it = iter(p)
-    it2 = it.copy()
-    assert list(it) == list(it2)
 
 
 def test_join_name():

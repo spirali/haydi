@@ -1,8 +1,7 @@
 
-from .domain import Domain, DomainIterator
+from .domain import Domain
 
 from random import randint
-from copy import copy
 
 
 class Range(Domain):
@@ -59,40 +58,8 @@ class Range(Domain):
         else:
             return randint(0, self.size - 1) * self.step
 
-    def create_iterator(self):
-        return RangeIterator(self)
+    def create_iter(self, step=0):
+        return iter(xrange(self.start + step * self.step, self.end, self.step))
 
-
-class RangeIterator(DomainIterator):
-
-    def __init__(self, domain):
-        super(RangeIterator, self).__init__(domain)
-        self.value = domain.start
-
-    def skip(self, start_index, count):
-        start = self.domain.start + start_index
-        end = start + count
-
-        return RangeIterator(Range(start, end))
-
-    def copy(self):
-        return copy(self)
-
-    def reset(self):
-        self.value = self.domain.start
-
-    def next(self):
-        v = self.value
-        if v < self.domain.end:
-            self.value += self.domain.step
-            return v
-        raise StopIteration()
-
-    def step(self):
-        return self.next()
-
-    def __repr__(self):
-        return "{} iterator".format(str(self.domain))
-
-    def set_step(self, index):
-        self.value = self.domain.start + self.domain.step * index
+    def create_step_iter(self, step):
+        return iter(xrange(self.start + step * self.step, self.end, self.step))

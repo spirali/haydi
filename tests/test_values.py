@@ -21,8 +21,7 @@ def test_values_iterate():
 
 def test_values_set():
     a = hd.Values(["a", "b", "c", "d"])
-    i = iter(a)
-    i.set_step(2)
+    i = a.create_iter(2)
     assert list(i) == ["c", "d"]
 
 

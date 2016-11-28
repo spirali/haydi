@@ -1,5 +1,4 @@
 
-from .iterator import GeneratingIterator, Iterator
 from . import action
 
 
@@ -11,7 +10,7 @@ class Domain(object):
     you do not have to care about parameters of the constructor.
 
     Args:
-        size(Optiona[int]): The number of elements in domain
+        size(Optional[int]): The number of elements in domain
             (for exact meaning) see the next argument
         exact_size(bool): The argument has the following meaning:
 
@@ -49,6 +48,17 @@ class Domain(object):
         ``Join((self, other))``, see :class:`haydi.Join`
         """
         return Join((self, other))
+
+    def iterate_steps(self, start, end):
+        i = start
+        it = self.create_step_iter(start)
+        while i < end:
+            v = next(it)
+            if isinstance(v, StepSkip):
+                i += v.value
+            else:
+                yield v
+                i += 1
 
     # Actions
 
@@ -158,12 +168,12 @@ class Domain(object):
         """A shortuct for ``self.collect.run(parallel)``"""
         return self.collect().run(parallel, timeout)
 
-    def create_iterator(self):
+    def create_iter(self, step=0):
         """Creates an interator over all elements of domain"""
         raise NotImplementedError()
 
     def __iter__(self):
-        return self.create_iterator()
+        return self.create_iter()
 
     def generate_one(self):
         """Generate a random element from the domain"""
@@ -213,24 +223,31 @@ class Domain(object):
         return "<{} size={} {}>".format(name, self.size, extra)
 
 
+class StepSkip(object):
+
+    def __init__(self, value=1):
+        self.value = value
+
+    def __repr__(self):
+        return "<StepSkip {}>".format(self.value)
+
+
+skip1 = StepSkip(1)
+
+
 class GeneratingDomain(Domain):
 
     def __init__(self, generate_fn, name=None):
         Domain.__init__(self, None, True, None, name=name)
         self.generate_fn = generate_fn
 
-    def create_iterator(self):
-        return GeneratingIterator(self.generate_fn)
+    def create_iter(self, step=0):
+        while True:
+            yield self.generate_fn()
 
+    def create_step_iter(self, step):
+        return self.create_iter()
 
-class DomainIterator(Iterator):
-
-    def __init__(self, domain):
-        super(DomainIterator, self).__init__()
-        self.domain = domain
-        self.size = self.domain.size
-        self.steps = self.domain.steps
-        self.exact_size = self.domain.exact_size
 
 from .product import Product  # noqa
 from .join import Join  # noqa

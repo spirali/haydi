@@ -36,22 +36,11 @@ def test_sequence_iter_set():
     a = list(p)
     b = []
     for i in xrange(p.size + 10):
-        it = iter(p)
-        it.set_step(i)
+        it = p.create_iter(i)
         l = list(it)
         if l:
             b.append(l[0])
     assert a == b
-
-
-def test_sequence_iter_copy():
-    r2 = hd.Range(3)
-    s = hd.Sequence(r2, 4)
-
-    it = iter(s)
-    it2 = it.copy()
-
-    assert list(it) == list(it2)
 
 
 def test_sequence_name():

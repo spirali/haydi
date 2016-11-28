@@ -1,70 +1,18 @@
 
-from .domain import Domain, DomainIterator
-from .iterator import NoValue
+from .domain import Domain, StepSkip, skip1
 
-from copy import copy
-
-
-class TransformationIterator(DomainIterator):
-
-    def __init__(self, domain, parent):
-        super(TransformationIterator, self).__init__(domain)
-        self.parent = parent
-
-    def reset(self):
-        self.parent.reset()
-
-    def set_step(self, index):
-        self.parent.set_step(index)
-
-    def copy(self):
-        new = copy(self)
-        new.parent = self.parent.copy()
-        return new
+import itertools
 
 
 class Transformation(Domain):
 
-    iterator_class = None
-
-    def __init__(self, domain, size, exact_size, steps):
+    def __init__(self, parent, size, exact_size, steps):
         name = type(self).__name__
         super(Transformation, self).__init__(size, exact_size, steps, name)
-        self.domain = domain
-
-    def create_iterator(self):
-        return self.iterator_class(self,
-                                   self.domain.create_iterator())
-
-
-class TakeIterator(TransformationIterator):
-
-    def __init__(self, domain, parent):
-        super(TakeIterator, self).__init__(domain, parent)
-        self.count = domain.size
-
-    def reset(self):
-        self.count = self.domain.size
-        self.parent.reset()
-
-    def next(self):
-        if self.count <= 0:
-            raise StopIteration()
-        self.count -= 1
-        return self.parent.next()
-
-    def step(self):
-        if self.count <= 0:
-            raise StopIteration()
-        value = self.parent.step()
-        if value is not NoValue:
-            self.count -= 1
-        return value
+        self.parent = parent
 
 
 class TakeTransformation(Transformation):
-
-    iterator_class = TakeIterator
 
     def __init__(self, parent, count):
         if parent.size is not None:
@@ -83,27 +31,27 @@ class TakeTransformation(Transformation):
                                                  parent.exact_size,
                                                  steps)
 
+    def generate_one(self):
+        return self.parent.generate_one()
 
-class MapIterator(TransformationIterator):
+    def create_iter(self, step=0):
+        return itertools.islice(self.parent.create_iter(step),
+                                self.size - step)
 
-    def __init__(self, domain, parent):
-        super(MapIterator, self).__init__(domain, parent)
-        self.fn = domain.fn
+    def create_step_iter(self, step):
+        assert self.exact_size
 
-    def next(self):
-        return self.fn(next(self.parent))
+        it = self.parent.create_step_iter(step)
+        count = self.size - step
 
-    def step(self):
-        v = self.parent.step()
-        if v is NoValue:
-            return v
-        else:
-            return self.fn(v)
+        while count > 0:
+            v = next(it)
+            yield v
+            if not isinstance(v, StepSkip):
+                count -= 1
 
 
 class MapTransformation(Transformation):
-
-    iterator_class = MapIterator
 
     def __init__(self, domain, fn):
         super(MapTransformation, self).__init__(
@@ -111,57 +59,39 @@ class MapTransformation(Transformation):
         self.fn = fn
 
     def generate_one(self):
-        return self.fn(self.domain.generate_one())
+        return self.fn(self.parent.generate_one())
 
+    def create_iter(self, step=0):
+        fn = self.fn
+        return (fn(x) for x in self.parent.create_iter(step))
 
-class FilterIterator(TransformationIterator):
-
-    def __init__(self, domain, parent):
-        super(FilterIterator, self).__init__(domain, parent)
-        self.fn = domain.fn
-
-    def next(self):
-        v = next(self.parent)
-        while not self.fn(v):
-            v = next(self.parent)
-        return v
-
-    def step(self):
-        v = self.parent.step()
-        if v is NoValue or self.fn(v):
-            return v
-        else:
-            return NoValue
+    def create_step_iter(self, step=0):
+        return self.create_iter(step)
 
 
 class FilterTransformation(Transformation):
-
-    iterator_class = FilterIterator
 
     def __init__(self, domain, fn):
         super(FilterTransformation, self).__init__(
             domain, domain.size, False, domain.steps)
         self.fn = fn
 
+    def create_iter(self, step=0):
+        for v in self.parent.create_iter(step):
+            if self.fn(v):
+                yield v
+
+    def create_step_iter(self, step):
+        for v in self.parent.create_step_iter(step):
+            if isinstance(v, StepSkip):
+                yield v
+            elif self.fn(v):
+                yield v
+            else:
+                yield skip1
+
     def generate_one(self):
         while True:
-            x = self.domain.generate_one()
+            x = self.parent.generate_one()
             if self.fn(x):
                 return x
-
-"""
-class TimeoutTransformation(Transformation):
-    def __init__(self, parent, timeout):
-        super(TimeoutTransformation, self).__init__(parent)
-        self.timeout = timeout
-        self.start = None
-
-    def next(self):
-        if not self.start:
-            self.start = time.time()
-
-        if time.time() - self.start >= self.timeout:
-            raise StopIteration()
-        else:
-            return next(self.parent)
-"""

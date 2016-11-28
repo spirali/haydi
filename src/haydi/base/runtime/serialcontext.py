@@ -3,7 +3,7 @@ class SerialContext(object):
     def run(self, domain, worker_reduce_fn, worker_reduce_init,
             global_reduce_fn, global_reduce_init, timeout=None):
         if worker_reduce_fn:
-            it = domain.create_iterator()
+            it = domain.create_iter()
             if worker_reduce_init is None:
                 try:
                     first = it.next()
@@ -16,7 +16,7 @@ class SerialContext(object):
                 first = worker_reduce_init()
             result = reduce(worker_reduce_fn, it, first)
         else:
-            result = list(domain.create_iterator())
+            result = list(domain.create_iter())
 
         if global_reduce_fn:
             if worker_reduce_fn and global_reduce_fn:

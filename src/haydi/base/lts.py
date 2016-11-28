@@ -1,5 +1,4 @@
 
-from .iterator import Iterator
 from .graph import Graph
 from .domain import Domain
 
@@ -17,14 +16,15 @@ class DLTS(object):
             return_depth=False,
             max_states=sys.maxint):
 
-        def create_iterator():
+        def create_iter(step=0):
+            assert step == 0
             return BreadthFirstIterator(self,
                                         init_state,
                                         max_depth,
                                         return_depth,
                                         max_states)
         domain = Domain(None, False)
-        domain.create_iterator = create_iterator
+        domain.create_iter = create_iter
         return domain
 
     def bfs_path(self,
@@ -122,7 +122,7 @@ class DLTSProduct(DLTS):
                                 self.lts2.make_label(state[1]))
 
 
-class BreadthFirstIterator(Iterator):
+class BreadthFirstIterator(object):
 
     def __init__(self, lts, init_state, max_depth, return_depth, max_states):
         super(BreadthFirstIterator, self).__init__()
@@ -170,7 +170,7 @@ class BreadthFirstIterator(Iterator):
             self.nexts = tmp
 
 
-class BreadthFirstIterator2(Iterator):
+class BreadthFirstIterator2(object):
 
     def __init__(self, lts, init_state, max_depth, max_states):
         super(BreadthFirstIterator2, self).__init__()

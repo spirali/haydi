@@ -1,8 +1,7 @@
 
-from .domain import Domain, DomainIterator
+from .domain import Domain, StepSkip
 from .values import Values
 
-from copy import copy
 import math
 from collections import namedtuple
 
@@ -29,11 +28,188 @@ class Product(Domain):
             if len(set(domains)) > 1:
                 raise Exception("Not implemented for discitinct domains")
 
-    def create_iterator(self):
+    def create_iter(self, step=0):
         if self.unordered:
-            return UnorderedProductIterator(self)
+            if self.exact_size:
+                return self._create_uproduct_iter(step)
+            else:
+                return self.iterate_steps(step, self.steps)
         else:
-            return ProductIterator(self)
+            return self._create_product_iter(step)
+
+    def create_step_iter(self, step):
+        if self.unordered:
+            return self._create_uproduct_step_iter(step)
+        else:
+            return self._create_product_step_iter(step)
+
+    def _init_iters(self, step):
+        if step:
+            iters = []
+            for d in self.domains:
+                steps = d.steps
+                iters.append(d.create_iter(step % steps))
+                step /= steps
+            return iters
+        else:
+            return [d.create_iter() for d in self.domains]
+
+    def _init_step_iters(self, step):
+        if step:
+            iters = []
+            for d in self.domains:
+                steps = d.steps
+                iters.append(d.create_step_iter(step % steps))
+                step /= steps
+            return iters
+        else:
+            return [d.create_step_iter(0) for d in self.domains]
+
+    def _create_product_iter(self, step):
+        if step >= self.steps:
+            return
+        domains = self.domains
+        iters = self._init_iters(step)
+        values = [None] * len(domains)
+        ln = len(domains)
+
+        i = ln - 1
+        while i < ln:
+            if i == 0:
+                for v in iters[i]:
+                    values[0] = v
+                    yield tuple(values)
+                iters[i] = domains[i].create_iter()
+                i = 1
+            else:
+                try:
+                    values[i] = next(iters[i])
+                    i -= 1
+                except StopIteration:
+                    iters[i] = domains[i].create_iter()
+                    i += 1
+
+    def _init_uproduct_iter(self, index):
+        assert len(self.domains) == 2
+        steps = self.domains[0].steps - 1  # -1 to ignore diagonal
+        # The root of y * size - ((y - 1) * y) / 2 - index
+        # y * size = full rectangle
+        # ((y-1) * y) / 2 = missing elements to full rectangle
+        y = int(0.5 * (-math.sqrt(-8 * index + 4 * steps**2 + 4 * steps + 1) +
+                       2 * steps + 1))
+        x = index - y * steps + ((y - 1) * y / 2) + y
+        return [x + 1, y]
+
+    def _create_uproduct_iter(self, step):
+        if step >= self.steps:
+            return
+        ln = len(self.domains)
+        domain = self.domains[0]
+        if step:
+            indices = self._init_uproduct_iter(step)
+        else:
+            indices = range(len(self.domains))
+            indices.reverse()
+
+        iters = [None] * ln
+        values = [None] * ln
+
+        for i, d in reversed(list(enumerate(self.domains))):
+            iters[i] = d.create_iter(indices[i])
+            if i == 0:
+                break
+            try:
+                values[i] = next(iters[i])
+            except StopIteration:
+                break
+        while i < ln:
+            if i == 0:
+                for v in iters[i]:
+                    values[0] = v
+                    yield tuple(values)
+                i = 1
+            else:
+                indices[i] += 1
+                try:
+                    values[i] = next(iters[i])
+                    for j in xrange(i - 1, 0, -1):
+                        indices[j] = indices[j + 1] + 1
+                        iters[j] = domain.create_iter(indices[j])
+                        values[j] = next(iters[j])
+
+                    iters[0] = domain.create_iter(indices[1] + 1)
+                    i = 0
+                except StopIteration:
+                    i += 1
+
+    def _create_product_step_iter(self, step):
+        if step >= self.steps:
+            return
+        domains = self.domains
+        iters = self._init_step_iters(step)
+        values = [None] * len(domains)
+        ln = len(domains)
+        w = 1
+        weights = []
+        for d in domains:
+            weights.append(w)
+            w *= d.steps
+
+        i = ln - 1
+        while i < ln:
+            if i == 0:
+                for v in iters[i]:
+                    if isinstance(v, StepSkip):
+                        yield v
+                    else:
+                        values[0] = v
+                        yield tuple(values)
+                iters[i] = domains[i].create_step_iter(0)
+                i = 1
+            else:
+                try:
+                    v = next(iters[i])
+                    while isinstance(v, StepSkip):
+                        yield StepSkip(weights[i] * v.value)
+                        v = next(iters[i])
+                    values[i] = v
+                    i -= 1
+                except StopIteration:
+                    iters[i] = domains[i].create_step_iter(0)
+                    i += 1
+
+    def _create_uproduct_step_iter(self, step):
+        domain = self.domains[0]
+        if step >= self.steps:
+            return
+        if step:
+            indices = self._init_uproduct_iter(step)
+        else:
+            indices = range(len(self.domains))
+            indices.reverse()
+
+        j_start, i = indices
+        it = domain.create_step_iter(i)
+        while i < domain.size:
+            v1 = next(it)
+            if isinstance(v1, StepSkip):
+                s = domain.size - j_start
+                count = 0
+                for x in xrange(v1.value):
+                    count += s
+                    s -= 1
+                yield StepSkip(count)
+                j_start = i + 2
+                i += 1
+                continue
+            i += 1
+            it0 = domain.create_step_iter(j_start)
+            for v0 in it0:
+                if isinstance(v0, StepSkip):
+                    yield v0
+                else:
+                    yield (v0, v1)
+            j_start = i + 1
 
     def generate_one(self):
         if self._generator_cache:
@@ -78,130 +254,6 @@ class Product(Domain):
 
     def __mul__(self, other):
         return Product(self.domains + (other,))
-
-
-class ProductIterator(DomainIterator):
-
-    def __init__(self, domain):
-        super(ProductIterator, self).__init__(domain)
-        self.iterators = [d.create_iterator() for d in domain.domains]
-        self.current = None
-
-    def reset(self):
-        for it in self.iterators:
-            it.reset()
-        self.current = None
-
-    def get_parents(self):
-        return list(self.iterators)
-
-    def copy(self):
-        new = copy(self)
-        new.iterators = [it.copy() for it in self.iterators]
-        new.current = copy(self.current)
-        return new
-
-    def next(self):
-        if self.current:
-            for i, it in enumerate(self.iterators):
-                try:
-                    self.current[i] = next(it)
-                    return tuple(self.current)
-                except StopIteration:
-                    it.reset()
-                    self.current[i] = next(it)
-            raise StopIteration()
-        else:
-            self.current = [next(i) for i in self.iterators]
-            return tuple(self.current)
-
-    def __repr__(self):
-        return "Product"
-
-    def set_step(self, index):
-        self.current = None
-        if index >= self.steps:
-            for it in self.iterators:
-                it.set_step(it.steps)
-            return
-        for it in self.iterators:
-            steps = it.steps
-            it.set_step(index % steps)
-            index /= steps
-
-
-class UnorderedProductIterator(DomainIterator):
-
-    def __init__(self, domain):
-        super(UnorderedProductIterator, self).__init__(domain)
-        assert len(set(domain.domains)) == 1
-        self.iterators = None
-        self.current = None
-
-    def copy(self):
-        new = copy(self)
-        if self.iterators is not None:
-            new.iterators = [it.copy() for it in self.iterators]
-        new.current = copy(self.current)
-        return new
-
-    def reset(self):
-        for it in self.iterators:
-            it.reset()
-        for i in xrange(len(self.indices) - 1):
-            self.nexts[i] = None
-        self.current = None
-
-    def next(self):
-        current = self.current
-        if current:
-            for i, it in enumerate(self.iterators):
-                try:
-                    current[i] = next(it)
-                    if i == 0:
-                        return tuple(current)
-                    for j in xrange(i - 1, -1, -1):
-                        it = it.copy()
-                        self.iterators[j] = it
-                        current[j] = next(it)
-                    return tuple(current)
-                except StopIteration:
-                    continue
-            raise StopIteration()
-        else:
-            it = self.domain.domains[0].create_iterator()
-            iterators = []
-            current = []
-            for d in self.domain.domains:
-                iterators.append(it)
-                current.append(next(it))
-                it = it.copy()
-            iterators.reverse()
-            current.reverse()
-            self.iterators = iterators
-            self.current = current
-            return tuple(self.current)
-
-    def set_step(self, index):
-        assert len(self.domain.domains) == 2
-        steps = self.domain.domains[1].steps - 1  # -1 to ignore diagonal
-        assert index < self.steps
-        # The root of y * size - ((y - 1) * y) / 2 - index
-        # y * size = full rectangle
-        # ((y-1) * y) / 2 = missing elements to full rectangle
-        y = int(0.5 * (-math.sqrt(-8 * index + 4 * steps**2 + 4 * steps + 1) +
-                       2 * steps + 1))
-        x = index - y * steps + ((y - 1) * y / 2) + y
-
-        if not self.current:
-            iterators = [d.create_iterator()
-                         for d in self.domain.domains]
-        else:
-            iterators = self.iterators
-        iterators[0].set_step(x)
-        iterators[1].set_step(y)
-        self.current = [next(it) for it in iterators]
-        self.iterators = iterators
 
 
 def NamedProduct(named_domains,

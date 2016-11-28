@@ -48,21 +48,11 @@ def test_iter_set():
     a = list(r)
     b = []
     for i in xrange(40):
-        it = iter(r)
-        it.set_step(i)
+        it = r.create_step_iter(i)
         l = list(it)
         if l:
             b.append(l[0])
     assert a == b
-
-
-def test_range_iter_copy():
-    r = hd.Range(3, 10, 2)
-
-    it = iter(r)
-    it2 = it.copy()
-
-    assert list(it) == list(it2)
 
 
 def test_range_name():

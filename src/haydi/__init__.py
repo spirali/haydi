@@ -14,9 +14,6 @@ from .base.lts import DLTS, DLTSProduct  # noqa
 # Basic types
 from .base.boolean import Boolean  # noqa
 
-# Singletons
-from .base.iterator import NoValue  # noqa
-
 # Session
 from .base.runtime.distributedcontext import DistributedContext  # noqa
 from .base.haydisession import session  # noqa

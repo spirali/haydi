@@ -40,17 +40,6 @@ def test_mapping_generate():
         assert r[1] == 0 or r[1] == 1
 
 
-def test_mapping_copy():
-    r1 = hd.Range(4)
-    r2 = hd.Range(3)
-    p = hd.Mapping(r1, r2)
-
-    it = iter(p)
-    it2 = it.copy()
-
-    assert list(it) == list(it2)
-
-
 def test_mapping_name():
     r = hd.Range(10)
     m = hd.Mapping(r, r, name="TestMapping")
@@ -70,7 +59,6 @@ def test_mapping_set():
     m = hd.Mapping(d1, d2)
 
     a = list(m)
-    for i in xrange(65):
-        it = iter(m)
-        it.set_step(i)
+    for i in xrange(70):
+        it = m.create_iter(i)
         assert list(it) == a[i:]

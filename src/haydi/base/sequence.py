@@ -1,7 +1,5 @@
 
-from .domain import Domain, DomainIterator
-
-from copy import copy
+from .domain import Domain
 
 
 class Sequence(Domain):
@@ -13,8 +11,40 @@ class Sequence(Domain):
         self.length = length
         self.domain = domain
 
-    def create_iterator(self):
-        return SequenceIterator(self)
+    def create_iter(self, step=0):
+        if step >= self.steps:
+            return
+
+        ln = self.length
+        if ln == 0:
+            yield ()
+            return
+
+        if step:
+            iters = []
+            steps = self.domain.steps
+            for i in xrange(ln):
+                iters.append(self.domain.create_iter(step % steps))
+                step /= steps
+        else:
+            iters = [self.domain.create_iter() for i in xrange(ln)]
+
+        value = [None] * ln
+        i = ln - 1
+        while i < ln:
+            if i == 0:
+                for v in iters[0]:
+                    value[0] = v
+                    yield tuple(value)
+                i = 1
+                iters[0] = self.domain.create_iter()
+            else:
+                try:
+                    value[i] = next(iters[i])
+                    i -= 1
+                except StopIteration:
+                    iters[i] = self.domain.create_iter()
+                    i += 1
 
     def generate_one(self):
         return tuple(self.domain.generate_one() for i in xrange(self.length))
@@ -26,47 +56,3 @@ class Sequence(Domain):
         for i in xrange(length):
             result *= size
         return result
-
-
-class SequenceIterator(DomainIterator):
-
-    def __init__(self, domain):
-        super(SequenceIterator, self).__init__(domain)
-        self.iterators = [domain.domain.create_iterator()
-                          for i in xrange(domain.length)]
-        self.current = None
-
-    def reset(self):
-        for it in self.iterators:
-            it.reset()
-        self.current = None
-
-    def copy(self):
-        new = copy(self)
-        new.iterators = [it.copy() for it in self.iterators]
-        return new
-
-    def next(self):
-        if self.current is not None:
-            for i, it in enumerate(self.iterators):
-                try:
-                    self.current[i] = next(it)
-                    return tuple(self.current)
-                except StopIteration:
-                    it.reset()
-                    self.current[i] = next(it)
-            raise StopIteration()
-        else:
-            self.current = [next(i) for i in self.iterators]
-            return tuple(self.current)
-
-    def set_step(self, index):
-        self.current = None
-        if index >= self.steps:
-            for it in self.iterators:
-                it.set_step(it.steps)
-            return
-        for it in self.iterators:
-            steps = it.size
-            it.set_step(index % steps)
-            index /= steps

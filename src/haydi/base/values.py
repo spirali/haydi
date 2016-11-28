@@ -1,6 +1,5 @@
-from .domain import Domain, DomainIterator
+from .domain import Domain
 
-from copy import copy
 import random
 
 
@@ -14,28 +13,12 @@ class Values(Domain):
     def generate_one(self):
         return random.choice(self.values)
 
-    def create_iterator(self):
-        return ValuesIterator(self)
+    def create_iter(self, step=0):
+        if step:
+            # TODO: Lazy []
+            return iter(self.values[step:])
+        else:
+            return iter(self.values)
 
-
-class ValuesIterator(DomainIterator):
-
-    def __init__(self, domain):
-        super(ValuesIterator, self).__init__(domain)
-        self.index = 0
-
-    def reset(self):
-        self.index = 0
-
-    def copy(self):
-        return copy(self)
-
-    def next(self):
-        if self.index < len(self.domain.values):
-            v = self.domain.values[self.index]
-            self.index += 1
-            return v
-        raise StopIteration()
-
-    def set_step(self, index):
-        self.index = index
+    def create_step_iter(self, step):
+        return self.create_iter(step)
