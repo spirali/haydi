@@ -1,11 +1,12 @@
-import os
-from datetime import datetime, timedelta
-import time
 import itertools
 import logging
-import socket
-import resource
 import math
+import os
+import resource
+import socket
+import time
+import traceback
+from datetime import datetime, timedelta
 
 from haydi.base.exception import HaydiException
 from haydi.base.iterator import NoValue
@@ -462,24 +463,30 @@ def process_batch(arg):
     :rtype: Job
     """
     domain, start, size, reduce_fn, reduce_init = arg
-    job = Job("{}#{}".format(socket.gethostname(), os.getpid()), start, size)
+    worker_name = "{}#{}".format(socket.gethostname(), os.getpid())
+    job = Job(worker_name, start, size)
 
-    iterator = domain.create_iterator()
-    iterator.set_step(start)
+    try:
+        iterator = domain.create_iterator()
+        iterator.set_step(start)
 
-    def item_generator():
-        for i in xrange(size):
-            item = iterator.step()
-            if item is not NoValue:
-                yield item
+        def item_generator():
+            for i in xrange(size):
+                item = iterator.step()
+                if item is not NoValue:
+                    yield item
 
-    if reduce_fn is None:
-        result = list(item_generator())
-    else:
-        if reduce_init is None:
-            result = reduce(reduce_fn, item_generator())
+        if reduce_fn is None:
+            result = list(item_generator())
         else:
-            result = reduce(reduce_fn, item_generator(), reduce_init())
+            if reduce_init is None:
+                result = reduce(reduce_fn, item_generator())
+            else:
+                result = reduce(reduce_fn, item_generator(), reduce_init())
 
-    job.finish(result)
-    return job
+        job.finish(result)
+        return job
+    except Exception as e:
+        with open("{}-error-{}".format(worker_name, datetime.now()), "w") as f:
+            f.write(traceback.format_exc(e) + "\n")
+        raise e
