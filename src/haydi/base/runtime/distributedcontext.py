@@ -1,3 +1,5 @@
+from __future__ import print_function
+import sys
 import itertools
 import logging
 import math
@@ -489,4 +491,7 @@ def process_batch(arg):
     except Exception as e:
         with open("{}-error-{}".format(worker_name, datetime.now()), "w") as f:
             f.write(traceback.format_exc(e) + "\n")
+
+        print(traceback.format_exc(), file=sys.stderr)
+
         raise e
