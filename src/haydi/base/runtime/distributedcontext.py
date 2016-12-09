@@ -255,12 +255,11 @@ class JobScheduler(object):
 
     def _init_futures(self, count_per_worker):
         job_count = self.worker_count * count_per_worker
-        self.job_size = 50
+        self.job_size = 20
 
         if self.size:
-            total_size = int(math.ceil(self.size / float(job_count)))
-            if total_size < self.job_size:
-                self.job_size = total_size
+            total_job_size = int(math.ceil(self.size / float(job_count)))
+            self.job_size = min(total_job_size, self.job_size)
 
         return self._create_futures(self._create_distribution(
             self.worker_count * count_per_worker, self.job_size))
