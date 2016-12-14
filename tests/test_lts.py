@@ -83,6 +83,66 @@ def test_lts_product2():
     assert result == [(3, 7), (4, 9), (5, 11)]
 
 
+def test_lts_product3():
+    class MyLTS1(hd.DLTS):
+        def __init__(self):
+            super(MyLTS1, self).__init__(hd.Range(1))
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 1
+
+    class MyLTS2(hd.DLTS):
+        def __init__(self):
+            super(MyLTS2, self).__init__(hd.Range(1))
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 2
+
+    s1 = MyLTS1() * MyLTS2() * MyLTS1()
+    assert s1.actions is not None
+
+    s2 = s1 * MyLTS1()
+    assert s2.actions is not None
+
+    s3 = s2 * (MyLTS2() * MyLTS1())
+    assert s3.actions is not None
+
+    results = list(s3.bfs((2, 3, 5, 7, (9, 11)), 2))
+
+    #                   +1 +2 +1 +1 +2 +1
+    assert results == [(2, 3, 5, 7, (9, 11)),
+                       (3, 5, 6, 8, (11, 12)),
+                       (4, 7, 7, 9, (13, 13))]
+
+
+def test_lts_product4():
+    class MyLTS1(hd.DLTS):
+        def __init__(self):
+            super(MyLTS1, self).__init__(hd.Range(1))
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 1
+
+    class MyLTS2(hd.DLTS):
+        def __init__(self):
+            super(MyLTS2, self).__init__()
+
+        def step(self, state, action):
+            assert action == 0
+            return state + 2
+
+        def get_enabled_actions(self, state):
+            return hd.Range(0)  # empty enabled actions
+
+    s = MyLTS1() * MyLTS2()
+
+    result = list(s.bfs((0, 0)))
+    assert result == [(0, 0)]
+
+
 def test_lts_graph():
     class MyLTS(hd.DLTS):
         def __init__(self):
@@ -119,3 +179,41 @@ def test_lts_graph():
 
     node = g.node(12)
     assert len(node.arcs) == 0
+
+
+def test_lts_empty_product():
+
+    class LtsA(hd.DLTS):
+        def __init__(self):
+            self.counter = 0
+            hd.DLTS.__init__(self, None)
+
+        def get_enabled_actions(self, state):
+            return ["a"]
+
+        def step(self, state, action):
+            return state + 1
+
+    class LtsEmpty(hd.DLTS):
+
+        def __init__(self):
+            hd.DLTS.__init__(self)
+
+        def get_enabled_actions(self, state):
+            return ()
+
+        def step(self, state, action):
+            assert 0
+
+    a = LtsA()
+    g = a.make_graph(0, 2)
+    assert g.size == 3
+
+    b = LtsEmpty()
+    g = b.make_graph(0, 2)
+    assert g.size == 1
+
+    c = a * b
+    assert len(c.get_enabled_actions((0, 0))) == 0
+    g = c.make_graph((0, 0), 2)
+    assert g.size == 1

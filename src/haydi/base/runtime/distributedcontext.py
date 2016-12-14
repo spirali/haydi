@@ -1,11 +1,14 @@
-import os
-from datetime import datetime
-import time
+from __future__ import print_function
+import sys
 import itertools
 import logging
-import socket
-import resource
 import math
+import os
+import resource
+import socket
+import time
+import traceback
+from datetime import datetime, timedelta
 
 from haydi.base.exception import HaydiException
 
@@ -35,7 +38,7 @@ class ResultSaver(object):
         self.results = []
         self.counter = 0
 
-    def handle_job(self, job):
+    def handle_job(self, scheduler, job):
         self.results.append(job.result)
 
         if len(self.results) % self.write_count == 0:
@@ -58,13 +61,49 @@ class TimeoutManager(object):
 
     def __init__(self, timeout):
         """
-        :type timeout: int
+        :type timeout: int | timedelta
         """
+        if isinstance(timeout, timedelta):
+            timeout = timeout.total_seconds()
         self.timeout = timeout
         self.start = datetime.now()
 
     def is_finished(self):
-        return (datetime.now() - self.start).seconds >= self.timeout
+        return self.get_remaining_time() <= 0
+
+    def get_total_time(self):
+        return self.timeout
+
+    def get_remaining_time(self):
+        return self.timeout - self.get_time_from_start()
+
+    def get_time_from_start(self):
+        return (datetime.now() - self.start).total_seconds()
+
+    def reset(self):
+        self.start = datetime.now()
+
+
+class ProgressLogger(object):
+    def __init__(self, log_repeat):
+        self.timeout_mgr = TimeoutManager(log_repeat)
+        self.last_percent = 0
+
+    def handle_job(self, scheduler, job):
+        self._log_progress(scheduler)
+
+    def _log_progress(self, scheduler):
+        if scheduler.size:
+            percent = (scheduler.index_completed / float(scheduler.size)) * 100
+            if percent - self.last_percent >= 1.0:
+                haydi_logger.info("Iterated {} % ({} elements)".format(
+                    percent, scheduler.index_completed))
+                self.last_percent = percent
+        else:
+            if self.timeout_mgr.is_finished():
+                self.timeout_mgr.reset()
+                haydi_logger.info("Generated {} elements".format(
+                    scheduler.index_completed))
 
 
 class Job(object):
@@ -128,16 +167,16 @@ class JobScheduler(object):
         self.index_scheduled = 0
         self.index_completed = 0
         self.job_size = None
-        self.timeout_mgr = TimeoutManager(timeout.total_seconds())\
-            if timeout else None
+        self.timeout_mgr = TimeoutManager(timeout) if timeout else None
         self.ordered_futures = []
         self.backlog_per_worker = 4
         self.active_futures = self._init_futures(self.backlog_per_worker)
         self.next_futures = []
         # <made-up amount> of minutes per batch is "optimal"
         self.target_time = 60 * 2
+        self.target_time_active = self.target_time
         self.completed_jobs = []
-        self.job_callback = None
+        self.job_callbacks = []
 
     def iterate_jobs(self):
         """
@@ -145,34 +184,38 @@ class JobScheduler(object):
         time runs out.
         :return: completed job
         """
-        if len(self.next_futures) > 0:
+        while (self._has_more_work() or
+               self.index_completed < self.index_scheduled):
+            iterated = 0
+            for future in as_completed(self.active_futures):
+                job = future.result()
+                self._mark_job_completed(job)
+                iterated += 1
+
+                if self.timeouted():
+                    haydi_logger.info("Run timeouted after {} seconds".format(
+                        self.timeout_mgr.get_time_from_start()))
+                    return self.completed_jobs
+
+                if iterated / self.worker_count >= 2:
+                    if self._has_more_work():
+                        self.next_futures += self._schedule(
+                            self.backlog_per_worker / 2)
+
+            if self._has_more_work():
+                self.next_futures += self._schedule(
+                    self.backlog_per_worker / 2)
+
             self.active_futures = self.next_futures
             self.next_futures = []
 
-        iterated = 0
-        for future in as_completed(self.active_futures):
-            job = future.result()
-            self._add_job(job)
-            iterated += 1
-
-            if self.timeouted():
-                return self.completed_jobs
-
-            if iterated / self.worker_count >= 2:
-                if self._has_more_work():
-                    self.next_futures += self._schedule(
-                        self.backlog_per_worker / 2)
-
-        if self._has_more_work():
-            self.next_futures += self._schedule(self.backlog_per_worker / 2)
-
-        if self.index_completed < self.index_scheduled:
-            return self.iterate_jobs()
-        else:
-            return self.completed_jobs
+        return self.completed_jobs
 
     def timeouted(self):
         return self.timeout_mgr and self.timeout_mgr.is_finished()
+
+    def add_job_callback(self, callback):
+        self.job_callbacks.append(callback)
 
     def _schedule(self, count_per_worker):
         """
@@ -182,13 +225,26 @@ class JobScheduler(object):
         :rtype: list of distributed.client.Future
         :return: newly scheduled futures
         """
+        self._check_falloff()
         duration = self._get_avg_duration()
-        delta = duration / float(self.target_time)
+        delta = duration / float(self.target_time_active)
         delta = self._clamp(delta, 0.1, 1.2)
         self.job_size = int(self.job_size / delta)
 
         return self._create_futures(self._create_distribution(
             self.worker_count * count_per_worker, self.job_size))
+
+    def _check_falloff(self):
+        if not self.timeout_mgr:
+            return
+
+        total = self.timeout_mgr.get_total_time()
+        remaining = self.timeout_mgr.get_remaining_time()
+        scale = total / 2.0
+
+        if remaining < scale:
+            ratio = remaining / float(scale)
+            self.target_time_active = self.target_time * ratio
 
     def _clamp(self, value, minimum, maximum):
         return min(maximum, max(minimum, value))
@@ -200,15 +256,12 @@ class JobScheduler(object):
 
     def _init_futures(self, count_per_worker):
         job_count = self.worker_count * count_per_worker
+        self.job_size = 50
 
         if self.size:
             total_size = int(math.ceil(self.size / float(job_count)))
-            if total_size < 100:
+            if total_size < self.job_size:
                 self.job_size = total_size
-            else:
-                self.job_size = min(total_size, int(self.size * 0.05))
-        else:
-            self.job_size = 50
 
         return self._create_futures(self._create_distribution(
             self.worker_count * count_per_worker, self.job_size))
@@ -256,11 +309,12 @@ class JobScheduler(object):
         else:
             return []
 
-    def _add_job(self, job):
+    def _mark_job_completed(self, job):
         self.completed_jobs.append(job)
         self.index_completed += job.size
-        if self.job_callback:
-            self.job_callback(job)
+
+        for cb in self.job_callbacks:
+            cb(self, job)
 
     def _get_remaining_work(self):
         if self.size:
@@ -351,6 +405,8 @@ class DistributedContext(object):
             timeout=None):
         size = domain.steps
 
+        haydi_logger.info("Starting run with size {}".format(size))
+
         scheduler = JobScheduler(self.executor,
                                  self._get_worker_count(),
                                  timeout, domain,
@@ -359,7 +415,10 @@ class DistributedContext(object):
         if self.write_partial_results is not None:
             result_saver = ResultSaver(self.execution_count,
                                        self.write_partial_results)
-            scheduler.job_callback = lambda job: result_saver.handle_job(job)
+            scheduler.add_job_callback(result_saver.handle_job)
+
+        progress_logger = ProgressLogger(timedelta(seconds=3))
+        scheduler.add_job_callback(progress_logger.handle_job)
 
         try:
             jobs = scheduler.iterate_jobs()
@@ -407,16 +466,22 @@ def process_batch(arg):
     :rtype: Job
     """
     domain, start, size, reduce_fn, reduce_init = arg
-    job = Job("{}#{}".format(socket.gethostname(), os.getpid()), start, size)
+    worker_name = "{}#{}".format(socket.gethostname(), os.getpid())
+    job = Job(worker_name, start, size)
 
-    iterator = domain.iterate_steps(start, start + size)
+    try:
+        iterator = domain.iterate_steps(start, start + size)
+        if reduce_fn is None:
+            result = list(iterator)
+        elif reduce_init is None:
+            result = reduce(reduce_fn, iterator)
+        else:
+            result = reduce(reduce_fn, iterator, reduce_init())
+        job.finish(result)
+        return job
 
-    if reduce_fn is None:
-        result = list(iterator)
-    elif reduce_init is None:
-        result = reduce(reduce_fn, iterator)
-    else:
-        result = reduce(reduce_fn, iterator, reduce_init())
-
-    job.finish(result)
-    return job
+    except Exception as e:
+        with open("{}-error-{}".format(worker_name, datetime.now()), "w") as f:
+            f.write(traceback.format_exc(e) + "\n")
+        print(traceback.format_exc(), file=sys.stderr)
+        raise e

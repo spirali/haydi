@@ -57,13 +57,13 @@ class ExperimentEnv(object):
             hd.session.set_parallel_context(ctx)
             self.parallel = True
 
-    def run(self, action, write=False):
+    def run(self, action, write=False, timeout=None):
         config = {name: self.config_dict[name] for name in self.config_names}
         print "Configuration"
         for name in self.config_names:
             print "\t{}: {}".format(name, config[name])
 
-        results = action.run(self.parallel)
+        results = action.run(self.parallel, timeout)
         if write:
             filename = "{}-{}.data".format(
                 self.name, datetime.isoformat(datetime.now()))
