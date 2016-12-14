@@ -100,7 +100,7 @@ class DLTSProduct(DLTS):
             for a in it:
                 actions = actions.intersection(a)
 
-        super(DLTSProduct, self).__init__( actions)
+        super(DLTSProduct, self).__init__(actions)
         self.systems = systems
 
     def get_enabled_actions(self, state):
@@ -109,22 +109,23 @@ class DLTSProduct(DLTS):
             # are enabled in every state
             return self.actions
 
-        # when actions are none compute enabled from all enabled over the systems
-        it = iter(frozenset(list(lts.get_enabled_actions(state[idx])))
-                                 for idx, lts in enumerate(self.systems))
-        enabled = it.next()
-        for en_a in it:
-            enabled = enabled.intersection(en_a)
-        return enabled
+        # when actions are None then compute enabled action over all systems
+        result = None
+        for s, lts in zip(state, self.systems):
+            if result is None:
+                result = frozenset(lts.get_enabled_actions(s))
+            else:
+                result = result.intersection(lts.get_enabled_actions(s))
+        return result
 
     def step(self, state, action):
-        next_states = [lts.step(state[idx], action)
-                       for idx, lts in enumerate(self.systems)]
-
-        if any(map(lambda s: s is None, next_states)):
-            return None
-
-        return tuple(next_states)
+        result = []
+        for s, lts in zip(state, self.systems):
+            new_state = lts.step(s, action)
+            if new_state is None:
+                return None
+            result.append(new_state)
+        return tuple(result)
 
     def make_label(self, state):
         return "\\n".join(lts.make_label(state[idx])
@@ -132,6 +133,7 @@ class DLTSProduct(DLTS):
 
     def __mul__(self, other):
         return DLTSProduct(self.systems + (other,))
+
 
 class BreadthFirstIterator(Iterator):
 
