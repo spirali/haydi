@@ -6,6 +6,7 @@ from .base.sequence import Sequence  # noqa
 from .base.values import Values  # noqa
 from .base.join import Join  # noqa
 from .base.mapping import Mapping  # noqa
+from .base.permutations import Permutations  # noqa
 
 # Others
 from .base.system import System  # noqa
