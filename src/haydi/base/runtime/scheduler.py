@@ -69,8 +69,7 @@ class JobScheduler(object):
         self.backlog_per_worker = 4
         self.active_futures = self._init_futures(self.backlog_per_worker)
         self.next_futures = []
-        # <made-up amount> of minutes per batch is "optimal"
-        self.target_time = 60 * 2
+        self.target_time = 60 * 5
         self.target_time_active = self.target_time
         self.completed_jobs = []
         self.job_callbacks = []
