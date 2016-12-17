@@ -5,9 +5,11 @@
 #XPBS -A IT4I-8-2
 #PBS -N haydi-test
 
-SERVER="127.0.0.1"
+SERVER=127.0.0.1
 PORT=9020
-PROJECT_PATH="~/projects/pyqit"
+PROJECT_PATH=~/projects/pyqit
+
+PROJECT_PATH=$(cd ${PROJECT_PATH}; pwd)
 
 source /etc/profile
 

@@ -123,15 +123,16 @@ class JobScheduler(object):
         :rtype: list of distributed.client.Future
         :return: newly scheduled futures
         """
-        haydi_logger.info("Scheduling, job size {}".format(self.job_size))
-
         self._check_falloff()
         duration = self._get_avg_duration()
         delta = duration / float(self.target_time_active)
         delta = self._clamp(delta, 0.2, 1.2)
+
+        previous_size = self.job_size
         self.job_size = int(self.job_size / delta)
 
-        haydi_logger.info("Scheduling complete, job size {}".format(self.job_size))
+        haydi_logger.info("Scheduling: avg duration {}, size {} -> {}"
+                          .format(duration, previous_size, self.job_size))
 
         return self._create_futures(self._create_distribution(
             self.worker_count * count_per_worker, self.job_size))
