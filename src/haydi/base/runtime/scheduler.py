@@ -1,12 +1,8 @@
 import math
-import os
-import socket
-import traceback
 from datetime import datetime
 
 from distributed import as_completed
 
-from haydi import NoValue
 from .util import TimeoutManager, haydi_logger
 
 
@@ -199,6 +195,8 @@ class JobScheduler(object):
         :type job_distribution: list of int
         :return:
         """
+        from .worker import worker_process_step
+
         job_distribution = self._truncate(job_distribution)
         batches = []
         for job_size in job_distribution:
@@ -210,7 +208,7 @@ class JobScheduler(object):
                 self.index_scheduled = start + job_size
 
         if len(batches) > 0:
-            futures = self.executor.map(process_batch, batches)
+            futures = self.executor.map(worker_process_step, batches)
             self.ordered_futures += futures
             return futures
         else:
@@ -231,40 +229,3 @@ class JobScheduler(object):
 
     def _has_more_work(self):
         return not self.size or self.index_scheduled < self.size
-
-
-def process_batch(arg):
-    """
-    :param arg:
-    :rtype: Job
-    """
-    domain, start, size, reduce_fn, reduce_init = arg
-    worker_name = "{}#{}".format(socket.gethostname(), os.getpid())
-    job = Job(worker_name, start, size)
-
-    try:
-        iterator = domain.create_iterator()
-        iterator.set_step(start)
-
-        def item_generator():
-            for i in xrange(size):
-                item = iterator.step()
-                if item is not NoValue:
-                    yield item
-
-        if reduce_fn is None:
-            result = list(item_generator())
-        else:
-            if reduce_init is None:
-                result = reduce(reduce_fn, item_generator())
-            else:
-                result = reduce(reduce_fn, item_generator(), reduce_init())
-
-        job.finish(result)
-        return job
-    except Exception as e:
-        with open("{}-error-{}".format(worker_name, datetime.now()), "w") as f:
-            f.write(traceback.format_exc(e) + "\n")
-            f.write("start: {}, size: {}".format(start, size))
-
-        raise e
