@@ -1,6 +1,6 @@
 import haydi as hd
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 
 try:
     import cPickle as pickle
@@ -16,8 +16,16 @@ class ExperimentEnv(object):
         self.config_dict = config_dict
         self.config_names = config_names
         self.parallel = False
+        self.time = None
 
     def parse_args(self):
+
+        def timeout_parser(value):
+            value = value.split(":")
+            if len(value) != 2:
+                raise ValueError()
+            return timedelta(hours=int(value[0]), minutes=int(value[1]))
+
         parser = argparse.ArgumentParser(description=self.name)
         parser.add_argument("--local",
                             metavar="PROCESSES",
@@ -32,6 +40,12 @@ class ExperimentEnv(object):
                             type=int,
                             default=9010,
                             help="Port of scheduler")
+
+        parser.add_argument("--time",
+                            metavar="HOURS:MINUTES",
+                            type=timeout_parser,
+                            default=None,
+                            help="Computation timeout")
 
         for name in self.config_names:
             parser.add_argument("--" + name,
@@ -57,13 +71,16 @@ class ExperimentEnv(object):
             hd.session.set_parallel_context(ctx)
             self.parallel = True
 
-    def run(self, action, write=False, timeout=None):
+        self.time = args.time
+
+    def run(self, action, write=False):
         config = {name: self.config_dict[name] for name in self.config_names}
         print "Configuration"
         for name in self.config_names:
             print "\t{}: {}".format(name, config[name])
+        print "Time:", self.time
 
-        results = action.run(self.parallel, timeout)
+        results = action.run(self.parallel, timeout=self.time)
         if write:
             filename = "{}-{}.data".format(
                 self.name, datetime.isoformat(datetime.now()))

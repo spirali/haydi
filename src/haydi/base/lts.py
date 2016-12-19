@@ -149,6 +149,9 @@ class BreadthFirstIterator(object):
         self.states = []
         self.found = set(self.nexts)
 
+    def __iter__(self):
+        return self
+
     def next(self):
         while True:
             if self.to_report:
@@ -195,6 +198,9 @@ class BreadthFirstIterator2(object):
         self.to_report = 1
         self.states = []
         self.found = set(self.nexts)
+
+    def __iter__(self):
+        return self
 
     def next(self):
         while True:
