@@ -1,5 +1,3 @@
-# Quick Idea Tester
+# Haystack Diver
 
-(Pure python version)
-
-TODO
+Generator and enumerator for automata related problems
