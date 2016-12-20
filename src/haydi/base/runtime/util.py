@@ -4,23 +4,6 @@ import cloudpickle
 import logging
 
 
-class Logger(logging.Logger):
-    file_log_inited = False
-
-    @staticmethod
-    def init_file_logger():
-        if not Logger.file_log_inited:
-            Logger.file_log_inited = True
-
-            fh = logging.FileHandler("{}.log".format(
-                "haydi-run-{}".format(datetime.now())))
-            haydi_logger.addHandler(fh)
-            fh.setLevel(logging.DEBUG)
-
-    def __init__(self, name):
-        super(Logger, self).__init__(name)
-
-
 class ResultSaver(object):
     def __init__(self, id, write_count):
         """
@@ -120,4 +103,4 @@ class JobOffsetLogger(object):
         self.histogram.append(time.time())
 
 
-haydi_logger = Logger("Haydi")
+haydi_logger = logging.getLogger("Haydi")

@@ -14,7 +14,7 @@ try:
     from distributed.http import HTTPScheduler
 
     from .scheduler import JobScheduler
-    from .util import haydi_logger, ResultSaver, ProgressLogger, Logger, \
+    from .util import haydi_logger, ResultSaver, ProgressLogger,\
         JobOffsetLogger
 
     distributed_import_error = None
@@ -74,8 +74,6 @@ class DistributedContext(object):
                                  "order to use the DistributedContext\n"
                                  "Error:\n{}"
                                  .format(distributed_import_error))
-
-        Logger.init_file_logger()
 
         self.worker_count = spawn_workers
         self.ip = ip
