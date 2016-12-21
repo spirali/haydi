@@ -12,7 +12,7 @@ def main():
                         default="qexp",
                         type=str,
                         help="qsub queue")
-    parser.add_argument("-p", "--project",
+    parser.add_argument("-A", "--project",
                         metavar="PROJET",
                         type=str,
                         help="qsub project")
@@ -21,7 +21,7 @@ def main():
                         default="01:00:00",
                         type=str,
                         help="qsub walltime")
-    parser.add_argument("-n", "--name",
+    parser.add_argument("-N", "--name",
                         metavar="NAME",
                         default="haydi-test",
                         type=str,
@@ -42,7 +42,8 @@ def main():
                         help="arguments for the launched program")
 
     args = parser.parse_args()
-    args.workdir = os.path.abspath(args.workdir)
+    if args.workdir:
+        args.workdir = os.path.abspath(args.workdir)
     args.program = os.path.abspath(args.program)
 
     popen_args = [

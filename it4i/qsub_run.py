@@ -7,20 +7,21 @@ import time
 import socket
 import sys
 import platform
+import multiprocessing
 
 from distributed import Client
 
 PORT = 9010
 HTTP_PORT = PORT + 1
-
+CPUS = multiprocessing.cpu_count()
 
 def count_workers(address):
-    return sum([value for name, value in Client(address).ncores().items()])
+    return sum(Client(address).ncores().values())
 
 
 def get_nodes():
     with open(os.environ["PBS_NODEFILE"]) as f:
-        return [line.strip() for line in f.readlines()]
+        return [line.strip() for line in f]
 
 
 def main():
@@ -43,11 +44,11 @@ def main():
     dirname = os.path.dirname(os.path.abspath(__file__))
 
     nodes = get_nodes()
-    total_worker_count = len(nodes) * 24 - 1
-    for i in xrange(len(nodes)):
-        worker_count = 23 if i == 0 else 24
+    total_worker_count = len(nodes) * CPUS - 1
+    for i, node in enumerate(nodes):
+        worker_count = CPUS - 1 if i == 0 else CPUS
         worker_args = [
-            "ssh", nodes[i], "--",
+            "ssh", node, "--",
             os.path.join(dirname, "worker-helper.sh"),
             os.environ["PBS_O_WORKDIR"],
             master,
