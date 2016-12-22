@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 import random
 
@@ -136,3 +138,15 @@ def test_dist_samples_and_counts(cluster4):
                 "C": [3] + ["C"] * 3,
                 "D": [10] + ["D"] * 10}
     assert result == expected
+
+
+def test_dist_timeout(cluster4):
+    r = hd.Range(1000000)
+
+    def fn(x):
+        return sum([i for i in xrange(x * x)])
+
+    result = r.map(fn).max_all(lambda x: x).run(
+        True, timeout=timedelta(seconds=3))
+    assert result is not None
+    assert result > 0

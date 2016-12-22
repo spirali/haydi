@@ -3,21 +3,75 @@ from __future__ import print_function
 import itertools
 import os
 import socket
-import time
+from Queue import Empty
 from datetime import timedelta
 
-from haydi.base.exception import HaydiException
+from haydi.base.exception import HaydiException, TimeoutException
 
 try:
     from distributed import Client, LocalCluster
     from distributed.http import HTTPScheduler
 
     from .scheduler import JobScheduler
-    from .util import haydi_logger, ResultSaver, ProgressLogger
+    from .util import haydi_logger, ResultSaver, ProgressLogger, TimeoutManager
 
     distributed_import_error = None
 except Exception as e:
     distributed_import_error = e
+
+
+class DistributedComputation(object):
+    def __init__(self, scheduler, timeout):
+        self.scheduler = scheduler
+        self.timeout_mgr = TimeoutManager(timeout) if timeout else None
+        self.callbacks = []
+
+    def add_callback(self, fn):
+        self.callbacks.append(fn)
+
+    def iterate_jobs(self):
+        self.scheduler.start()
+
+        jobs = []
+        try:
+            while not (self.scheduler.completed or self.scheduler.canceled):
+                if self._is_timeouted():
+                    raise TimeoutException()
+
+                try:
+                    job = self.scheduler.job_queue.get(timeout=3)
+                    jobs.append(job)
+
+                    self._on_job_completed(job)
+                except Empty:
+                    pass
+
+            # extract remaining jobs
+            while True:
+                try:
+                    jobs.append(self.scheduler.job_queue.get(block=False))
+                except Empty:
+                    break
+
+        except KeyboardInterrupt:
+            pass
+        except TimeoutException:
+            haydi_logger.info("Run timeouted after {} seconds".format(
+                self.timeout_mgr.get_time_from_start()))
+
+        self.scheduler.stop()
+
+        # order the results
+        jobs.sort(key=lambda job: job.start_index)
+
+        return jobs
+
+    def _on_job_completed(self, job):
+        for cb in self.callbacks:
+            cb(self.scheduler, job)
+
+    def _is_timeouted(self):
+        return self.timeout_mgr and self.timeout_mgr.is_finished()
 
 
 class DistributedContext(object):
@@ -110,26 +164,20 @@ class DistributedContext(object):
                                  timeout, domain,
                                  worker_reduce_fn, worker_reduce_init)
 
+        computation = DistributedComputation(scheduler, timeout)
+
         if self.write_partial_results is not None:
             result_saver = ResultSaver(self.execution_count,
                                        self.write_partial_results)
-            scheduler.add_job_callback(result_saver.handle_job)
+            computation.add_callback(result_saver.handle_job)
 
-        progress_logger = ProgressLogger(timedelta(seconds=3))
-        scheduler.add_job_callback(progress_logger.handle_job)
+        progress_logger = ProgressLogger(timedelta(seconds=10))
+        computation.add_callback(progress_logger.handle_job)
 
-        try:
-            jobs = scheduler.iterate_jobs()
-        except KeyboardInterrupt:
-            jobs = scheduler.completed_jobs
-
-        # order the results
-        start = time.time()
-        jobs.sort(key=lambda job: job.start_index)
-        results = [job.result for job in jobs]
-        haydi_logger.info("Ordering took {} ms".format(time.time() - start))
-
+        jobs = computation.iterate_jobs()
         self.execution_count += 1
+
+        results = [job.result for job in jobs]
 
         if worker_reduce_fn is None:
             results = list(itertools.chain.from_iterable(results))

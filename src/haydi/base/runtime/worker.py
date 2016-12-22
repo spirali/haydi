@@ -1,21 +1,19 @@
 import os
 import random
 import socket
-import traceback
 import time
-from datetime import datetime
 
 from .scheduler import Job
 
+random_initialized = False
 
-class RandomSeed(object):
-    initialized = False
 
-    @staticmethod
-    def initialize(worker):
-        if not RandomSeed.initialized:
-            RandomSeed.initialized = True
-            random.seed(os.urandom(16) + worker + str(time.time()))
+def random_init(worker):
+    global random_initialized
+
+    if not random_initialized:
+        random_initialized = True
+        random.seed(os.urandom(16) + worker + str(time.time()))
 
 
 def worker_process_step(arg):
@@ -27,24 +25,17 @@ def worker_process_step(arg):
     worker_name = "{}#{}".format(socket.gethostname(), os.getpid())
     job = Job(worker_name, start, size)
 
-    RandomSeed.initialize(worker_name)
+    random_init(worker_name)
 
-    try:
-        iterator = domain.iterate_steps(start, start + size)
+    iterator = domain.iterate_steps(start, start + size)
 
-        if reduce_fn is None:
-            result = list(iterator)
+    if reduce_fn is None:
+        result = list(iterator)
+    else:
+        if reduce_init is None:
+            result = reduce(reduce_fn, iterator)
         else:
-            if reduce_init is None:
-                result = reduce(reduce_fn, iterator)
-            else:
-                result = reduce(reduce_fn, iterator, reduce_init())
+            result = reduce(reduce_fn, iterator, reduce_init())
 
-        job.finish(result)
-        return job
-    except Exception as e:
-        with open("{}-error-{}".format(worker_name, datetime.now()), "w") as f:
-            f.write(traceback.format_exc(e) + "\n")
-            f.write("start: {}, size: {}".format(start, size))
-
-        raise e
+    job.finish(result)
+    return job

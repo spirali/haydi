@@ -1,5 +1,8 @@
+import Queue
 import math
+import traceback
 from datetime import datetime
+from threading import Thread
 
 from distributed import as_completed
 
@@ -67,54 +70,58 @@ class JobScheduler(object):
         self.timeout_mgr = TimeoutManager(timeout) if timeout else None
         self.ordered_futures = []
         self.backlog_per_worker = 4
-        self.active_futures = self._init_futures(self.backlog_per_worker)
-        self.next_futures = []
         self.target_time = 60 * 5
         self.target_time_active = self.target_time
         self.completed_jobs = []
-        self.job_callbacks = []
+        self.job_queue = Queue.Queue()
+        self.job_thread = None
+        self.completed = False
+        self.canceled = False
 
-    def iterate_jobs(self):
+    def start(self):
+        self.job_thread = Thread(target=self._iterate_jobs)
+        self.job_thread.daemon = True
+        self.job_thread.start()
+
+    def stop(self):
+        self.canceled = True
+
+    def _iterate_jobs(self):
         """
         Iterate through all jobs until the domain size is depleted or
         time runs out.
         :return: completed job
         """
         backlog_half = self.backlog_per_worker / 2
+        active_futures = self._init_futures(self.backlog_per_worker)
+        next_futures = []
 
-        while (self._has_more_work() or
-               self.index_completed < self.index_scheduled):
-            iterated = 0
-            for future in as_completed(self.active_futures):
-                job = future.result()
-                self._mark_job_completed(job)
-                iterated += 1
+        try:
+            while ((self._has_more_work() or
+                   self.index_completed < self.index_scheduled) and
+                       not self.canceled):
+                iterated = 0
+                for future in as_completed(active_futures):
+                    job = future.result()
+                    self._mark_job_completed(job)
+                    iterated += 1
 
-                if self.timeouted():
-                    haydi_logger.info("Run timeouted after {} seconds".format(
-                        self.timeout_mgr.get_time_from_start()))
-                    return self.completed_jobs
+                    if iterated >= (backlog_half * self.worker_count):
+                        iterated = 0
+                        if self._has_more_work():
+                            next_futures += self._schedule(backlog_half)
 
-                if iterated >= (backlog_half * self.worker_count):
-                    iterated = 0
-                    if self._has_more_work():
-                        self.next_futures += self._schedule(backlog_half)
+                haydi_logger.info(
+                    "Average time per job {}".format(self._get_avg_duration()))
+                if self._has_more_work():
+                    next_futures += self._schedule(backlog_half)
 
-            haydi_logger.info(
-                "Average time per job {}".format(self._get_avg_duration()))
-            if self._has_more_work():
-                self.next_futures += self._schedule(backlog_half)
+                active_futures = next_futures
+                next_futures = []
+        except Exception as e:
+            haydi_logger.error(traceback.format_exc(e))
 
-            self.active_futures = self.next_futures
-            self.next_futures = []
-
-        return self.completed_jobs
-
-    def timeouted(self):
-        return self.timeout_mgr and self.timeout_mgr.is_finished()
-
-    def add_job_callback(self, callback):
-        self.job_callbacks.append(callback)
+        self.completed = True
 
     def _schedule(self, count_per_worker):
         """
@@ -219,8 +226,7 @@ class JobScheduler(object):
         self.completed_jobs.append(job)
         self.index_completed += job.size
 
-        for cb in self.job_callbacks:
-            cb(self, job)
+        self.job_queue.put(job)
 
     def _get_remaining_work(self):
         if self.size:
