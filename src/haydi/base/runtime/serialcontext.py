@@ -1,5 +1,7 @@
-class SerialContext(object):
+from .util import TimeoutManager
 
+
+class SerialContext(object):
     def run(self, domain, worker_reduce_fn, worker_reduce_init,
             global_reduce_fn, global_reduce_init, timeout=None):
         if worker_reduce_fn:
@@ -14,9 +16,11 @@ class SerialContext(object):
                         return global_reduce_init()
             else:
                 first = worker_reduce_init()
-            result = reduce(worker_reduce_fn, it, first)
+
+            result = reduce(
+                worker_reduce_fn, self._iterate(it, timeout), first)
         else:
-            result = list(domain.create_iter())
+            result = self._iterate(domain.create_iter(), timeout)
 
         if global_reduce_fn:
             if worker_reduce_fn and global_reduce_fn:
@@ -29,3 +33,17 @@ class SerialContext(object):
                 return reduce(global_reduce_fn, result, global_reduce_init())
         else:
             return result
+
+    def _iterate(self, iterator, timeout):
+        if timeout is None:
+            return list(iterator)
+
+        timeout_mgr = TimeoutManager(timeout)
+        result = []
+
+        for item in iterator:
+            result.append(item)
+            if timeout_mgr.is_finished():
+                break
+
+        return result

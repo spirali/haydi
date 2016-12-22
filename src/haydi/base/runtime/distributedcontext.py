@@ -9,13 +9,11 @@ from datetime import timedelta
 from haydi.base.exception import HaydiException
 
 try:
-    import cloudpickle
-    from distributed import Client, as_completed, LocalCluster
+    from distributed import Client, LocalCluster
     from distributed.http import HTTPScheduler
 
     from .scheduler import JobScheduler
-    from .util import haydi_logger, ResultSaver, ProgressLogger,\
-        JobOffsetLogger
+    from .util import haydi_logger, ResultSaver, ProgressLogger
 
     distributed_import_error = None
 except Exception as e:

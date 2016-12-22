@@ -100,7 +100,8 @@ class JobScheduler(object):
                     if self._has_more_work():
                         self.next_futures += self._schedule(backlog_half)
 
-            haydi_logger.info("Average time per job {}".format(self._get_avg_duration()))
+            haydi_logger.info(
+                "Average time per job {}".format(self._get_avg_duration()))
             if self._has_more_work():
                 self.next_futures += self._schedule(backlog_half)
 

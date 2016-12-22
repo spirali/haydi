@@ -21,4 +21,5 @@ class Session(object):
     def set_parallel_context(self, ctx):
         self.parallel_context = ctx
 
+
 session = Session()
