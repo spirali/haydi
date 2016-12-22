@@ -134,7 +134,7 @@ class JobScheduler(object):
         self._check_falloff()
         duration = self._get_avg_duration()
         delta = duration / float(self.target_time_active)
-        delta = self._clamp(delta, 0.2, 1.2)
+        delta = self._clamp(delta, 0.75, 1.25)
 
         previous_size = self.job_size
         self.job_size = int(self.job_size / delta)
