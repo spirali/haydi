@@ -3,6 +3,7 @@ from __future__ import print_function
 import itertools
 import os
 import socket
+import time
 from Queue import Empty
 from datetime import timedelta
 
@@ -39,12 +40,12 @@ class DistributedComputation(object):
                     raise TimeoutException()
 
                 try:
-                    job = self.scheduler.job_queue.get(timeout=3)
+                    job = self.scheduler.job_queue.get(block=False)
                     jobs.append(job)
 
                     self._on_job_completed(job)
                 except Empty:
-                    pass
+                    time.sleep(3)
 
             # extract remaining jobs
             while True:

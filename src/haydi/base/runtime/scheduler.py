@@ -99,7 +99,7 @@ class JobScheduler(object):
         try:
             while ((self._has_more_work() or
                    self.index_completed < self.index_scheduled) and
-                       not self.canceled):
+                   not self.canceled):
                 iterated = 0
                 for future in as_completed(active_futures):
                     job = future.result()
