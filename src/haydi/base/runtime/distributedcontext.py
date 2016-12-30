@@ -65,6 +65,8 @@ class DistributedComputation(object):
         # order the results
         jobs.sort(key=lambda job: job.start_index)
 
+        self._log_statistics(self.scheduler, jobs)
+
         return jobs
 
     def _on_job_completed(self, job):
@@ -73,6 +75,23 @@ class DistributedComputation(object):
 
     def _is_timeouted(self):
         return self.timeout_mgr and self.timeout_mgr.is_finished()
+
+    def _log_statistics(self, scheduler, jobs):
+        haydi_logger.info("Total scheduled: {}".format(
+            scheduler.index_scheduled))
+        haydi_logger.info("Total completed: {}".format(
+            scheduler.index_completed))
+
+        size_hist = {}
+        for job in jobs:
+            if not job.size in size_hist:
+                size_hist[job.size] = []
+            size_hist[job.size].append(job.get_duration())
+
+        for size, times in sorted(size_hist.iteritems(), key=lambda x: x[0]):
+            count = len(times)
+            haydi_logger.info("Batch size {} had {} jobs with avg time {}"
+                              .format(size, count, sum(times) / float(count)))
 
 
 class DistributedContext(object):
@@ -186,9 +205,7 @@ class DistributedContext(object):
         if size:
             results = results[:domain.size]  # trim results to required size
 
-        haydi_logger.info("Finished run with size {}".format(domain.size))
-        haydi_logger.info("Iterated {} elements".format(
-            sum([job.size for job in jobs])))
+        haydi_logger.info("Size of domain: {}".format(domain.size))
 
         if global_reduce_fn is None or len(results) == 0:
             return results
