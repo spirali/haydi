@@ -47,6 +47,12 @@ class Mapping(Domain):
                     iters[i] = self.value_domain.create_iter()
                     i += 1
 
+    def create_step_iter(self, step):
+        if self.exact_size:
+            return self.create_iter(step)
+        else:
+            assert 0
+
     def generate_one(self):
         result = {}
         value_domain = self.value_domain
