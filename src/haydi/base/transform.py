@@ -67,7 +67,11 @@ class MapTransformation(Transformation):
 
     def create_skip_iter(self, step=0):
         fn = self.fn
-        return (fn(x) for x in self.parent.create_step_iter(step))
+        for v in self.parent.create_step_iter(step):
+            if isinstance(v, StepSkip):
+                yield v
+            else:
+                fn(v)
 
 
 class FilterTransformation(Transformation):
