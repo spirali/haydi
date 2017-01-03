@@ -19,6 +19,3 @@ class Values(Domain):
             return iter(self.values[step:])
         else:
             return iter(self.values)
-
-    def create_step_iter(self, step):
-        return self.create_iter(step)

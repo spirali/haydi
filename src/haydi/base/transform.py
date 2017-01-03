@@ -65,8 +65,9 @@ class MapTransformation(Transformation):
         fn = self.fn
         return (fn(x) for x in self.parent.create_iter(step))
 
-    def create_step_iter(self, step=0):
-        return self.create_iter(step)
+    def create_skip_iter(self, step=0):
+        fn = self.fn
+        return (fn(x) for x in self.parent.create_step_iter(step))
 
 
 class FilterTransformation(Transformation):

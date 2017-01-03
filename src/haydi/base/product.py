@@ -37,7 +37,7 @@ class Product(Domain):
         else:
             return self._create_product_iter(step)
 
-    def create_step_iter(self, step):
+    def create_skip_iter(self, step):
         if self.unordered:
             return self._create_uproduct_step_iter(step)
         else:

@@ -172,6 +172,15 @@ class Domain(object):
         """Creates an interator over all elements of domain"""
         raise NotImplementedError()
 
+    def create_skip_iter(self, step=0):
+        raise NotImplementedError()
+
+    def create_step_iter(self, step):
+        if self.exact_size:
+            return self.create_iter(step)
+        else:
+            return self.create_skip_iter(step)
+
     def __iter__(self):
         return self.create_iter()
 
