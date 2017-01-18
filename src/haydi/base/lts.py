@@ -23,7 +23,7 @@ class DLTS(object):
                                         max_depth,
                                         return_depth,
                                         max_states)
-        domain = Domain(None, False)
+        domain = Domain(None, False, name="lts-bfs")
         domain.create_iter = create_iter
         return domain
 
@@ -31,13 +31,14 @@ class DLTS(object):
                  init_state,
                  max_depth=sys.maxint,
                  max_states=sys.maxint):
-        def create_iterator():
+        def create_iter(step=0):
+            assert step == 0
             return BreadthFirstIterator2(self,
                                          init_state,
                                          max_depth,
                                          max_states)
-        domain = Domain(None, False)
-        domain.create_iterator = create_iterator
+        domain = Domain(None, False, name="lts-bfs-path")
+        domain.create_iter = create_iter
         return domain
 
     def get_enabled_actions(self, state):
