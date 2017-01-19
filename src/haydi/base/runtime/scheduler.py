@@ -1,7 +1,7 @@
 import Queue
 import math
+import time
 import traceback
-from datetime import datetime
 from threading import Thread
 
 from distributed import as_completed
@@ -20,15 +20,15 @@ class Job(object):
         self.start_index = start_index
         self.size = size
         self.result = None
-        self.start_time = datetime.now()
+        self.start_time = time.time()
         self.end_time = None
 
     def finish(self, result):
         self.result = result
-        self.end_time = datetime.now()
+        self.end_time = time.time()
 
     def get_duration(self):
-        return (self.end_time - self.start_time).total_seconds()
+        return self.end_time - self.start_time
 
     def __str__(self):
         return "Job(worker={}, from={}, to={}".format(

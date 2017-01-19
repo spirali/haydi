@@ -1,11 +1,12 @@
 from __future__ import print_function
 
 import itertools
+import json
 import os
 import socket
 import time
 from Queue import Empty
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from haydi.base.exception import HaydiException, TimeoutException
 
@@ -66,6 +67,7 @@ class DistributedComputation(object):
         jobs.sort(key=lambda job: job.start_index)
 
         self._log_statistics(self.scheduler, jobs)
+        self._dump_jobs(jobs)
 
         return jobs
 
@@ -92,6 +94,20 @@ class DistributedComputation(object):
             count = len(times)
             haydi_logger.info("Batch size {} had {} jobs with avg time {}"
                               .format(size, count, sum(times) / float(count)))
+
+    def _dump_jobs(self, jobs):
+        jobs = map(lambda job: {
+                    "start": job.start_time,
+                    "end": job.end_time,
+                    "duration": job.get_duration(),
+                    "size": job.size,
+                    "index": job.start_index,
+                    "worker": job.worker_id,
+                    "completed": job.result is not None
+                }, jobs)
+
+        with open("jobs-{}.json".format(datetime.now()), "w") as f:
+            json.dump(jobs, f)
 
 
 class DistributedContext(object):
