@@ -149,10 +149,10 @@ class JobScheduler(object):
 
         total = self.timeout_mgr.get_total_time()
         remaining = self.timeout_mgr.get_remaining_time()
-        scale = total / 2.0
+        limit = total * 0.2
 
-        if remaining < scale:
-            ratio = remaining / float(scale)
+        if remaining < limit:
+            ratio = remaining / float(limit)
             self.target_time_active = self.target_time * ratio
 
     def _clamp(self, value, minimum, maximum):
