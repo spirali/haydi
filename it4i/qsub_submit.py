@@ -49,14 +49,16 @@ def main():
     popen_args = [
         "qsub",
         "-q", args.queue,
-        "-l", "select={}:ncpus=24,walltime={}".format(args.nodes, args.walltime),
+        "-l", "select={}:ncpus=24,walltime={}".format(
+            args.nodes, args.walltime),
         "-N", args.name
     ]
 
     if args.project:
         popen_args += ["-A", args.project]
 
-    popen_args += ["-v", "HAYDI_ARGS=\"{}\"".format("{} {}".format(args.program, " ".join(args.program_args)))]
+    popen_args += ["-v", "HAYDI_ARGS=\"{}\"".format("{} {}".format(
+        args.program, " ".join(args.program_args)))]
 
     script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                "qsub_init.sh")

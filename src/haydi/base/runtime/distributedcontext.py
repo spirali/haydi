@@ -9,6 +9,7 @@ from Queue import Empty
 from datetime import timedelta, datetime
 
 from haydi.base.exception import HaydiException, TimeoutException
+from haydi.base.runtime.trace import OTFTracer, Tracer
 
 try:
     from distributed import Client, LocalCluster
@@ -23,9 +24,10 @@ except Exception as e:
 
 
 class DistributedComputation(object):
-    def __init__(self, scheduler, timeout):
+    def __init__(self, scheduler, timeout, dump_jobs=False):
         self.scheduler = scheduler
         self.timeout_mgr = TimeoutManager(timeout) if timeout else None
+        self.dump_jobs = dump_jobs
         self.callbacks = []
 
     def add_callback(self, fn):
@@ -41,17 +43,14 @@ class DistributedComputation(object):
                     raise TimeoutException()
 
                 try:
-                    job = self.scheduler.job_queue.get(block=False)
-                    jobs.append(job)
-
-                    self._on_job_completed(job)
+                    jobs.append(self._consume_job())
                 except Empty:
                     time.sleep(3)
 
             # extract remaining jobs
             while True:
                 try:
-                    jobs.append(self.scheduler.job_queue.get(block=False))
+                    jobs.append(self._consume_job())
                 except Empty:
                     break
 
@@ -67,9 +66,16 @@ class DistributedComputation(object):
         jobs.sort(key=lambda job: job.start_index)
 
         self._log_statistics(self.scheduler, jobs)
-        self._dump_jobs(jobs)
+
+        if self.dump_jobs:
+            self._dump_jobs(jobs)
 
         return jobs
+
+    def _consume_job(self):
+        job = self.scheduler.job_queue.get(block=False)
+        self._on_job_completed(job)
+        return job
 
     def _on_job_completed(self, job):
         for cb in self.callbacks:
@@ -86,7 +92,7 @@ class DistributedComputation(object):
 
         size_hist = {}
         for job in jobs:
-            if not job.size in size_hist:
+            if job.size not in size_hist:
                 size_hist[job.size] = []
             size_hist[job.size].append(job.get_duration())
 
@@ -186,21 +192,29 @@ class DistributedContext(object):
     def run(self, domain,
             worker_reduce_fn, worker_reduce_init,
             global_reduce_fn, global_reduce_init,
-            timeout=None):
+            timeout=None,
+            dump_jobs=False,
+            trace_otf=False):
         size = domain.steps
 
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
         start_msg = "Starting run with size {} and worker count {} on {}".\
             format(size, self._get_worker_count(), name)
 
+        if trace_otf:
+            tracer = OTFTracer("otf-{}".format(int(time.time())))
+        else:
+            tracer = Tracer()
+
         haydi_logger.info(start_msg)
+        tracer.trace_workers(self._get_worker_count())
 
         scheduler = JobScheduler(self.executor,
                                  self._get_worker_count(),
                                  timeout, domain,
                                  worker_reduce_fn, worker_reduce_init)
 
-        computation = DistributedComputation(scheduler, timeout)
+        computation = DistributedComputation(scheduler, timeout, dump_jobs)
 
         if self.write_partial_results is not None:
             result_saver = ResultSaver(self.execution_count,
@@ -209,6 +223,8 @@ class DistributedContext(object):
 
         progress_logger = ProgressLogger(timedelta(seconds=10))
         computation.add_callback(progress_logger.handle_job)
+        computation.add_callback(
+            lambda scheduler, job: tracer.trace_job_recv(job))
 
         jobs = computation.iterate_jobs()
         self.execution_count += 1
@@ -222,6 +238,7 @@ class DistributedContext(object):
             results = results[:domain.size]  # trim results to required size
 
         haydi_logger.info("Size of domain: {}".format(domain.size))
+        tracer.trace_finish()
 
         if global_reduce_fn is None or len(results) == 0:
             return results

@@ -15,6 +15,7 @@ PORT = 9010
 HTTP_PORT = PORT + 1
 CPUS = multiprocessing.cpu_count()
 
+
 def count_workers(address):
     return sum(Client(address).ncores().values())
 
@@ -25,7 +26,8 @@ def get_nodes():
 
 
 def main():
-    print("PLATFORM: {}".format(platform.python_implementation()), file=sys.stderr)
+    print("PLATFORM: {}".format(platform.python_implementation()),
+          file=sys.stderr)
 
     env_args = os.environ["HAYDI_ARGS"].split(" ")
     program = env_args[0]

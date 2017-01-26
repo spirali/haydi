@@ -14,10 +14,13 @@ class Action(object):
         """
         self.domain = domain
 
-    def run(self, parallel=False, timeout=None):
+    def run(self, parallel=False, timeout=None,
+            dump_jobs=False, otf_trace=False):
         """
         :type parallel: bool
         :type timeout: int
+        :type dump_jobs: bool
+        :type otf_trace: bool
         :return: Returns the computed result.
         """
         ctx = session.get_context(parallel)
@@ -26,7 +29,9 @@ class Action(object):
                          self.worker_reduce_init,
                          self.global_reduce_fn,
                          self.global_reduce_init,
-                         timeout)
+                         timeout,
+                         dump_jobs,
+                         otf_trace)
         return self.postprocess(result)
 
     def postprocess(self, value):

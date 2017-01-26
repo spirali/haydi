@@ -3,7 +3,8 @@ from .util import TimeoutManager
 
 class SerialContext(object):
     def run(self, domain, worker_reduce_fn, worker_reduce_init,
-            global_reduce_fn, global_reduce_init, timeout=None):
+            global_reduce_fn, global_reduce_init, timeout=None,
+            dump_jobs=False, otf_trace=False):
         if worker_reduce_fn:
             it = domain.create_iter()
             if worker_reduce_init is None:
