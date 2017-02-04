@@ -5,6 +5,7 @@ import time
 
 from .scheduler import Job
 
+
 random_initialized = False
 
 
@@ -18,31 +19,33 @@ def random_init(worker):
 
 def worker_process_step(arg):
     """
-    :param arg:
+    :type arg: (haydi.base.runtime.scheduler.WorkerArgs, int, int)
     :rtype: Job
     """
-    domain, start, size, reduce_fn, reduce_init, timelimit = arg
+    worker_args, start, size = arg
     worker_name = "{}#{}".format(socket.gethostname(), os.getpid())
     job = Job(worker_name, start, size)
 
     random_init(worker_name)
 
-    iterator = domain.iterate_steps(start, start + size)
+    iterator = worker_args.domain.iterate_steps(start, start + size)
     result = []
 
-    if timelimit is not None:
+    if worker_args.timelimit is not None:
         for item in iterator:
             result.append(item)
-            if timelimit - time.time() < 60:    # return partial results
+            # return partial results
+            if worker_args.timelimit - time.time() < 60:
                 break
     else:
         result = list(iterator)
 
-    if reduce_fn is not None:
-        if reduce_init is None:
-            result = reduce(reduce_fn, result)
+    if worker_args.reduce_fn is not None:
+        if worker_args.reduce_init is None:
+            result = reduce(worker_args.reduce_fn, result)
         else:
-            result = reduce(reduce_fn, result, reduce_init())
+            result = reduce(worker_args.reduce_fn, result,
+                            worker_args.reduce_init())
 
     job.finish(result)
     return job

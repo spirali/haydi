@@ -9,6 +9,14 @@ from distributed import as_completed
 from .util import TimeoutManager, haydi_logger
 
 
+class WorkerArgs(object):
+    def __init__(self, domain, reduce_fn, reduce_init, timelimit):
+        self.domain = domain
+        self.reduce_fn = reduce_fn
+        self.reduce_init = reduce_init
+        self.timelimit = timelimit
+
+
 class Job(object):
     def __init__(self, worker_id, start_index, size):
         """
@@ -63,14 +71,14 @@ class JobScheduler(object):
         self.executor = executor
         self.worker_count = worker_count
         self.size = domain.steps
-        self.domain = domain
-        self.worker_reduce_fn = worker_reduce_fn
-        self.worker_reduce_init = worker_reduce_init
         self.tracer = tracer
+        self.worker_args_future = None
         self.index_scheduled = 0
         self.index_completed = 0
         self.job_size = None
         self.timeout_mgr = TimeoutManager(timeout) if timeout else None
+        self.worker_args = self._create_worker_args(domain, worker_reduce_fn,
+                                                    worker_reduce_init)
         self.ordered_futures = []
         self.backlog_per_worker = 4
         self.target_time = 60 * 5
@@ -82,6 +90,8 @@ class JobScheduler(object):
         self.canceled = False
 
     def start(self):
+        [self.worker_args_future] = self.executor.scatter([self.worker_args],
+                                                          broadcast=True)
         self.job_thread = Thread(target=self._iterate_jobs)
         self.job_thread.daemon = True
         self.job_thread.start()
@@ -219,10 +229,7 @@ class JobScheduler(object):
         for job_size in job_distribution:
             if job_size > 0:
                 start = self.index_scheduled
-                batches.append((self.domain, start, job_size,
-                                self.worker_reduce_fn,
-                                self.worker_reduce_init,
-                                timelimit))
+                batches.append((self.worker_args_future, start, job_size))
                 self.index_scheduled = start + job_size
 
         if len(batches) > 0:
@@ -251,3 +258,15 @@ class JobScheduler(object):
 
     def _has_more_work(self):
         return not self.size or self.index_scheduled < self.size
+
+    def _create_worker_args(self, domain,
+                            worker_reduce_fn,
+                            worker_reduce_init):
+        timelimit = None
+        if self.timeout_mgr:
+            timelimit = self.timeout_mgr.end
+
+        return WorkerArgs(domain,
+                          worker_reduce_fn,
+                          worker_reduce_init,
+                          timelimit)
