@@ -240,6 +240,12 @@ class StepSkip(object):
     def __repr__(self):
         return "<StepSkip {}>".format(self.value)
 
+    def __eq__(self, other):
+        return isinstance(other, StepSkip) and other.value == self.value
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 skip1 = StepSkip(1)
 

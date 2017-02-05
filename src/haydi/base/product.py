@@ -54,17 +54,6 @@ class Product(Domain):
         else:
             return [d.create_iter() for d in self.domains]
 
-    def _init_step_iters(self, step):
-        if step:
-            iters = []
-            for d in self.domains:
-                steps = d.steps
-                iters.append(d.create_step_iter(step % steps))
-                step /= steps
-            return iters
-        else:
-            return [d.create_step_iter(0) for d in self.domains]
-
     def _create_product_iter(self, step):
         if step >= self.steps:
             return
@@ -146,16 +135,46 @@ class Product(Domain):
         if step >= self.steps:
             return
         domains = self.domains
-        iters = self._init_step_iters(step)
-        values = [None] * len(domains)
-        ln = len(domains)
         w = 1
         weights = []
         for d in domains:
             weights.append(w)
             w *= d.steps
 
-        i = ln - 1
+        values = [None] * len(domains)
+        iters = []
+
+        for i in xrange(len(domains) - 1, 0, -1):  # We want to skip 0
+            print step / weights[i], weights[i]
+            it = domains[i].create_step_iter(step / weights[i])
+            iters.append(it)
+            try:
+                v = it.next()
+            except StopIteration:
+                i += 1
+                for j in xrange(i - 1, -1, -1):
+                    iters.append(domains[i].create_step_iter(0))
+                break
+
+            if isinstance(v, StepSkip):
+                v = v.value
+                if v > 1:
+                    yield StepSkip((v - 1) * weights[i])
+                s = weights[i] - step % weights[i]
+                if s > 0:
+                    yield StepSkip(s)
+                for j in xrange(i - 1, -1, -1):
+                    iters.append(domains[j].create_step_iter(0))
+                break
+            else:
+                values[i] = v
+                step = step % weights[i]
+        else:
+            i = 0
+            iters.append(domains[0].create_step_iter(step))
+        iters.reverse()
+
+        ln = len(domains)
         while i < ln:
             if i == 0:
                 for v in iters[i]:

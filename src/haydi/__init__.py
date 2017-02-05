@@ -1,5 +1,5 @@
 # Domains
-from .base.domain import Domain  # noqa
+from .base.domain import Domain, StepSkip  # noqa
 from .base.range import Range  # noqa
 from .base.product import Product, NamedProduct  # noqa
 from .base.sequence import Sequence  # noqa

@@ -232,6 +232,28 @@ def test_product_steps():
     assert list(p.iterate_steps(40, 44)) == [(0, 4), (2, 4)]
     assert list(p.iterate_steps(85, 100)) == []
 
+    assert list(p.iterate_steps(85, 100)) == []
+
+
+def test_product_steps2():
+    a = hd.Range(10).filter(lambda x: x in (2, 3))
+    b = hd.Range(12).filter(lambda x: x in (6, 9))
+    p = a * b
+
+    assert list(p.iterate_steps(53, 60)) == []
+    assert list(p.iterate_steps(43, 60)) == []
+    assert list(p.iterate_steps(43, 63)) == [(2, 6)]
+    assert list(p.iterate_steps(43, 93)) == [(2, 6), (3, 6), (2, 9)]
+    assert list(p.iterate_steps(43, 94)) == [(2, 6), (3, 6), (2, 9), (3, 9)]
+
+
+def test_product_steps3():
+    a = hd.Range(10).filter(lambda x: False)
+    b = hd.Range(0).filter(lambda x: False)
+    p = a * b
+
+    assert list(p.iterate_steps(0, 0)) == []
+
 
 def test_uproduct_steps():
 
