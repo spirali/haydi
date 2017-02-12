@@ -71,7 +71,7 @@ class MapTransformation(Transformation):
             if isinstance(v, StepSkip):
                 yield v
             else:
-                fn(v)
+                yield fn(v)
 
 
 class FilterTransformation(Transformation):

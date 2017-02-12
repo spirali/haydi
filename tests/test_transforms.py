@@ -20,6 +20,13 @@ def test_map():
     r = hd.Range(5)
     assert [0, 2, 4, 6, 8] == list(r.map(lambda x: x * 2))
 
+
+def test_map2():
+    r = hd.Range(10).filter(lambda x: x % 2 == 0).map(lambda x: x * 10)
+    assert [0, 20, 40, 60, 80] == list(r)
+    assert [20, 40] == list(r.iterate_steps(2, 5))
+
+
 def test_sparse_map():
     r = hd.Range(6).filter(lambda x: x % 2 == 1)
     result = list(r.map(lambda x: x * 10).iterate_steps(0, 5))
