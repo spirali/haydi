@@ -81,7 +81,7 @@ class JobScheduler(object):
                                                     worker_reduce_init)
         self.ordered_futures = []
         self.backlog_per_worker = 4
-        self.target_time = 60 * 5
+        self.target_time = 60 * 3
         self.target_time_active = self.target_time
         self.completed_jobs = []
         self.job_queue = Queue.Queue()
@@ -147,7 +147,7 @@ class JobScheduler(object):
         self._check_falloff()
         duration = self._get_avg_duration()
         delta = duration / float(self.target_time_active)
-        delta = self._clamp(delta, 0.75, 1.25)
+        delta = self._clamp(delta, 0.6, 1.25)
 
         previous_size = self.job_size
         self.job_size = int(self.job_size / delta)
