@@ -1,9 +1,9 @@
 import Queue
 import math
-import time
 import traceback
 from threading import Thread
 
+import monotonic
 from distributed import as_completed
 
 from .util import TimeoutManager, haydi_logger
@@ -20,12 +20,12 @@ class Job(object):
         self.start_index = start_index
         self.size = size
         self.result = None
-        self.start_time = time.time()
+        self.start_time = monotonic.monotonic()
         self.end_time = None
 
     def finish(self, result):
         self.result = result
-        self.end_time = time.time()
+        self.end_time = monotonic.monotonic()
 
     def get_duration(self):
         return self.end_time - self.start_time
@@ -48,7 +48,8 @@ class JobScheduler(object):
                  timeout,
                  domain,
                  worker_reduce_fn,
-                 worker_reduce_init):
+                 worker_reduce_init,
+                 tracer):
         """
         :param executor: distributed executor
         :param worker_count: number of workers in the cluster
@@ -57,6 +58,7 @@ class JobScheduler(object):
         :param domain: domain to be iterated
         :param worker_reduce_fn:
         :param worker_reduce_init:
+        :type tracer: haydi.base.runtime.trace.Tracer
         """
         self.executor = executor
         self.worker_count = worker_count
@@ -64,6 +66,7 @@ class JobScheduler(object):
         self.domain = domain
         self.worker_reduce_fn = worker_reduce_fn
         self.worker_reduce_init = worker_reduce_init
+        self.tracer = tracer
         self.index_scheduled = 0
         self.index_completed = 0
         self.job_size = None
@@ -106,6 +109,8 @@ class JobScheduler(object):
                     self._mark_job_completed(job)
                     iterated += 1
 
+                    self.tracer.trace_job(job)
+
                     if iterated >= (backlog_half * self.worker_count):
                         iterated = 0
                         if self._has_more_work():
@@ -137,6 +142,8 @@ class JobScheduler(object):
         previous_size = self.job_size
         self.job_size = int(self.job_size / delta)
 
+        self.tracer.trace_job_size(self.job_size)
+
         haydi_logger.info("Scheduling: avg duration {}, size {} -> {}"
                           .format(duration, previous_size, self.job_size))
 
@@ -159,7 +166,7 @@ class JobScheduler(object):
         return min(maximum, max(minimum, value))
 
     def _get_avg_duration(self):
-        job_histogram = self.completed_jobs[-(self.worker_count):]
+        job_histogram = self.completed_jobs[-self.worker_count:]
         total_duration = sum([j.get_duration() for j in job_histogram])
         return total_duration / float(len(job_histogram))
 
@@ -214,6 +221,9 @@ class JobScheduler(object):
                 self.index_scheduled = start + job_size
 
         if len(batches) > 0:
+            self.tracer.trace_index_scheduled(self.index_scheduled)
+            self.tracer.trace_comment("Sending {} jobs with size {}"
+                                      .format(len(batches), self.job_size))
             futures = self.executor.map(worker_process_step, batches)
             self.ordered_futures += futures
             return futures
@@ -223,6 +233,8 @@ class JobScheduler(object):
     def _mark_job_completed(self, job):
         self.completed_jobs.append(job)
         self.index_completed += job.size
+
+        self.tracer.trace_index_completed(self.index_completed)
 
         self.job_queue.put(job)
 

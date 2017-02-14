@@ -212,7 +212,9 @@ class DistributedContext(object):
         scheduler = JobScheduler(self.executor,
                                  self._get_worker_count(),
                                  timeout, domain,
-                                 worker_reduce_fn, worker_reduce_init)
+                                 worker_reduce_fn,
+                                 worker_reduce_init,
+                                 tracer)
 
         computation = DistributedComputation(scheduler, timeout, dump_jobs)
 
@@ -223,8 +225,6 @@ class DistributedContext(object):
 
         progress_logger = ProgressLogger(timedelta(seconds=10))
         computation.add_callback(progress_logger.handle_job)
-        computation.add_callback(
-            lambda scheduler, job: tracer.trace_job_recv(job))
 
         jobs = computation.iterate_jobs()
         self.execution_count += 1
