@@ -73,14 +73,14 @@ class ExperimentEnv(object):
 
         self.time = args.time
 
-    def run(self, action, write=False):
+    def run(self, action, write=False, **kwargs):
         config = {name: self.config_dict[name] for name in self.config_names}
         print "Configuration"
         for name in self.config_names:
             print "\t{}: {}".format(name, config[name])
         print "Time:", self.time
 
-        results = action.run(self.parallel, timeout=self.time)
+        results = action.run(self.parallel, timeout=self.time, **kwargs)
         if write:
             filename = "{}-{}.data".format(
                 self.name, datetime.isoformat(datetime.now()))
