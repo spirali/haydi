@@ -97,11 +97,13 @@ class OTFTracer(Tracer):
         duration = max(int(job.get_duration() * self.time_scale), 1)
         current_time = self._get_time()
         start = max(last_time + 1, current_time - duration)
-        if start >= current_time:
-            return
 
         end = start + duration
         end = min(end, current_time)
+
+        if start >= current_time or end - start <= 0.001:
+            return
+
         self.worker_map[job.worker_id][1] = end
 
         otf.OTF_Writer_writeEnter(self.writer, start,
