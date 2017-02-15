@@ -18,9 +18,9 @@ try:
     from .scheduler import JobScheduler
     from .util import haydi_logger, ResultSaver, ProgressLogger, TimeoutManager
 
-    distributed_import_error = None
+    package_import_error = None
 except Exception as e:
-    distributed_import_error = e
+    package_import_error = e
 
 
 class DistributedComputation(object):
@@ -163,11 +163,12 @@ class DistributedContext(object):
             None -> no temporary results will be stored
         """
 
-        if distributed_import_error:
-            raise HaydiException("distributed must be properly installed in"
+        if package_import_error:
+            raise HaydiException("distributed and monotonic must"
+                                 "be properly installed in"
                                  "order to use the DistributedContext\n"
                                  "Error:\n{}"
-                                 .format(distributed_import_error))
+                                 .format(package_import_error))
 
         self.worker_count = spawn_workers
         self.ip = ip
