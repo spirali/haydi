@@ -1,3 +1,5 @@
+import os
+
 from haydi.base.exception import HaydiException
 
 try:
@@ -40,7 +42,8 @@ class OTFTracer(Tracer):
                                  .format(otf_import_error))
         self.name = name
         self.manager = otf.OTF_FileManager_open(1000)
-        self.writer = otf.OTF_Writer_open(name, 10000, self.manager)
+        path = self._create_folder(name)
+        self.writer = otf.OTF_Writer_open(path, 10000, self.manager)
         self.worker_count = None
         self.worker_map = {"master": [1, 0]}
         self.comment_marker_id = 101
@@ -94,11 +97,11 @@ class OTFTracer(Tracer):
         duration = max(int(job.get_duration() * self.time_scale), 1)
         current_time = self._get_time()
         start = max(last_time + 1, current_time - duration)
-        end = start + duration
-
         if start >= current_time:
             return
 
+        end = start + duration
+        end = min(end, current_time)
         self.worker_map[job.worker_id][1] = end
 
         otf.OTF_Writer_writeEnter(self.writer, start,
@@ -114,6 +117,12 @@ class OTFTracer(Tracer):
             worker_id = len(self.worker_map) + 1
             self.worker_map[name] = [worker_id, 0]
         return self.worker_map[name]
+
+    def _create_folder(self, name):
+        path = os.path.abspath(name)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return os.path.join(path, name)
 
     def _init(self):
         otf.OTF_Writer_writeDefTimerResolution(self.writer, 0, self.time_scale)
