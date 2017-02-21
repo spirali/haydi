@@ -195,14 +195,14 @@ class DistributedContext(object):
             global_reduce_fn, global_reduce_init,
             timeout=None,
             dump_jobs=False,
-            trace_otf=False):
+            otf_trace=False):
         size = domain.steps
 
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
         start_msg = "Starting run with size {} and worker count {} on {}".\
             format(size, self._get_worker_count(), name)
 
-        if trace_otf:
+        if otf_trace:
             tracer = OTFTracer("otf-{}".format(int(time.time())))
         else:
             tracer = Tracer()
