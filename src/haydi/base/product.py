@@ -1,6 +1,7 @@
 
 from .domain import Domain, StepSkip
 from .values import Values
+from .canonicals import canonical_builder
 
 import math
 from collections import namedtuple
@@ -28,6 +29,15 @@ class Product(Domain):
             if len(set(domains)) > 1:
                 raise Exception("Not implemented for discitinct domains")
 
+    def canonicals(self):
+        def make_fn(item, candidate):
+            item += (candidate,)
+            if len(item) == len(domains):
+                return item, None, True, None
+            return item, domains[len(item)], False, None
+        domains = self.domains
+        return canonical_builder(domains[0], (), make_fn, None)
+
     def create_iter(self, step=0):
         if self.unordered:
             if self.exact_size:
@@ -46,10 +56,11 @@ class Product(Domain):
     def _init_iters(self, step):
         if step:
             iters = []
-            for d in self.domains:
+            for d in reversed(self.domains):
                 steps = d.steps
                 iters.append(d.create_iter(step % steps))
                 step /= steps
+            iters.reverse()
             return iters
         else:
             return [d.create_iter() for d in self.domains]
@@ -57,26 +68,30 @@ class Product(Domain):
     def _create_product_iter(self, step):
         if step >= self.steps:
             return
+
         domains = self.domains
+        if not domains:
+            yield ()
+            return
+
         iters = self._init_iters(step)
         values = [None] * len(domains)
-        ln = len(domains)
-
-        i = ln - 1
-        while i < ln:
-            if i == 0:
+        last = len(domains) - 1
+        i = 0
+        while i >= 0:
+            if i == last:
                 for v in iters[i]:
-                    values[0] = v
+                    values[i] = v
                     yield tuple(values)
                 iters[i] = domains[i].create_iter()
-                i = 1
+                i -= 1
             else:
                 try:
                     values[i] = next(iters[i])
-                    i -= 1
+                    i += 1
                 except StopIteration:
                     iters[i] = domains[i].create_iter()
-                    i += 1
+                    i -= 1
 
     def _init_uproduct_iter(self, index):
         assert len(self.domains) == 2
@@ -137,23 +152,24 @@ class Product(Domain):
         domains = self.domains
         w = 1
         weights = []
-        for d in domains:
+        for d in reversed(domains):
             weights.append(w)
             w *= d.steps
+        weights.reverse()
 
         values = [None] * len(domains)
         iters = []
 
-        for i in xrange(len(domains) - 1, 0, -1):  # We want to skip 0
-            print step / weights[i], weights[i]
+        last = len(domains) - 1
+        for i in xrange(last):  # We want to skip last
             it = domains[i].create_step_iter(step / weights[i])
             iters.append(it)
             try:
                 v = it.next()
             except StopIteration:
                 i += 1
-                for j in xrange(i - 1, -1, -1):
-                    iters.append(domains[i].create_step_iter(0))
+                for j in xrange(i, len(domains)):
+                    iters.append(domains[j].create_step_iter(0))
                 break
 
             if isinstance(v, StepSkip):
@@ -163,28 +179,26 @@ class Product(Domain):
                 s = weights[i] - step % weights[i]
                 if s > 0:
                     yield StepSkip(s)
-                for j in xrange(i - 1, -1, -1):
+                for j in xrange(i + 1, len(domains)):
                     iters.append(domains[j].create_step_iter(0))
                 break
             else:
                 values[i] = v
                 step = step % weights[i]
         else:
-            i = 0
-            iters.append(domains[0].create_step_iter(step))
-        iters.reverse()
+            i = last
+            iters.append(domains[last].create_step_iter(step))
 
-        ln = len(domains)
-        while i < ln:
-            if i == 0:
+        while i >= 0:
+            if i == last:
                 for v in iters[i]:
                     if isinstance(v, StepSkip):
                         yield v
                     else:
-                        values[0] = v
+                        values[last] = v
                         yield tuple(values)
                 iters[i] = domains[i].create_step_iter(0)
-                i = 1
+                i -= 1
             else:
                 try:
                     v = next(iters[i])
@@ -192,10 +206,10 @@ class Product(Domain):
                         yield StepSkip(weights[i] * v.value)
                         v = next(iters[i])
                     values[i] = v
-                    i -= 1
+                    i += 1
                 except StopIteration:
                     iters[i] = domains[i].create_step_iter(0)
-                    i += 1
+                    i -= 1
 
     def _create_uproduct_step_iter(self, step):
         domain = self.domains[0]

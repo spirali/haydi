@@ -7,9 +7,14 @@ import itertools  # noqa
 
 
 def test_sequence_iterate():
-    s = hd.Sequence(hd.Range(3), 2)
+    s = hd.Sequence(hd.Range(3), 0, 2)
+
+    expected = [(), (0,), (1,), (2,),
+                (0, 0), (0, 1), (0, 2),
+                (1, 0), (1, 1), (1, 2),
+                (2, 0), (2, 1), (2, 2)]
+
     result = list(s)
-    expected = list(itertools.product(range(3), range(3)))
     assert set(result) == set(expected)
     assert len(result) == len(expected)
     s.size == len(expected)
@@ -44,5 +49,5 @@ def test_sequence_iter_set():
 
 
 def test_sequence_name():
-    s = hd.Sequence(hd.Range(10), 2, "TestSequence")
+    s = hd.Sequence(hd.Range(10), 2, name="TestSequence")
     assert s.name == "TestSequence"

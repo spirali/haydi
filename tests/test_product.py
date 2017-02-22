@@ -227,24 +227,29 @@ def test_product_steps():
 
     assert list(p.iterate_steps(10, 12)) == []
     assert list(p.iterate_steps(10, 14)) == []
-    assert list(p.iterate_steps(10, 24)) == [(0, 2), (2, 2)]
+    assert list(p.iterate_steps(10, 24)) == [(2, 0), (2, 2)]
     assert list(p.iterate_steps(30, 34)) == []
-    assert list(p.iterate_steps(40, 44)) == [(0, 4), (2, 4)]
+    assert list(p.iterate_steps(40, 44)) == [(4, 0), (4, 2)]
     assert list(p.iterate_steps(85, 100)) == []
 
     assert list(p.iterate_steps(85, 100)) == []
+
+
+def test_product_empty():
+    p = hd.Product(())
+    assert list(p) == [()]
 
 
 def test_product_steps2():
-    a = hd.Range(10).filter(lambda x: x in (2, 3))
-    b = hd.Range(12).filter(lambda x: x in (6, 9))
+    a = hd.Range(12).filter(lambda x: x in (6, 9))
+    b = hd.Range(10).filter(lambda x: x in (2, 3))
     p = a * b
 
     assert list(p.iterate_steps(53, 60)) == []
     assert list(p.iterate_steps(43, 60)) == []
-    assert list(p.iterate_steps(43, 63)) == [(2, 6)]
-    assert list(p.iterate_steps(43, 93)) == [(2, 6), (3, 6), (2, 9)]
-    assert list(p.iterate_steps(43, 94)) == [(2, 6), (3, 6), (2, 9), (3, 9)]
+    assert list(p.iterate_steps(43, 63)) == [(6, 2)]
+    assert list(p.iterate_steps(43, 93)) == [(6, 2), (6, 3), (9, 2)]
+    assert list(p.iterate_steps(43, 94)) == [(6, 2), (6, 3), (9, 2), (9, 3)]
 
 
 def test_product_steps3():

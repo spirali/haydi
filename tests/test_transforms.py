@@ -30,7 +30,7 @@ def test_map2():
 def test_sparse_map():
     r = hd.Range(6).filter(lambda x: x % 2 == 1)
     result = list(r.map(lambda x: x * 10).iterate_steps(0, 5))
-    assert result == []
+    assert result == [10, 30]
 
 
 def test_filter():

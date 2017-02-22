@@ -4,23 +4,17 @@ init()
 import haydi as hd # noqa
 
 
-def dict_to_sorted_items(d):
-    return tuple(sorted(d.items()))
-
-
-def check_eq_list_of_dicts(list1, list2):
-    s1 = map(dict_to_sorted_items, list1)
-    s2 = map(dict_to_sorted_items, list1)
-    assert list(s1) == list(s2)
-
-
 def test_mapping_int_int():
     r = hd.Range(2)
     m = hd.Mapping(r, r)
     result = list(m)
-    check_eq_list_of_dicts(result,
-                           [{0: 0, 1: 0}, {0: 1, 1: 0},
-                            {0: 0, 1: 1}, {0: 1, 1: 1}])
+
+    e1 = hd.Map(((0, 0), (1, 0)))
+    e2 = hd.Map(((0, 0), (1, 1)))
+    e3 = hd.Map(((0, 1), (1, 0)))
+    e4 = hd.Map(((0, 1), (1, 1)))
+
+    assert result == [e1, e2, e3, e4]
     assert m.size == 4
 
 
@@ -36,8 +30,8 @@ def test_mapping_generate():
     result = list(p.generate(200))
     for r in result:
         assert len(r) == 2
-        assert r[0] == 0 or r[0] == 1
-        assert r[1] == 0 or r[1] == 1
+        assert r.get(0) == 0 or r.get(0) == 1
+        assert r.get(1) == 0 or r.get(1) == 1
 
 
 def test_mapping_name():

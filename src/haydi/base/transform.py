@@ -81,6 +81,11 @@ class FilterTransformation(Transformation):
             domain, domain.size, False, domain.steps)
         self.fn = fn
 
+    def canonicals(self):
+        for v in self.parent.canonicals():
+            if self.fn(v):
+                yield v
+
     def create_iter(self, step=0):
         for v in self.parent.create_iter(step):
             if self.fn(v):
