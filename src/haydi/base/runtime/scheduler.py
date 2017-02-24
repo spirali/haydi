@@ -212,12 +212,17 @@ class JobScheduler(object):
 
         job_distribution = self._truncate(job_distribution)
         batches = []
+        timelimit = None
+        if self.timeout_mgr:
+            timelimit = self.timeout_mgr.end
+
         for job_size in job_distribution:
             if job_size > 0:
                 start = self.index_scheduled
                 batches.append((self.domain, start, job_size,
                                 self.worker_reduce_fn,
-                                self.worker_reduce_init))
+                                self.worker_reduce_init,
+                                timelimit))
                 self.index_scheduled = start + job_size
 
         if len(batches) > 0:

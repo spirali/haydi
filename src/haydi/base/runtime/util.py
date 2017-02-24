@@ -43,6 +43,7 @@ class TimeoutManager(object):
         if isinstance(timeout, timedelta):
             timeout = timeout.total_seconds()
         self.timeout = timeout
+        self.end = time.time() + timeout
         self.start = datetime.now()
 
     def is_finished(self):
