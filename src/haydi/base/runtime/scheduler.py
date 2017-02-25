@@ -222,10 +222,6 @@ class JobScheduler(object):
 
         job_distribution = self._truncate(job_distribution)
         batches = []
-        timelimit = None
-        if self.timeout_mgr:
-            timelimit = self.timeout_mgr.end
-
         for job_size in job_distribution:
             if job_size > 0:
                 start = self.index_scheduled

@@ -59,7 +59,8 @@ class OTFTracer(Tracer):
 
         time = self._get_time()
         otf.OTF_Writer_writeDefProcess(self.writer, 0,
-                                       self.worker_map["master"][0], "master", 0)
+                                       self.worker_map["master"][0],
+                                       "master", 0)
         otf.OTF_Writer_writeBeginProcess(self.writer, time,
                                          self.worker_map["master"][0])
         self.worker_map["master"][1] = time
@@ -136,15 +137,18 @@ class OTFTracer(Tracer):
                                        otf.OTF_COUNTER_SCOPE_POINT, 0,
                                        "instances per job")
         otf.OTF_Writer_writeDefCounter(self.writer, 0,
-                                       self.job_scheduled_id, "Count scheduled",
+                                       self.job_scheduled_id,
+                                       "Count scheduled",
                                        otf.OTF_COUNTER_TYPE_ABS |
                                        otf.OTF_COUNTER_SCOPE_POINT, 0,
                                        "instances scheduled")
         otf.OTF_Writer_writeDefCounter(self.writer, 0,
-                                       self.job_completed_id, "Count completed",
+                                       self.job_completed_id,
+                                       "Count completed",
                                        otf.OTF_COUNTER_TYPE_ABS |
                                        otf.OTF_COUNTER_SCOPE_POINT, 0,
                                        "instances completed")
 
-        otf.OTF_Writer_writeDefFunction(self.writer, 0, self.worker_compute_id,
+        otf.OTF_Writer_writeDefFunction(self.writer, 0,
+                                        self.worker_compute_id,
                                         "WorkerCompute", 0, 0)
