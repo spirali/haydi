@@ -14,7 +14,7 @@ class System(object):
         def create_iter(step=0):
             assert step == 0
             return StatesIterator(self, depth, return_depth)
-        domain = Domain(None, False)
+        domain = Domain("system")
         domain.create_iter = create_iter
         return domain
 

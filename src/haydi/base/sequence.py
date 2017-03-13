@@ -11,17 +11,21 @@ class Sequence(Domain):
         if max_length is None:
             max_length = min_length
 
-        helper = Join([Product((domain,) * i)
-                       for i in range(min_length, max_length + 1)])
-
-        super(Sequence, self).__init__(helper.size,
-                                       domain.exact_size,
-                                       helper.steps,
-                                       name)
+        super(Sequence, self).__init__(name)
+        self._set_flags_from_domain(domain)
         self.min_length = min_length
         self.max_length = max_length
         self.domain = domain
+
+        if min_length == max_length:
+            helper = Product((domain,) * min_length)
+        else:
+            helper = Join([Product((domain,) * i)
+                          for i in range(min_length, max_length + 1)])
         self.helper = helper
+
+    def _compute_size(self):
+        return self.helper.size
 
     def canonicals(self):
         def make_fn(item, candidate):

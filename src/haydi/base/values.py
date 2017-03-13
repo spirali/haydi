@@ -5,10 +5,12 @@ import random
 
 class Values(Domain):
 
+    step_jumps = True
+
     def __init__(self, values, name=None):
+        super(Values, self).__init__(name)
         values = tuple(values)
-        size = len(values)
-        super(Values, self).__init__(size, True, size, name)
+        self._size = len(values)
         self.values = values
 
     def generate_one(self):
@@ -25,9 +27,9 @@ class Values(Domain):
 class StrictValues(Domain):
 
     def __init__(self, values, name=None):
+        super(StrictValues, self).__init__(name)
         values = tuple(values)
-        size = len(values)
-        super(StrictValues, self).__init__(size, True, size, name)
+        self._size = len(values)
         self.values = values
 
     def canonicals(self):

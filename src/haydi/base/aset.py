@@ -4,16 +4,18 @@ from domain import Domain
 
 class ASet(Domain):
 
+    step_jumps = True
     counter = 1
 
     def __init__(self, size, name):
-        Domain.__init__(self, size, True, size, name)
+        Domain.__init__(self, name)
+        self._size = size
         self.aset_id = ASet.counter
-        self.cache = tuple(Atom(self, i) for i in xrange(self.size))
+        self.cache = tuple(Atom(self, i) for i in xrange(size))
         ASet.counter += 1
 
     def get(self, index):
-        assert index >= 0 and index < self.size
+        assert index >= 0 and index < self._size
         return self.cache[index]
 
     def all(self):
@@ -30,4 +32,4 @@ class ASet(Domain):
 
     def __repr__(self):
         return "<ASet id={} size={} name={}>".format(
-            self.aset_id, self.size, self.name)
+            self.aset_id, self._size, self.name)

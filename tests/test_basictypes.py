@@ -6,6 +6,12 @@ from haydi.base import basictypes as hdt # noqa
 from haydi import ASet # noqa
 
 
+def test_aset_flags():
+    ax = ASet(3, "a")
+    assert not ax.filtered
+    assert ax.step_jumps
+
+
 def test_compare_atoms():
     ax = ASet(3, "a")
     bx = ASet(5, "b")

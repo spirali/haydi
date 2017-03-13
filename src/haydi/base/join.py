@@ -6,40 +6,32 @@ from random import randint
 class Join(Domain):
 
     def __init__(self, domains, ratios=None, name=None):
+        super(Join, self).__init__(name)
         domains = tuple(domains)
-        if all(d.size is not None for d in domains):
-            size = sum(d.size for d in domains)
-        else:
-            size = None
-        exact_size = all(d.exact_size for d in domains)
-        if all(d.steps is not None for d in domains):
-            steps = sum(d.steps for d in domains)
-        else:
-            steps = None
-        super(Join, self).__init__(size, exact_size, steps, name)
+        self._set_flags_from_domains(domains)
         self.domains = domains
+        self.ratios = ratios
+        self.ratio_sums = None
 
-        if ratios is None:
-            ratios = (d.size if d.size is not None else 1
-                      for d in domains)
-
-        ratio_sums = []
-        s = 0
-        for r in ratios:
-            s += r
-            ratio_sums.append(s)
-        self.ratio_sums = ratio_sums
+    def _compute_size(self):
+        size = 0
+        for d in self.domains:
+            s = d.size
+            if s is None:
+                return None
+            size += s
+        return size
 
     def create_iter(self, step=0):
         if not self.domains:
             return
 
-        if step >= self.steps:
+        if step >= self.size:
             return
 
         index = 0
-        while step > self.domains[index].steps:
-            step -= self.domains[index].steps
+        while step > self.domains[index].size:
+            step -= self.domains[index].size
             index += 1
 
         while index < len(self.domains):
@@ -49,7 +41,23 @@ class Join(Domain):
                 yield v
             index += 1
 
+    def _compute_ratio_sums(self):
+        ratios = self.ratios
+        if ratios is None:
+            ratios = (d.size if d.size is not None else 1
+                      for d in self.domains)
+        ratio_sums = []
+        s = 0
+        for r in ratios:
+            s += r
+            ratio_sums.append(s)
+        self.ratio_sums = ratio_sums
+
     def generate_one(self):
+        ratio_sums = self.ratio_sums
+        if ratio_sums is None:
+            self._compute_ratio_sums()
+            ratio_sums = self.ratio_sums
         c = randint(0, self.ratio_sums[-1] - 1)
         for i, r in enumerate(self.ratio_sums):
             if c < r:

@@ -13,10 +13,12 @@ def test_range_iterate():
     assert list(hd.Range(-5, 11, 2)) == list(range(-5, 11, 2))
 
 
-def test_range_size():
+def test_range_size_and_flags():
     assert hd.Range(20).size == 20
     assert hd.Range(0).size == 0
     assert hd.Range(-1).size == 0
+    assert not hd.Range(1).filtered
+    assert hd.Range(1).step_jumps
 
 
 def test_range_generate():

@@ -33,9 +33,10 @@ class Range(Domain):
 
     """
 
-    exact_size = True
+    step_jumps = True
 
     def __init__(self, start, end=None, step=1, name=None):
+        super(Range, self).__init__(name)
         if end is None:
             end = start
             start = 0
@@ -45,9 +46,7 @@ class Range(Domain):
             size = end
         else:
             size = (end - start) / step
-
-        super(Range, self).__init__(size, True, size, name)
-
+        self._size = size
         self.start = start
         self.end = end
         self.step = step
@@ -60,6 +59,3 @@ class Range(Domain):
 
     def create_iter(self, step=0):
         return iter(xrange(self.start + step * self.step, self.end, self.step))
-
-    def repack(self, fn):
-        return fn(self)

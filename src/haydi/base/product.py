@@ -17,10 +17,8 @@ class Product(Domain):
                  unordered=False,
                  cache_size=0):
         domains = tuple(domains)
-        size = self._compute_size([d.size for d in domains], unordered)
-        steps = self._compute_size([d.steps for d in domains], unordered)
-        exact_size = all(d.exact_size for d in domains)
-        super(Product, self).__init__(size, exact_size, steps, name)
+        super(Product, self).__init__(name)
+        self._set_flags_from_domains(domains)
         self.domains = tuple(domains)
         self.unordered = unordered
         self.cache_size = max(len(domains), cache_size) if cache_size else 0
@@ -40,10 +38,10 @@ class Product(Domain):
 
     def create_iter(self, step=0):
         if self.unordered:
-            if self.exact_size:
-                return self._create_uproduct_iter(step)
+            if self.filtered:
+                return self.iterate_steps(step, self.size)
             else:
-                return self.iterate_steps(step, self.steps)
+                return self._create_uproduct_iter(step)
         else:
             return self._create_product_iter(step)
 
@@ -57,7 +55,7 @@ class Product(Domain):
         if step:
             iters = []
             for d in reversed(self.domains):
-                steps = d.steps
+                steps = d.size
                 iters.append(d.create_iter(step % steps))
                 step /= steps
             iters.reverse()
@@ -66,7 +64,7 @@ class Product(Domain):
             return [d.create_iter() for d in self.domains]
 
     def _create_product_iter(self, step):
-        if step >= self.steps:
+        if step >= self.size:
             return
 
         domains = self.domains
@@ -95,7 +93,7 @@ class Product(Domain):
 
     def _init_uproduct_iter(self, index):
         assert len(self.domains) == 2
-        steps = self.domains[0].steps - 1  # -1 to ignore diagonal
+        steps = self.domains[0].size - 1  # -1 to ignore diagonal
         # The root of y * size - ((y - 1) * y) / 2 - index
         # y * size = full rectangle
         # ((y-1) * y) / 2 = missing elements to full rectangle
@@ -105,7 +103,7 @@ class Product(Domain):
         return [x + 1, y]
 
     def _create_uproduct_iter(self, step):
-        if step >= self.steps:
+        if step >= self.size:
             return
         ln = len(self.domains)
         domain = self.domains[0]
@@ -147,14 +145,14 @@ class Product(Domain):
                     i += 1
 
     def _create_product_step_iter(self, step):
-        if step >= self.steps:
+        if step >= self.size:
             return
         domains = self.domains
         w = 1
         weights = []
         for d in reversed(domains):
             weights.append(w)
-            w *= d.steps
+            w *= d.size
         weights.reverse()
 
         values = [None] * len(domains)
@@ -213,7 +211,7 @@ class Product(Domain):
 
     def _create_uproduct_step_iter(self, step):
         domain = self.domains[0]
-        if step >= self.steps:
+        if step >= self.size:
             return
         if step:
             indices = self._init_uproduct_iter(step)
@@ -271,17 +269,20 @@ class Product(Domain):
         else:
             return tuple(d.generate_one() for d in self.domains)
 
-    def _compute_size(self, sizes, unordered):
-        if any(s is None for s in sizes):
-            return None
+    def _compute_size(self):
         result = 1
-
-        if unordered:
-            for i, s in enumerate(sizes):
+        if self.unordered:
+            for i, d in enumerate(self.domains):
+                s = d.size
+                if s is None:
+                    return None
                 result *= s - i
-            return result / math.factorial(len(sizes))
+            return result / math.factorial(len(self.domains))
         else:
-            for s in sizes:
+            for d in self.domains:
+                s = d.size
+                if s is None:
+                    return None
                 result *= s
             return result
 

@@ -23,7 +23,7 @@ class DLTS(object):
                                         max_depth,
                                         return_depth,
                                         max_states)
-        domain = Domain(None, False, name="bfs")
+        domain = Domain(name="bfs")
         domain.create_iter = create_iter
         return domain
 

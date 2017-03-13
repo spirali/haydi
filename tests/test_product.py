@@ -185,16 +185,16 @@ def test_product_steps():
 
     assert a.size == 4
     assert p.size == 16
-    assert a.steps == 10
-    assert p.steps == 100
+    assert not a.step_jumps
+    assert not p.step_jumps
 
     a = hd.Range(20).take(10).filter(lambda x: x % 2 == 0 and x < 8)
     p = a * a
 
     assert a.size == 10
     assert p.size == 100
-    assert a.steps == 10
-    assert p.steps == 100
+    assert a.step_jumps
+    assert p.step_jumps
 
     result = list(p)
     assert len(result) == 16
@@ -267,7 +267,6 @@ def test_uproduct_steps():
     p = hd.Product((a, a), unordered=True)
 
     assert p.size == 45
-    assert p.steps == 45
 
     for i in xrange(9):
         assert list(p.iterate_steps(0, i)) == []
@@ -298,17 +297,17 @@ def test_uproduct_steps2():
     b = (a * a).filter(lambda x: x[0] + x[1] > 0)
     c = hd.Product((b, b), unordered=True)
 
-    assert list(b) == [(1, 0), (0, 1), (1, 1)]
+    assert list(b) == [(0, 1), (1, 0), (1, 1)]
     assert list(c.iterate_steps(0, 9)) == []
-    assert list(c.iterate_steps(0, 10)) == [((0, 1), (1, 0))]
-    assert list(c.iterate_steps(0, 11)) == [((0, 1), (1, 0)), ((1, 1), (1, 0))]
+    assert list(c.iterate_steps(0, 10)) == [((1, 0), (0, 1))]
+    assert list(c.iterate_steps(0, 11)) == [((1, 0), (0, 1)), ((1, 1), (0, 1))]
     assert set(c.iterate_steps(0, 36)) == \
-        set((((0, 1), (1, 0)), ((1, 1), (0, 1)), ((1, 1), (1, 0))))
+        set((((1, 0), (0, 1)), ((1, 1), (1, 0)), ((1, 1), (0, 1))))
 
     assert list(c.iterate_steps(8, 9)) == []
-    assert list(c.iterate_steps(9, 10)) == [((0, 1), (1, 0))]
-    assert list(c.iterate_steps(0, 11)) == [((0, 1), (1, 0)), ((1, 1), (1, 0))]
+    assert list(c.iterate_steps(9, 10)) == [((1, 0), (0, 1))]
+    assert list(c.iterate_steps(0, 11)) == [((1, 0), (0, 1)), ((1, 1), (0, 1))]
     assert list(c.iterate_steps(14, 20)) == []
-    assert list(c.iterate_steps(14, 26)) == [((1, 1), (0, 1))]
+    assert list(c.iterate_steps(14, 26)) == [((1, 1), (1, 0))]
     assert set(c.iterate_steps(8, 36)) == \
-        set((((0, 1), (1, 0)), ((1, 1), (0, 1)), ((1, 1), (1, 0))))
+        set((((1, 0), (0, 1)), ((1, 1), (1, 0)), ((1, 1), (0, 1))))

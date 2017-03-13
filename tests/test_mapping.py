@@ -40,11 +40,11 @@ def test_mapping_name():
     assert m.name == "TestMapping"
 
 
-def test_mapping_exact_size():
+def test_mapping_flags():
     d1 = hd.Range(3)
     d2 = hd.Range(3).filter(lambda x: True)
-    assert not hd.Mapping(d1, d2).exact_size
-    assert hd.Mapping(d1, d1).exact_size
+    assert hd.Mapping(d1, d2).filtered
+    assert not hd.Mapping(d1, d1).filtered
 
 
 def test_mapping_set():

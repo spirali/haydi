@@ -4,34 +4,26 @@ from . import action
 
 class Domain(object):
     """
-    Base class for all domains
-
-    If you do not want to create a domain by yourself,
-    you do not have to care about parameters of the constructor.
-
-    Args:
-        size(Optional[int]): The number of elements in domain
-            (for exact meaning) see the next argument
-        exact_size(bool): The argument has the following meaning:
-
-            - If `size` is ``int``
-                - If `exact_size` is ``True`` then `size` is the number
-                  of elements in the domain.
-                - If `exact_size` is ``False`` then `size` is the upperbound
-                  of elements in the domain.
-            - If `size` is ``None``
-                - If `exact_size` is ``True`` then domain is infinite.
-                - If `exact_size` is ``False`` then the number of elements
-                  is not a priori known.
-        steps(int): Number of internal steps of domain
-        name(Optional[str]): Name of domain (for debug messages)
+    Base class for domains
     """
 
-    def __init__(self, size=None, exact_size=False, steps=None, name=None):
-        self.size = size
-        self.exact_size = exact_size
-        self.steps = steps
+    filtered = False
+    step_jumps = False
+
+    def __init__(self, name=None):
         self.name = name
+        self._size = -1
+
+    @property
+    def size(self):
+        s = self._size
+        if s == -1:
+            s = self._compute_size()
+            self._size = s
+        return s
+
+    def _compute_size(self):
+        return None
 
     def __mul__(self, other):
         """Creates a cartesian product of domains.
@@ -59,6 +51,16 @@ class Domain(object):
             else:
                 yield v
                 i += 1
+
+    # Internal
+
+    def _set_flags_from_domain(self, domain):
+        self.filtered = domain.filtered
+        self.step_jumps = domain.step_jumps
+
+    def _set_flags_from_domains(self, domains):
+        self.filtered = any(d.filtered for d in domains)
+        self.step_jumps = any(d.step_jumps for d in domains)
 
     # Actions
 
@@ -154,8 +156,7 @@ class Domain(object):
         It calls function `fn` on each element, if the function
         returns ``False`` then the element is filtered out.
 
-        Note, that the resulting domain has `exact_size` set to ``False``,
-        since we do not know in advance how many elements is filtered out.
+        Note, that the resulting domain has `filtered` set to ``True``,
 
         Example:
             >>> list(hd.Range(4).filter(lambda x: x % 2 == 1))
@@ -176,10 +177,10 @@ class Domain(object):
         raise NotImplementedError()
 
     def create_step_iter(self, step):
-        if self.exact_size:
-            return self.create_iter(step)
-        else:
+        if self.filtered:
             return self.create_skip_iter(step)
+        else:
+            return self.create_iter(step)
 
     def __iter__(self):
         return self.create_iter()
@@ -216,7 +217,7 @@ class Domain(object):
         else:
             name = self.__class__.__name__
 
-        if self.exact_size and self.size is not None:
+        if not self.filtered and self.size is not None:
             items = ", ".join(map(str, self.take(ITEMS_LIMIT)))
             if len(items) > ITEMS_CHAR_LIMIT:
                 items = items[:ITEMS_CHAR_LIMIT - 5]
@@ -225,11 +226,11 @@ class Domain(object):
                 items += ", ..."
             extra = "{{{0}}}".format(items)
         else:
-            if not self.exact_size:
-                extra = "not exact_size"
+            if self.filtered:
+                extra = " filtered"
             else:
                 extra = ""
-        return "<{} size={} {}>".format(name, self.size, extra)
+        return "<{} size={}{}>".format(name, self.size, extra)
 
 
 class StepSkip(object):
@@ -253,7 +254,8 @@ skip1 = StepSkip(1)
 class GeneratingDomain(Domain):
 
     def __init__(self, generate_fn, name=None):
-        Domain.__init__(self, None, True, None, name=name)
+        Domain.__init__(self, name)
+        self._size = None
         self.generate_fn = generate_fn
 
     def create_iter(self, step=0):

@@ -6,30 +6,31 @@ import itertools
 
 class Transformation(Domain):
 
-    def __init__(self, parent, size, exact_size, steps):
+    def __init__(self, parent):
         name = type(self).__name__
-        super(Transformation, self).__init__(size, exact_size, steps, name)
+        super(Transformation, self).__init__(name)
         self.parent = parent
+        self.filtered = parent.filtered
+        self.step_jumps = parent.step_jumps
+
+    def _compute_size(self):
+        return self.parent.size
 
 
 class TakeTransformation(Transformation):
 
     def __init__(self, parent, count):
-        if parent.size is not None:
-            size = min(parent.size, count)
-        else:
-            size = count
-        self.size = size
+        super(TakeTransformation, self).__init__(parent)
+        self.count = count
+        if self.filtered:
+            self.step_jumps = False
 
-        if parent.exact_size and parent.steps:
-            steps = min(size, parent.steps)
+    def _compute_size(self):
+        size = self.parent.size
+        if size is not None:
+            return min(size, self.count)
         else:
-            steps = parent.steps
-
-        super(TakeTransformation, self).__init__(parent,
-                                                 size,
-                                                 parent.exact_size,
-                                                 steps)
+            return self.count
 
     def generate_one(self):
         return self.parent.generate_one()
@@ -39,7 +40,7 @@ class TakeTransformation(Transformation):
                                 self.size - step)
 
     def create_step_iter(self, step):
-        assert self.exact_size
+        assert not self.filtered
 
         it = self.parent.create_step_iter(step)
         count = self.size - step
@@ -54,8 +55,7 @@ class TakeTransformation(Transformation):
 class MapTransformation(Transformation):
 
     def __init__(self, domain, fn):
-        super(MapTransformation, self).__init__(
-            domain, domain.size, domain.exact_size, domain.steps)
+        super(MapTransformation, self).__init__(domain)
         self.fn = fn
 
     def generate_one(self):
@@ -77,9 +77,9 @@ class MapTransformation(Transformation):
 class FilterTransformation(Transformation):
 
     def __init__(self, domain, fn):
-        super(FilterTransformation, self).__init__(
-            domain, domain.size, False, domain.steps)
+        super(FilterTransformation, self).__init__(domain)
         self.fn = fn
+        self.filtered = True
 
     def canonicals(self):
         for v in self.parent.canonicals():

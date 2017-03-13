@@ -15,15 +15,17 @@ def test_join_range_iterate():
     result = list(j)
     assert expected == result
     assert j.size == 8
-    assert j.exact_size
+    assert not j.filtered
+    assert j.step_jumps
 
 
-def test_join_non_exact_size():
+def test_join_filtered_size():
     d1 = hd.Range(3)
     d2 = hd.Range(3).filter(lambda x: True)
     j = d1 + d2
     assert j.size == 6
-    assert not j.exact_size
+    assert j.filtered
+    assert j.step_jumps
 
 
 def test_join_empty_iterate():

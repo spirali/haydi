@@ -8,20 +8,18 @@ import random
 class Permutations(Domain):
 
     def __init__(self, domain, name=None):
-        size = factorial(domain.size)
-        steps = factorial(domain.steps)
-        exact_size = domain.exact_size
-        super(Permutations, self).__init__(size, exact_size, steps, name)
+        super(Permutations, self).__init__(name)
+        self._set_flags_from_domain(domain)
+        self.step_jumps = False  # not implemented yet
         self.domain = domain
 
-    def create_iter(self, step=0):
-        if step >= self.steps:
-            return
+    def _compute_size(self):
+        return factorial(self.domain.size)
 
+    def create_iter(self, step=0):
+        assert step == 0  # nonzero step implemented yet
         items = tuple(self.domain)
-        if step == 0:
-            return itertools.permutations(items)
-        assert 0  # nonzero step implemented yet
+        return itertools.permutations(items)
 
     def generate_one(self):
         return random.shuffle(tuple(self.domain))

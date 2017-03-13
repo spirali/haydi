@@ -8,7 +8,8 @@ def test_values_iterate():
 
     a = hd.Values(["a", "b", "c"])
 
-    assert a.exact_size
+    assert not a.filtered
+    assert a.step_jumps
     assert a.size == 3
     assert list(a) == ["a", "b", "c"]
     for x in a.generate(100):

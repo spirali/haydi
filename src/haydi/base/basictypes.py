@@ -3,7 +3,7 @@
 class Atom(object):
 
     def __init__(self, parent, index):
-        assert index >= 0 and index < parent.size
+        assert index >= 0 and index < parent._size
         self.parent = parent
         self.index = index
 
