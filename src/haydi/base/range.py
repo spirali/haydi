@@ -34,6 +34,7 @@ class Range(Domain):
     """
 
     step_jumps = True
+    strict = True
 
     def __init__(self, start, end=None, step=1, name=None):
         super(Range, self).__init__(name)

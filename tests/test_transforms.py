@@ -11,6 +11,8 @@ def test_take():
     assert r.take(17).size == 10
     assert r.take(2).take(3).take(1).size == 1
     assert not r.take(10).filtered
+    assert not r.take(10).strict
+    assert r.take(10).step_jumps
 
     assert range(10) == list(r.take(100))
     assert range(5) == list(r.take(5))
@@ -39,3 +41,9 @@ def test_filter():
     assert list(r.filter(lambda x: False)) == []
     assert list(r.filter(lambda x: True)) == range(10)
     assert list(r.filter(lambda x: x % 2 == 1)) == [1, 3, 5, 7, 9]
+
+    f = r.filter(lambda x: False)
+    assert not f.strict
+
+    f = r.filter(lambda x: False, strict=True)
+    assert f.strict

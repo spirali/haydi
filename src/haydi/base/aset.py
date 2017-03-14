@@ -5,6 +5,8 @@ from domain import Domain
 class ASet(Domain):
 
     step_jumps = True
+    strict = True
+
     counter = 1
 
     def __init__(self, size, name):
@@ -24,8 +26,11 @@ class ASet(Domain):
     def generate_one(self):
         raise Exception("TODO")
 
-    def create_iter(self):
-        return iter(self.cache)
+    def create_iter(self, step=0):
+        if step == 0:
+            return iter(self.cache)
+        else:
+            return iter(self.cache[step:])
 
     def canonicals(self):
         yield self.cache[0]

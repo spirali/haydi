@@ -9,6 +9,7 @@ class Domain(object):
 
     filtered = False
     step_jumps = False
+    strict = False
 
     def __init__(self, name=None):
         self.name = name
@@ -57,10 +58,12 @@ class Domain(object):
     def _set_flags_from_domain(self, domain):
         self.filtered = domain.filtered
         self.step_jumps = domain.step_jumps
+        self.strict = domain.strict
 
     def _set_flags_from_domains(self, domains):
         self.filtered = any(d.filtered for d in domains)
-        self.step_jumps = any(d.step_jumps for d in domains)
+        self.step_jumps = all(d.step_jumps for d in domains)
+        self.strict = all(d.strict for d in domains)
 
     # Actions
 
@@ -149,7 +152,7 @@ class Domain(object):
         """
         return transform.MapTransformation(self, fn)
 
-    def filter(self, fn):
+    def filter(self, fn, strict=False):
         """
         Transformation: Filters elements from domain
 
@@ -162,7 +165,7 @@ class Domain(object):
             >>> list(hd.Range(4).filter(lambda x: x % 2 == 1))
             [1, 3]
         """
-        return transform.FilterTransformation(self, fn)
+        return transform.FilterTransformation(self, fn, strict)
 
     # Others
     def run(self, parallel=False, timeout=None):

@@ -10,6 +10,7 @@ def test_aset_flags():
     ax = ASet(3, "a")
     assert not ax.filtered
     assert ax.step_jumps
+    assert ax.strict
 
 
 def test_compare_atoms():

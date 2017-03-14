@@ -6,6 +6,28 @@ import haydi as hd # noqa
 import itertools  # noqa
 
 
+def test_sequence_flags():
+    a = hd.ASet(4, "a")
+    f = a.filter(lambda x: True)
+    m = a.map(lambda x: True)
+
+    p1 = hd.Sequence(a, 2)
+    p2 = hd.Sequence(f, 2)
+    p3 = hd.Sequence(m, 2)
+
+    assert not p1.filtered
+    assert p2.filtered
+    assert not p3.filtered
+
+    assert p1.step_jumps
+    assert p2.step_jumps
+    assert p3.step_jumps
+
+    assert p1.strict
+    assert not p2.strict
+    assert not p3.strict
+
+
 def test_sequence_iterate():
     s = hd.Sequence(hd.Range(3), 0, 2)
 

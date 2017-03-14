@@ -4,6 +4,13 @@ init()
 import haydi as hd # noqa
 
 
+def test_values_flags():
+    a = hd.Values(["a", "b", "c"])
+    assert not a.filtered
+    assert a.step_jumps
+    assert not a.strict
+
+
 def test_values_iterate():
 
     a = hd.Values(["a", "b", "c"])

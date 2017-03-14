@@ -19,6 +19,7 @@ def test_range_size_and_flags():
     assert hd.Range(-1).size == 0
     assert not hd.Range(1).filtered
     assert hd.Range(1).step_jumps
+    assert hd.Range(1).strict
 
 
 def test_range_generate():

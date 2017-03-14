@@ -12,6 +12,7 @@ class Transformation(Domain):
         self.parent = parent
         self.filtered = parent.filtered
         self.step_jumps = parent.step_jumps
+        self.strict = False
 
     def _compute_size(self):
         return self.parent.size
@@ -76,10 +77,11 @@ class MapTransformation(Transformation):
 
 class FilterTransformation(Transformation):
 
-    def __init__(self, domain, fn):
+    def __init__(self, domain, fn, strict):
         super(FilterTransformation, self).__init__(domain)
         self.fn = fn
         self.filtered = True
+        self.strict = strict
 
     def canonicals(self):
         for v in self.parent.canonicals():
