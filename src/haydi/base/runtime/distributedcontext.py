@@ -196,7 +196,8 @@ class DistributedContext(object):
             timeout=None,
             dump_jobs=False,
             otf_trace=False):
-        size = domain.steps
+        assert domain.step_jumps
+        size = domain.size
 
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
         start_msg = "Starting run with size {} and worker count {} on {}".\

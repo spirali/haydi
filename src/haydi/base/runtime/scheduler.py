@@ -70,7 +70,7 @@ class JobScheduler(object):
         """
         self.executor = executor
         self.worker_count = worker_count
-        self.size = domain.steps
+        self.size = domain.size
         self.tracer = tracer
         self.worker_args_future = None
         self.index_scheduled = 0
