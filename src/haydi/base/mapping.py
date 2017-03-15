@@ -47,7 +47,7 @@ class Mapping(Domain):
         def make_fn(map_item, candidate):
             new_items = map_item.items[:]
             new_items.append((keys[len(new_items)], candidate))
-            m = Map(new_items)
+            m = Map(new_items, True)
             if len(new_items) == len(keys):
                 return m, None, True, None
             return m, value_domain, False, get_bounds(keys[len(new_items)])

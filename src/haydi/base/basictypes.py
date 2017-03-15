@@ -13,8 +13,11 @@ class Atom(object):
 
 class Map(object):
 
-    def __init__(self, items):
-        self.items = sorted(items, cmp=compare)
+    def __init__(self, items, _prepared_items=False):
+        if _prepared_items:
+            self.items = items
+        else:
+            self.items = sorted(items, cmp=compare)
 
     def get(self, key):
         for k, v in self.items:
@@ -123,9 +126,11 @@ def compare2(item1, perm1, item2, perm2):
 
     if type1 == Map:
         items1 = list(item1.items)
-        items1.sort(cmp=lambda i1, i2: compare2(i1, perm1, i2, perm1))
+        if perm1:
+            items1.sort(cmp=lambda i1, i2: compare2(i1, perm1, i2, perm1))
         items2 = list(item2.items)
-        items2.sort(cmp=lambda i1, i2: compare2(i1, perm2, i2, perm2))
+        if perm2:
+            items2.sort(cmp=lambda i1, i2: compare2(i1, perm2, i2, perm2))
         return compare2_sequence(items1, perm1, items2, perm2)
 
     raise Exception("Unknown type " + repr(type1) + " value: " + repr(item1))
