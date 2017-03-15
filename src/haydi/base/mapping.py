@@ -36,7 +36,7 @@ class Mapping(Domain):
     def generate_one(self):
         return Map(zip(self.key_domain, self.product.generate_one()))
 
-    def canonicals(self):
+    def create_cn_iter(self):
         keys = self.keys
         if keys is None:
             keys = tuple(sorted(self.key_domain, cmp=compare))

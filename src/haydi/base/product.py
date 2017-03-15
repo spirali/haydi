@@ -27,7 +27,7 @@ class Product(Domain):
             if len(set(domains)) > 1:
                 raise Exception("Not implemented for discitinct domains")
 
-    def canonicals(self):
+    def create_cn_iter(self):
         def make_fn(item, candidate):
             item += (candidate,)
             if len(item) == len(domains):

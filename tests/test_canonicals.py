@@ -118,21 +118,21 @@ def test_canonical_product():
     bx = ASet(2, "b")
     b0, b1 = bx.all()
 
-    result = list(hd.Product((ax,)).canonicals())
+    result = list(hd.Product((ax,)).create_cn_iter())
     assert result == [(a0,)]
 
-    result = list((ax * ax).canonicals())
+    result = list((ax * ax).create_cn_iter())
     assert result == [(a0, a0), (a0, a1)]
 
-    result = list((ax * ax * ax).canonicals())
+    result = list((ax * ax * ax).create_cn_iter())
     assert result == [(a0, a0, a0), (a0, a0, a1),
                       (a0, a1, a0), (a0, a1, a1), (a0, a1, a2)]
 
-    result = list((bx * bx * bx).canonicals())
+    result = list((bx * bx * bx).create_cn_iter())
     assert result == [(b0, b0, b0), (b0, b0, b1),
                       (b0, b1, b0), (b0, b1, b1)]
 
-    result = list((ax * bx * bx).canonicals())
+    result = list((ax * bx * bx).create_cn_iter())
     assert result == [(a0, b0, b0), (a0, b0, b1)]
 
 
@@ -146,27 +146,27 @@ def test_canonical_mapping():
     m1 = hd.Map([(b0, b0), (b1, b0)])
     m2 = hd.Map([(b0, b0), (b1, b1)])
     m3 = hd.Map([(b0, b1), (b1, b0)])
-    result = list(hd.Mapping(bx, bx).canonicals())
+    result = list(hd.Mapping(bx, bx).create_cn_iter())
     assert result == [m1, m2, m3]
 
     m1 = hd.Map([(b0, a0), (b1, a0)])
     m2 = hd.Map([(b0, a0), (b1, a1)])
-    result = list(hd.Mapping(bx, ax).canonicals())
+    result = list(hd.Mapping(bx, ax).create_cn_iter())
     assert result == [m1, m2]
 
     m1 = hd.Map([(0, a0), (1, a0)])
     m2 = hd.Map([(0, a0), (1, a1)])
-    result = list(hd.Mapping(hd.Range(2), ax).canonicals())
+    result = list(hd.Mapping(hd.Range(2), ax).create_cn_iter())
     assert result == [m1, m2]
 
     m1 = hd.Map([(0, b0), (1, b0)])
     m2 = hd.Map([(0, b0), (1, b1)])
-    result = list(hd.Mapping(hd.Range(2), bx).canonicals())
+    result = list(hd.Mapping(hd.Range(2), bx).create_cn_iter())
     assert result == [m1, m2]
 
 
 def bf_check(domain):
-    result = list(domain.canonicals())
+    result = list(domain.create_cn_iter())
     hdc.sort(result)
     bf = [x for x in domain if hdc.is_canonical_naive(x)]
     hdc.sort(bf)

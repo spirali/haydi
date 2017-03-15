@@ -83,8 +83,8 @@ class FilterTransformation(Transformation):
         self.filtered = True
         self.strict = strict
 
-    def canonicals(self):
-        for v in self.parent.canonicals():
+    def create_cn_iter(self):
+        for v in self.parent.create_cn_iter():
             if self.fn(v):
                 yield v
 

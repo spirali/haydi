@@ -27,7 +27,7 @@ class Sequence(Domain):
     def _compute_size(self):
         return self.helper.size
 
-    def canonicals(self):
+    def create_cn_iter(self):
         def make_fn(item, candidate):
             item += (candidate,)
             if len(item) == max_length:

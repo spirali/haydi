@@ -32,7 +32,7 @@ class ASet(Domain):
         else:
             return iter(self.cache[step:])
 
-    def canonicals(self):
+    def create_cn_iter(self):
         yield self.cache[0]
 
     def __repr__(self):

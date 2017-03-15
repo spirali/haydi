@@ -32,5 +32,5 @@ class StrictValues(Domain):
         self._size = len(values)
         self.values = values
 
-    def canonicals(self):
+    def create_cn_iter(self):
         return iter(self.values)

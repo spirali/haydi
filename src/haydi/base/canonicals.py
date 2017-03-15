@@ -116,7 +116,7 @@ def create_candidates(item, bounds):
 
 def canonical_builder(domain, item, make_fn, extra_bounds):
     bounds = get_bounds(item, extra_bounds)
-    for base_item in domain.canonicals():
+    for base_item in domain.create_cn_iter():
         for candidate in create_candidates(base_item, bounds):
             result, next_domain, is_final, new_bounds = \
                 make_fn(item, candidate)
