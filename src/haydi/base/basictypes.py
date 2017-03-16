@@ -11,6 +11,32 @@ class Atom(object):
         return "{}{}".format(self.parent.name, self.index)
 
 
+class Set(object):
+
+    def __init__(self, items, _prepared_items=False):
+        if _prepared_items:
+            self.items = items
+        else:
+            self.items = sorted(items, cmp=compare)
+
+    def to_set(self):
+        return set(self.items)
+
+    def __len__(self):
+        return len(self.items)
+
+    def __eq__(self, other):
+        if not isinstance(other, Set):
+            return False
+        return self.items == other.items
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __repr__(self):
+        return "{{{}}}".format(", ".join(repr(i) for i in self.items))
+
+
 class Map(object):
 
     def __init__(self, items, _prepared_items=False):
@@ -48,7 +74,7 @@ class Map(object):
         return "{{{}}}".format("; ".join(r))
 
 
-stype_table = (Atom, int, str, tuple, Map)
+stype_table = (Atom, int, str, tuple, Map, Set)
 
 
 def is_equal(item1, item2):
@@ -88,6 +114,9 @@ def compare(item1, item2):
         return cmp(item1, item2)
 
     if type1 == Map:
+        return compare_sequence(item1.items, item2.items)
+
+    if type1 == Set:
         return compare_sequence(item1.items, item2.items)
 
     raise Exception("Unknown type " + repr(type1) + " value: " + repr(item1))
