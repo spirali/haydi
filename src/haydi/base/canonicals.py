@@ -102,6 +102,10 @@ def is_canonical_naive(item):
 
 
 def is_canonical(item):
+    # TODO: This is version for internal purpose
+    # where we know that there are no gaps in permutations
+    # for public version we would need similar operation
+    # as in canonize
     bound_dict = get_bounds(item)
     empty = {}
     for p in make_permutations(bound_dict.items()):
@@ -167,6 +171,8 @@ def canonical_builder(domain, item, make_fn, extra_bounds):
         for candidate in create_candidates(base_item, bounds):
             result, next_domain, is_final, new_bounds = \
                 make_fn(item, candidate)
+            if result is None:
+                continue
             if is_canonical(result):
                 if is_final:
                     yield result

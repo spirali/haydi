@@ -45,7 +45,7 @@ class Mapping(Domain):
         value_domain = self.value_domain
 
         def make_fn(map_item, candidate):
-            new_items = map_item.items[:]
+            new_items = list(map_item.items)
             new_items.append((keys[len(new_items)], candidate))
             m = Map(new_items, True)
             if len(new_items) == len(keys):

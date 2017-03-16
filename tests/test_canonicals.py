@@ -240,6 +240,14 @@ def test_canonical_sequence():
     bf_check(s)
 
 
+def test_canonical_sets():
+    ax = ASet(4, "a")
+    s = hd.Subsets(ax, 2)
+    bf_check(s)
+    s = hd.Subsets(ax, 0, 2)
+    bf_check(s)
+
+
 def test_canonize():
     ax = ASet(1000, "a")
     a0 = ax.get(0)
