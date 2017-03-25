@@ -4,13 +4,16 @@ from basictypes import sort, collect_atoms, compare, replace_atoms, compare2
 
 def aset_permutations(aset_and_bounds):
     return itertools.product(
-        # ALL? is it corrent?
-        *(tuple(itertools.permutations(aset.all(), bound))
+        *(tuple(itertools.permutations(aset.all()[:bound], bound))
           for aset, bound in aset_and_bounds))
 
 
 def apply_permutation(item, perm):
     return replace_atoms(item, perm.get)
+
+
+def apply_permutation_with_gaps(item, perm):
+    return replace_atoms(item, lambda x: perm.get(x, x))
 
 
 def make_permutations(asets_and_bounds):
@@ -43,6 +46,50 @@ def get_bounds(item, original_bounds=None):
             if m < index:
                 bound_dict[atom.parent] = index
     return bound_dict
+
+
+def canonize(item, remove_gaps=True):
+    if remove_gaps:
+        atoms = list(collect_atoms(item))
+        if not atoms:
+            return item
+        sort(atoms)
+        unique(atoms)
+        perm = {}
+
+        a1 = atoms[0]
+        if a1.index != 0:
+            a2 = a1.parent.get(0)
+            perm[a1] = a2
+            atoms[0] = a2
+
+        for i in xrange(1, len(atoms)):
+            a2 = atoms[i]
+            a1 = atoms[i - 1]
+            if a1.parent != a2.parent:
+                if a2.index != 0:
+                    a3 = a2.parent.get(0)
+                    perm[a2] = a3
+                    atoms[i] = a3
+                continue
+
+            if a1.index + 1 == a2.index:
+                continue
+            a3 = a1.parent.get(a1.index + 1)
+            perm[a2] = a3
+            atoms[i] = a3
+        if perm:
+            item = apply_permutation_with_gaps(item, perm)
+    bound_dict = get_bounds(item)
+    perm = {}
+    for p in make_permutations(bound_dict.items()):
+        if compare2(item, perm, item, p) > 0:
+            perm = p
+
+    if perm:
+        return apply_permutation(item, perm)
+    else:
+        return item
 
 
 def is_canonical_naive(item):

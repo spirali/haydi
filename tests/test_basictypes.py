@@ -192,6 +192,7 @@ def test_replace_atoms():
         [[b, a], [[b, b], c]],
         lambda x: c if x == b else a)
 
+
 def test_map_hash():
     ax = ASet(3, "a")
     m1 = hdt.Map((

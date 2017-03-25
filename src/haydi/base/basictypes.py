@@ -180,6 +180,6 @@ def replace_atoms_by_indices(item):
 
 
 def collect_atoms(item):
-    result = set()
-    foreach_atom(item, lambda e: result.add(e))
+    result = []
+    foreach_atom(item, lambda e: result.append(e))
     return result

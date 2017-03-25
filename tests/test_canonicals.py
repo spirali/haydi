@@ -238,3 +238,25 @@ def test_canonical_sequence():
 
     s = hd.Sequence(ax * ax, 0, 4)
     bf_check(s)
+
+
+def test_canonize():
+    ax = ASet(1000, "a")
+    a0 = ax.get(0)
+    a1 = ax.get(1)
+    a2 = ax.get(2)
+    a900 = ax.get(900)
+
+    bx = ASet(2, "b")
+    b0 = bx.get(0)
+    b1 = bx.get(1)
+
+    assert hd.canonize(a0) == a0
+    assert hd.canonize(a1) == a0
+    assert hd.canonize(a900) == a0
+
+    assert hd.canonize((a900, a0, a1, a1, 100)) == (a0, a1, a2, a2, 100)
+    assert hd.canonize((a0, b1, b1)) == (a0, b0, b0)
+    assert hd.canonize((a0, b0, b1)) == (a0, b0, b1)
+    assert hd.canonize((a0, b1, b0)) == (a0, b0, b1)
+    assert hd.canonize((a900, b1, b0)) == (a0, b0, b1)
