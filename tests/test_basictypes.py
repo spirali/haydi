@@ -1,9 +1,8 @@
 from testutils import init
 init()
 
-import haydi as hd # noqa
-from haydi.base import basictypes as hdt # noqa
-from haydi import ASet # noqa
+from haydi.base import basictypes as hdt  # noqa
+from haydi import ASet  # noqa
 
 
 def test_aset_flags():
@@ -77,7 +76,6 @@ def test_compare_consts():
     hdt.compare("a", "AAA") == -1
     hdt.compare("z", "z") == 0
     hdt.compare("z", "a") == 1
-
 
 
 def test_compare_maps():

@@ -3,13 +3,14 @@ from datetime import timedelta
 import pytest
 import random
 
-from testutils import init
+from testutils import init, slow
+
 init()
 
 from haydi import Range   # noqa
 from haydi import session  # noqa
 from haydi.base.runtime.distributedcontext import DistributedContext  # noqa
-import haydi as hd # noqa
+import haydi as hd  # noqa
 
 
 class DCluster(object):
@@ -44,6 +45,7 @@ def cluster4():
     c.stop()
 
 
+@slow
 def test_dist_map(cluster4):
     count = 10000
     x = Range(count)
@@ -52,6 +54,7 @@ def test_dist_map(cluster4):
     assert result == [item + 1 for item in xrange(count)]
 
 
+@slow
 def test_dist_filter(cluster4):
     x = Range(211)
     y = x * x
@@ -61,18 +64,21 @@ def test_dist_filter(cluster4):
     assert result == expect
 
 
+@slow
 def test_dist_simple_take(cluster4):
     x = Range(10).take(3)
     result = x.run(True)
     assert result == [0, 1, 2]
 
 
+@slow
 def test_dist_take_filter(cluster4):
     x = Range(10).filter(lambda x: x > 5).take(3)
     result = x.run(True)
     assert result == [6, 7, 8]
 
 
+@slow
 def test_dist_generate(cluster4):
     x = Range(10).generate(100)
     result = x.run(True)
@@ -81,6 +87,7 @@ def test_dist_generate(cluster4):
         assert 0 <= i < 10
 
 
+@slow
 def test_dist_samples(cluster4):
     a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
     random.shuffle(a)
@@ -110,6 +117,7 @@ def test_dist_samples(cluster4):
     assert result == expected
 
 
+@slow
 def test_dist_samples_and_counts(cluster4):
     a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
     random.shuffle(a)
@@ -140,6 +148,7 @@ def test_dist_samples_and_counts(cluster4):
     assert result == expected
 
 
+@slow
 def test_dist_timeout(cluster4):
     r = hd.Range(1000000)
 
