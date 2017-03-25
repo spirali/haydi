@@ -191,3 +191,14 @@ def test_replace_atoms():
     assert ((c, a), ((c, c), a)) == hdt.replace_atoms(
         [[b, a], [[b, b], c]],
         lambda x: c if x == b else a)
+
+def test_map_hash():
+    ax = ASet(3, "a")
+    m1 = hdt.Map((
+        (ax.get(2), 11), ("b", 12)
+    ))
+    m2 = hdt.Map((
+        (ax.get(2), 11), ("b", 12)
+    ))
+    assert m1 == m2
+    assert hash(m1) == hash(m2)
