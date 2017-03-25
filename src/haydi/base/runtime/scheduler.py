@@ -9,14 +9,6 @@ from distributed import as_completed
 from .util import TimeoutManager, haydi_logger
 
 
-class WorkerArgs(object):
-    def __init__(self, domain, reduce_fn, reduce_init, timelimit):
-        self.domain = domain
-        self.reduce_fn = reduce_fn
-        self.reduce_init = reduce_init
-        self.timelimit = timelimit
-
-
 class Job(object):
     def __init__(self, worker_id, start_index, size):
         """
@@ -53,6 +45,7 @@ class JobScheduler(object):
     def __init__(self,
                  executor,
                  worker_count,
+                 strategy,
                  timeout,
                  domain,
                  worker_reduce_fn,
@@ -61,6 +54,7 @@ class JobScheduler(object):
         """
         :param executor: distributed executor
         :param worker_count: number of workers in the cluster
+        :type strategy: haydi.base.runtime.strategy.WorkerStrategy
         :type timeout: datetime.timedelta
         :param timeout: timeout for the computation
         :param domain: domain to be iterated
@@ -70,15 +64,16 @@ class JobScheduler(object):
         """
         self.executor = executor
         self.worker_count = worker_count
-        self.size = domain.size
+        self.size = strategy.get_size(domain)
+        self.strategy = strategy
         self.tracer = tracer
-        self.worker_args_future = None
+        self.domain = domain
+        self.worker_reduce_fn = worker_reduce_fn
+        self.worker_reduce_init = worker_reduce_init
         self.index_scheduled = 0
         self.index_completed = 0
         self.job_size = None
         self.timeout_mgr = TimeoutManager(timeout) if timeout else None
-        self.worker_args = self._create_worker_args(domain, worker_reduce_fn,
-                                                    worker_reduce_init)
         self.ordered_futures = []
         self.backlog_per_worker = 4
         self.target_time = 60 * 3
@@ -90,14 +85,17 @@ class JobScheduler(object):
         self.canceled = False
 
     def start(self):
-        [self.worker_args_future] = self.executor.scatter([self.worker_args],
-                                                          broadcast=True)
+        self.strategy.start(self)
         self.job_thread = Thread(target=self._iterate_jobs)
         self.job_thread.daemon = True
         self.job_thread.start()
 
     def stop(self):
         self.canceled = True
+
+        size = len(self.ordered_futures)
+        for i in xrange(size):
+            self.ordered_futures[i].cancel()
 
     def _iterate_jobs(self):
         """
@@ -218,21 +216,20 @@ class JobScheduler(object):
         :type job_distribution: list of int
         :return:
         """
-        from .worker import worker_process_step
-
         job_distribution = self._truncate(job_distribution)
         batches = []
         for job_size in job_distribution:
             if job_size > 0:
                 start = self.index_scheduled
-                batches.append((self.worker_args_future, start, job_size))
+                batches.append(self.strategy.get_args_for_batch(start,
+                                                                job_size))
                 self.index_scheduled = start + job_size
 
         if len(batches) > 0:
             self.tracer.trace_index_scheduled(self.index_scheduled)
             self.tracer.trace_comment("Sending {} jobs with size {}"
                                       .format(len(batches), self.job_size))
-            futures = self.executor.map(worker_process_step, batches)
+            futures = self.strategy.create_futures(self, batches)
             self.ordered_futures += futures
             return futures
         else:
@@ -254,15 +251,3 @@ class JobScheduler(object):
 
     def _has_more_work(self):
         return not self.size or self.index_scheduled < self.size
-
-    def _create_worker_args(self, domain,
-                            worker_reduce_fn,
-                            worker_reduce_init):
-        timelimit = None
-        if self.timeout_mgr:
-            timelimit = self.timeout_mgr.end
-
-        return WorkerArgs(domain,
-                          worker_reduce_fn,
-                          worker_reduce_init,
-                          timelimit)

@@ -9,6 +9,7 @@ from Queue import Empty
 from datetime import timedelta, datetime
 
 from haydi.base.exception import HaydiException, TimeoutException
+from haydi.base.runtime.strategy import StepStrategy, PrecomputeSourceStrategy
 from haydi.base.runtime.trace import OTFTracer, Tracer
 
 try:
@@ -196,23 +197,27 @@ class DistributedContext(object):
             timeout=None,
             dump_jobs=False,
             otf_trace=False):
-        assert domain.step_jumps
-        size = domain.size
-
-        name = "{} (pid {})".format(socket.gethostname(), os.getpid())
-        start_msg = "Starting run with size {} and worker count {} on {}".\
-            format(size, self._get_worker_count(), name)
-
         if otf_trace:
             tracer = OTFTracer("otf-{}".format(int(time.time())))
         else:
             tracer = Tracer()
 
-        haydi_logger.info(start_msg)
         tracer.trace_workers(self._get_worker_count())
+
+        if domain.step_jumps:
+            strategy = StepStrategy()
+        else:
+            strategy = PrecomputeSourceStrategy()
+
+        size = strategy.get_size(domain)
+        name = "{} (pid {})".format(socket.gethostname(), os.getpid())
+        start_msg = "Starting run with size {} and worker count {} on {}". \
+            format(size, self._get_worker_count(), name)
+        haydi_logger.info(start_msg)
 
         scheduler = JobScheduler(self.executor,
                                  self._get_worker_count(),
+                                 strategy,
                                  timeout, domain,
                                  worker_reduce_fn,
                                  worker_reduce_init,

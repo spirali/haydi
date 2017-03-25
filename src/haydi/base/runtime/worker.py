@@ -17,35 +17,56 @@ def random_init(worker):
         random.seed(os.urandom(16) + worker + str(time.time()))
 
 
-def worker_process_step(arg):
-    """
-    :type arg: (haydi.base.runtime.scheduler.WorkerArgs, int, int)
-    :rtype: Job
-    """
-    worker_args, start, size = arg
+def worker_compute(iterator, start, size, timelimit, reduce_fn, reduce_init):
     worker_name = "{}#{}".format(socket.gethostname(), os.getpid())
-    job = Job(worker_name, start, size)
-
     random_init(worker_name)
 
-    iterator = worker_args.domain.iterate_steps(start, start + size)
+    job = Job(worker_name, start, size)
     result = []
 
-    if worker_args.timelimit is not None:
+    if timelimit is not None:
         for item in iterator:
             result.append(item)
             # return partial results
-            if worker_args.timelimit - time.time() < 60:
+            if timelimit - time.time() < 60:
                 break
     else:
         result = list(iterator)
 
-    if worker_args.reduce_fn is not None:
-        if worker_args.reduce_init is None:
-            result = reduce(worker_args.reduce_fn, result)
+    if reduce_fn is not None:
+        if reduce_init is None:
+            result = reduce(reduce_fn, result)
         else:
-            result = reduce(worker_args.reduce_fn, result,
-                            worker_args.reduce_init())
+            result = reduce(reduce_fn, result,
+                            reduce_init())
 
     job.finish(result)
     return job
+
+
+def worker_step(arg):
+    """
+    :type arg: (dict, int, int)
+    :rtype: Job
+    """
+    worker_args, start, size = arg
+    iterator = worker_args["domain"].iterate_steps(start, start + size)
+
+    return worker_compute(iterator, start, size,
+                          worker_args["timelimit"],
+                          worker_args["reduce_fn"],
+                          worker_args["reduce_init"])
+
+
+def worker_precomputed(arg):
+    """
+    :type arg: (dict, haydi.base.domain.Domain, int)
+    :rtype: Job
+    """
+    worker_args, domain, size = arg
+    iterator = domain.create_iter()
+
+    return worker_compute(iterator, 0, size,
+                          worker_args["timelimit"],
+                          worker_args["reduce_fn"],
+                          worker_args["reduce_init"])
