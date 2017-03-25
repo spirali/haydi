@@ -203,3 +203,11 @@ def test_map_hash():
     ))
     assert m1 == m2
     assert hash(m1) == hash(m2)
+
+
+def test_set_hash():
+    ax = ASet(3, "a")
+    m1 = hdt.Set((ax.get(2), 11))
+    m2 = hdt.Set((ax.get(2), 11))
+    assert m1 == m2
+    assert hash(m1) == hash(m2)
