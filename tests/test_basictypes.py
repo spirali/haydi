@@ -178,9 +178,9 @@ def test_collect_atoms():
 
     a = ax.get(0)
     b = ax.get(1)
-    assert set((a,)) == hdt.collect_atoms(((a,), (a, a)))
-    assert set((a, b)) == hdt.collect_atoms(((b,), (b, a)))
-    assert set() == hdt.collect_atoms((1, 2, 3))
+    assert set((a,)) == set(hdt.collect_atoms(((a,), (a, a))))
+    assert set((a, b)) == set(hdt.collect_atoms(((b,), (b, a))))
+    assert set() == set(hdt.collect_atoms((1, 2, 3)))
 
 
 def test_replace_atoms():
