@@ -37,6 +37,8 @@ def test_sets_iter():
 
 def test_size():
     r = hd.Range(3)
-    assert hd.Sets(r, 2).size == 6
+    assert hd.Sets(r, 2).size == 3
     assert hd.Sets(r, 0).size == 1
-    assert hd.Sets(r * r, 1, 3).size == 1
+    s = hd.Sets(r * r, 1, 3)
+    assert s.size == len(list(s))
+    assert s.size == 129

@@ -1,7 +1,7 @@
 from .domain import Domain
 from .basictypes import Set, compare
 from .canonicals import canonical_builder, is_canonical
-
+from .utils import ncr
 
 class Sets(Domain):
 
@@ -23,7 +23,9 @@ class Sets(Domain):
         self.values = None
 
     def _compute_size(self):
-        return None
+        domain_size = self.domain.size
+        return sum(ncr(domain_size, i)
+                   for i in xrange(self.min_size, self.max_size+1))
 
     def create_iter(self, step=0):
         assert step == 0  # sets not yet implemented
