@@ -217,3 +217,18 @@ def test_lts_empty_product():
     assert len(c.get_enabled_actions((0, 0))) == 0
     g = c.make_graph((0, 0), 2)
     assert g.size == 1
+
+
+def test_dlts_from_dict():
+    l = hd.dlts_from_dict({(0, "a"): 1,
+                           (0, "b"): 0,
+                           (1, "a"): 0},
+                          ("a", "b"))
+    g = l.make_graph(0)
+    assert g.size == 2
+    assert g.has_node(0)
+    assert g.has_node(1)
+    assert g.node(0).arc_by_data("a").node == g.node(1)
+    assert g.node(0).arc_by_data("b").node == g.node(0)
+    assert g.node(1).arc_by_data("a").node == g.node(0)
+    assert g.node(1).arc_by_data("b") is None

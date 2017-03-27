@@ -19,6 +19,12 @@ class Node(object):
     def add_arc(self, node, data=None):
         self.arcs.append(Arc(node, data))
 
+    def arc_by_data(self, data):
+        for arc in self.arcs:
+            if arc.data == data:
+                return arc
+        return None
+
     def merge_arcs(self, merge_fn):
         if len(self.arcs) < 2:
             return
@@ -43,6 +49,9 @@ class Graph(object):
     @property
     def size(self):
         return len(self.nodes)
+
+    def has_node(self, key):
+        return key, self.nodes
 
     def node_check(self, key):
         node = self.nodes.get(key)

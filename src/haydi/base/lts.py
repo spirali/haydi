@@ -233,3 +233,10 @@ class BreadthFirstIterator2(object):
             tmp = self.states
             self.states = self.nexts
             self.nexts = tmp
+
+
+def dlts_from_dict(delta, actions):
+    assert isinstance(delta, dict)
+    dlts = DLTS(actions)
+    dlts.step = lambda s, a: delta.get((s, a))
+    return dlts

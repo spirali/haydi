@@ -14,7 +14,7 @@ from .base.permutations import Permutations  # noqa
 
 # Others
 from .base.system import System  # noqa
-from .base.lts import DLTS, DLTSProduct  # noqa
+from .base.lts import DLTS, DLTSProduct, dlts_from_dict  # noqa
 
 # Basic types
 from .base.boolean import Boolean  # noqa
