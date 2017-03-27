@@ -32,7 +32,7 @@ class Sequence(Domain):
             item += (candidate,)
             if len(item) == max_length:
                 return item, None, True, None
-            return item, domain, item >= min_length, None
+            return item, domain, len(item) >= min_length, None
         domain = self.domain
         max_length = self.max_length
         min_length = self.min_length

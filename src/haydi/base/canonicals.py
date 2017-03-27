@@ -171,6 +171,8 @@ def canonical_builder(domain, item, make_fn, extra_bounds):
         for candidate in create_candidates(base_item, bounds):
             result, next_domain, is_final, new_bounds = \
                 make_fn(item, candidate)
+            if result is None:
+                continue
             if is_canonical(result):
                 if is_final:
                     yield result

@@ -1,6 +1,6 @@
 from .domain import Domain
-from .basictypes import Set
-from .canonicals import canonical_builder
+from .basictypes import Set, compare
+from .canonicals import canonical_builder, is_canonical
 
 
 class Sets(Domain):
@@ -23,7 +23,7 @@ class Sets(Domain):
         self.values = None
 
     def _compute_size(self):
-        return self.product.size
+        return None
 
     def create_iter(self, step=0):
         assert step == 0  # sets not yet implemented
@@ -66,15 +66,20 @@ class Sets(Domain):
         raise Exception("TODO")
 
     def create_cn_iter(self):
-        """
         domain = self.domain
-        def make_fn(map_item, candidate):
-            new_items = map_item.items[:]
-            new_items.append((keys[len(new_items)], candidate))
-            m = Map(new_items, True)
-            if len(new_items) == len(keys):
-                return m, None, True, None
-            return m, value_domain, False, get_bounds(keys[len(new_items)])
-        return canonical_builder(
-            value_domain, Map(()), make_fn, get_bounds(keys[0]))
-        """
+        max_size = self.max_size
+        min_size = self.min_size
+        def make_fn(s, candidate):
+            items = s.items
+            if items and compare(items[-1], candidate) != -1:
+                return None, None, None, None
+            new_items = list(items)
+            new_items.append(candidate)
+            s = Set(new_items, True)
+            if len(new_items) == max_size:
+                return s, None, True, None
+            return s, domain, len(new_items) >= min_size, None
+        if min_size == 0:
+            yield Set((), True)
+        for item in canonical_builder(domain, Set((), True), make_fn, None):
+            yield item

@@ -33,3 +33,10 @@ def test_sets_iter():
     s = hd.Sets(r3, 1, 2)
     assert list(s) == [hd.Set((0,)), hd.Set((0, 1)), hd.Set((0, 2)),
                        hd.Set((1,)), hd.Set((1, 2)), hd.Set((2,))]
+
+
+def test_size():
+    r = hd.Range(3)
+    assert hd.Sets(r, 2).size == 6
+    assert hd.Sets(r, 0).size == 1
+    assert hd.Sets(r * r, 1, 3).size == 1

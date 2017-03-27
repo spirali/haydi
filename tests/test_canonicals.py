@@ -239,6 +239,13 @@ def test_canonical_sequence():
     s = hd.Sequence(ax * ax, 0, 4)
     bf_check(s)
 
+def test_canonical_sets():
+    ax = ASet(4, "a")
+    s = hd.Sets(ax, 2)
+    bf_check(s)
+    s = hd.Sets(ax, 0, 2)
+    bf_check(s)
+
 
 def test_canonize():
     ax = ASet(1000, "a")

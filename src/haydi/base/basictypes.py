@@ -15,9 +15,9 @@ class Set(object):
 
     def __init__(self, items, _prepared_items=False):
         if _prepared_items:
-            self.items = items
+            self.items = tuple(items)
         else:
-            self.items = sorted(items, cmp=compare)
+            self.items = tuple(sorted(items, cmp=compare))
 
     def to_set(self):
         return set(self.items)
@@ -44,9 +44,9 @@ class Map(object):
 
     def __init__(self, items, _prepared_items=False):
         if _prepared_items:
-            self.items = items
+            self.items = tuple(items)
         else:
-            self.items = sorted(items, cmp=compare)
+            self.items = tuple(sorted(items, cmp=compare))
 
     def get(self, key):
         for k, v in self.items:
@@ -159,7 +159,7 @@ def compare2(item1, perm1, item2, perm2):
     if type1 == int or type2 == str:
         return cmp(item1, item2)
 
-    if type1 == Map:
+    if type1 == Map or type1 == Set:
         items1 = list(item1.items)
         if perm1:
             items1.sort(cmp=lambda i1, i2: compare2(i1, perm1, i2, perm1))
@@ -183,7 +183,7 @@ def foreach_atom(item, fn):
     elif isinstance(item, tuple):
         for i in item:
             foreach_atom(i, fn)
-    elif isinstance(item, Map):
+    elif isinstance(item, Map) or isinstance(item, Set):
         for i in item.items:
             foreach_atom(i, fn)
     else:
@@ -199,6 +199,8 @@ def replace_atoms(item, fn):
         return tuple(replace_atoms(i, fn) for i in item)
     elif isinstance(item, Map):
         return Map(replace_atoms(i, fn) for i in item.items)
+    elif isinstance(item, Set):
+        return Set(replace_atoms(i, fn) for i in item.items)
     else:
         raise Exception("Unknown item: {}".format(repr(item)))
 
