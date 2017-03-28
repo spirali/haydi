@@ -60,3 +60,6 @@ class Range(Domain):
 
     def create_iter(self, step=0):
         return iter(xrange(self.start + step * self.step, self.end, self.step))
+
+    def create_cn_iter(self):
+        return self.create_iter()
