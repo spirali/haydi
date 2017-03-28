@@ -9,8 +9,8 @@ from Queue import Empty
 from datetime import timedelta, datetime
 
 from haydi.base.exception import HaydiException, TimeoutException
-from haydi.base.runtime.strategy import StepStrategy, PrecomputeSourceStrategy
-from haydi.base.runtime.trace import OTFTracer, Tracer
+from .strategy import StepStrategy, PrecomputeSourceStrategy, GeneratorStrategy
+from .trace import OTFTracer, Tracer
 
 try:
     from distributed import Client, LocalCluster
@@ -204,10 +204,7 @@ class DistributedContext(object):
 
         tracer.trace_workers(self._get_worker_count())
 
-        if domain.step_jumps:
-            strategy = StepStrategy()
-        else:
-            strategy = PrecomputeSourceStrategy()
+        strategy = self._create_strategy(domain)
 
         size = strategy.get_size(domain)
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
@@ -264,3 +261,10 @@ class DistributedContext(object):
             raise HaydiException("There are no workers")
 
         return workers
+
+    def _create_strategy(self, explorer):
+        if explorer.generator:
+            return GeneratorStrategy()
+        if explorer.step_jumps:
+            return StepStrategy()
+        return PrecomputeSourceStrategy()

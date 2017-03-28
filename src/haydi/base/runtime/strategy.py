@@ -1,5 +1,5 @@
 from haydi import Values
-from .worker import worker_step, worker_precomputed
+from .worker import worker_step, worker_precomputed, worker_generator
 
 
 class WorkerStrategy(object):
@@ -9,7 +9,7 @@ class WorkerStrategy(object):
         self.domain = None
 
     def get_size(self, domain):
-        raise NotImplementedError()
+        return domain.size
 
     def start(self, scheduler):
         self.domain = scheduler.domain
@@ -21,18 +21,7 @@ class WorkerStrategy(object):
         return (self.worker_args_future, start, job_size)
 
     def create_futures(self, scheduler, batches):
-        raise NotImplementedError()
-
-    def _create_worker_args(self, scheduler):
-        return {}
-
-
-class StepStrategy(WorkerStrategy):
-    def get_size(self, domain):
-        return domain.size
-
-    def create_futures(self, scheduler, batches):
-        return scheduler.executor.map(worker_step, batches)
+        return scheduler.executor.map(self._get_worker_fn(), batches)
 
     def _create_worker_args(self, scheduler):
         timelimit = None
@@ -45,6 +34,14 @@ class StepStrategy(WorkerStrategy):
             "reduce_init": scheduler.worker_reduce_init,
             "timelimit": timelimit
         }
+
+    def _get_worker_fn(self):
+        raise NotImplementedError()
+
+
+class StepStrategy(WorkerStrategy):
+    def _get_worker_fn(self):
+        return worker_step
 
 
 class PrecomputeSourceStrategy(WorkerStrategy):
@@ -67,9 +64,6 @@ class PrecomputeSourceStrategy(WorkerStrategy):
         return (self.worker_args_future, self._set_source(self.domain, values),
                 job_size)
 
-    def create_futures(self, scheduler, batches):
-        return scheduler.executor.map(worker_precomputed, batches)
-
     def _create_worker_args(self, scheduler):
         timelimit = None
         if scheduler.timeout_mgr:
@@ -83,3 +77,11 @@ class PrecomputeSourceStrategy(WorkerStrategy):
 
     def _set_source(self, domain, values):
         return domain.set_source(Values(values))
+
+    def _get_worker_fn(self):
+        return worker_precomputed
+
+
+class GeneratorStrategy(WorkerStrategy):
+    def _get_worker_fn(self):
+        return worker_generator

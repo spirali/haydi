@@ -70,3 +70,21 @@ def worker_precomputed(arg):
                           worker_args["timelimit"],
                           worker_args["reduce_fn"],
                           worker_args["reduce_init"])
+
+
+def worker_generator(arg):
+    """
+        :type arg: (dict, haydi.base.domain.Domain, int, int)
+        :rtype: Job
+        """
+    worker_args, domain, start, size = arg
+    domain_iter = domain.create_iter()
+
+    def iterator():
+        for i in xrange(size):
+            yield domain_iter.next()
+
+    return worker_compute(iterator(), start, size,
+                          worker_args["timelimit"],
+                          worker_args["reduce_fn"],
+                          worker_args["reduce_init"])
