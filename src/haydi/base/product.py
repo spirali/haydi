@@ -1,7 +1,7 @@
 
 from .domain import Domain, StepSkip
 from .values import Values
-from .canonicals import canonical_builder
+from .cnf import canonical_builder
 
 import math
 from collections import namedtuple

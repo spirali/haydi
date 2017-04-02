@@ -1,7 +1,7 @@
 from .domain import Domain
 from .domain import Product
 from .basictypes import Map, compare
-from .canonicals import canonical_builder, get_bounds
+from .cnf import canonical_builder, get_bounds
 
 
 class Mapping(Domain):

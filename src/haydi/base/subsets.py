@@ -1,6 +1,6 @@
 from .domain import Domain
 from .basictypes import Set, compare
-from .canonicals import canonical_builder
+from .cnf import canonical_builder
 from .utils import ncr
 
 

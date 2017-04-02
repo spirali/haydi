@@ -24,5 +24,5 @@ from .base.boolean import Boolean  # noqa
 from .base.runtime.distributedcontext import DistributedContext  # noqa
 from .base.haydisession import session  # noqa
 
-# Canonicals
-from .base.canonicals import canonize, expand  # noqa
+# Canonical forms
+from .base.cnf import canonize, expand  # noqa

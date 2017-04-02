@@ -1,5 +1,5 @@
 from .domain import Domain
-from .canonicals import expand
+from .cnf import expand
 
 import random
 
@@ -9,7 +9,6 @@ class Values(Domain):
     step_jumps = True
 
     def __init__(self, values=None, name=None):
-        assert values is not None or canonicals is not None
         super(Values, self).__init__(name)
         values = tuple(values)
         self._size = len(values)

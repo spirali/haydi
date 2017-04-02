@@ -2,7 +2,7 @@
 from .domain import Domain
 from .product import Product
 from .join import Join
-from .canonicals import canonical_builder
+from .cnf import canonical_builder
 
 
 class Sequence(Domain):
