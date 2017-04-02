@@ -7,11 +7,20 @@ class Values(Domain):
 
     step_jumps = True
 
-    def __init__(self, values, name=None):
+    def __init__(self, values=None, canonicals=None, name=None):
+        assert values is not None or canonicals is not None
         super(Values, self).__init__(name)
         values = tuple(values)
         self._size = len(values)
-        self.values = values
+        self._values = values
+        self._canonicals = canonicals
+
+    @property
+    def values(self):
+        if self._values:
+            return self._values
+        else:
+            pass
 
     def generate_one(self):
         return random.choice(self.values)

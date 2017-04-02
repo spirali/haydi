@@ -1,12 +1,16 @@
 import itertools
-from basictypes import sort, collect_atoms, compare, replace_atoms, compare2
+from .basictypes import sort, collect_atoms, compare, replace_atoms, compare2
 
 
-def aset_permutations(aset_and_bounds):
+def aset_permutations_bounded(aset_and_bounds):
     return itertools.product(
         *(tuple(itertools.permutations(aset.all()[:bound], bound))
           for aset, bound in aset_and_bounds))
 
+def aset_permutations_all(aset_and_bounds):
+    return itertools.product(
+        *(tuple(itertools.permutations(aset.all(), bound))
+          for aset, bound in aset_and_bounds))
 
 def apply_permutation(item, perm):
     return replace_atoms(item, perm.get)
@@ -16,10 +20,26 @@ def apply_permutation_with_gaps(item, perm):
     return replace_atoms(item, lambda x: perm.get(x, x))
 
 
-def make_permutations(asets_and_bounds):
+def make_permutations_all(asets_and_bounds):
     permutations = []
     asets = [aset for aset, bound in asets_and_bounds]
-    it = aset_permutations(asets_and_bounds)
+    it = aset_permutations_all(asets_and_bounds)
+    next(it)  # Remove identity
+    for perm in it:
+        result = {}
+        for i in xrange(len(asets)):
+            a = asets[i].all()
+            p = perm[i]
+            for j in xrange(len(p)):
+                result[a[j]] = p[j]
+        permutations.append(result)
+    return permutations
+
+
+def make_permutations_bounded(asets_and_bounds):
+    permutations = []
+    asets = [aset for aset, bound in asets_and_bounds]
+    it = aset_permutations_bounded(asets_and_bounds)
     next(it)  # Remove identity
     for perm in it:
         result = {}
@@ -47,42 +67,46 @@ def get_bounds(item, original_bounds=None):
                 bound_dict[atom.parent] = index
     return bound_dict
 
+def remove_gaps(item):
+    atoms = list(collect_atoms(item))
+    if not atoms:
+        return item
+    sort(atoms)
+    unique(atoms)
+    perm = {}
 
-def canonize(item, remove_gaps=True):
-    if remove_gaps:
-        atoms = list(collect_atoms(item))
-        if not atoms:
-            return item
-        sort(atoms)
-        unique(atoms)
-        perm = {}
+    a1 = atoms[0]
+    if a1.index != 0:
+        a2 = a1.parent.get(0)
+        perm[a1] = a2
+        atoms[0] = a2
 
-        a1 = atoms[0]
-        if a1.index != 0:
-            a2 = a1.parent.get(0)
-            perm[a1] = a2
-            atoms[0] = a2
+    for i in xrange(1, len(atoms)):
+        a2 = atoms[i]
+        a1 = atoms[i - 1]
+        if a1.parent != a2.parent:
+            if a2.index != 0:
+                a3 = a2.parent.get(0)
+                perm[a2] = a3
+                atoms[i] = a3
+            continue
 
-        for i in xrange(1, len(atoms)):
-            a2 = atoms[i]
-            a1 = atoms[i - 1]
-            if a1.parent != a2.parent:
-                if a2.index != 0:
-                    a3 = a2.parent.get(0)
-                    perm[a2] = a3
-                    atoms[i] = a3
-                continue
+        if a1.index + 1 == a2.index:
+            continue
+        a3 = a1.parent.get(a1.index + 1)
+        perm[a2] = a3
+        atoms[i] = a3
+    if perm:
+        return apply_permutation_with_gaps(item, perm)
+    else:
+        return item
 
-            if a1.index + 1 == a2.index:
-                continue
-            a3 = a1.parent.get(a1.index + 1)
-            perm[a2] = a3
-            atoms[i] = a3
-        if perm:
-            item = apply_permutation_with_gaps(item, perm)
+def canonize(item, use_remove_gaps=True):
+    if use_remove_gaps:
+        item = remove_gaps(item)
     bound_dict = get_bounds(item)
     perm = {}
-    for p in make_permutations(bound_dict.items()):
+    for p in make_permutations_bounded(bound_dict.items()):
         if compare2(item, perm, item, p) > 0:
             perm = p
 
@@ -95,7 +119,7 @@ def canonize(item, remove_gaps=True):
 def is_canonical_naive(item):
     """Simple and unoptimized implementation for testing purpose"""
     bound_dict = get_bounds(item)
-    for p in make_permutations(bound_dict.items()):
+    for p in make_permutations_all(bound_dict.items()):
         if compare(apply_permutation(item, p), item) < 0:
             return False
     return True
@@ -108,7 +132,7 @@ def is_canonical(item):
     # as in canonize
     bound_dict = get_bounds(item)
     empty = {}
-    for p in make_permutations(bound_dict.items()):
+    for p in make_permutations_bounded(bound_dict.items()):
         if compare2(item, empty, item, p) > 0:
             return False
     return True
@@ -180,3 +204,13 @@ def canonical_builder(domain, item, make_fn, extra_bounds):
                     for result in canonical_builder(
                             next_domain, result, make_fn, new_bounds):
                         yield result
+
+def expand(item, use_remove_gaps=True):
+    if use_remove_gaps:
+        item = remove_gaps(item)
+    items = [apply_permutation(item, p)
+             for p in make_permutations_all(get_bounds(item).items())]
+    items.append(item)
+    sort(items)
+    unique(items)
+    return items

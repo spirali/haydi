@@ -1,5 +1,5 @@
-from basictypes import Atom
-from domain import Domain
+from .basictypes import Atom
+from .domain import Domain
 
 
 class ASet(Domain):
