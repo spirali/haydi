@@ -36,3 +36,10 @@ def test_values_set():
 def test_values_name():
     a = hd.Values(["a", "b", "c", "d"], name="ListTest")
     assert a.name == "ListTest"
+
+
+def test_cnfs_values():
+    ax = hd.ASet(3, "a")
+    a0, a1, a2 = ax
+    assert list(hd.CnfValues((a0, )).create_cn_iter()) == [a0]
+    assert list(hd.CnfValues((a0, ))) == [a0, a1, a2]
