@@ -34,7 +34,7 @@ class Set(object):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(tuple(self.items))
+        return hash(self.items)
 
     def __repr__(self):
         return "{{{}}}".format(", ".join(repr(i) for i in self.items))
@@ -68,7 +68,7 @@ class Map(object):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(tuple(self.items))
+        return hash(self.items)
 
     def __repr__(self):
         r = []
