@@ -269,6 +269,7 @@ def test_canonize():
     assert hd.canonize((a0, b1, b0)) == (a0, b0, b1)
     assert hd.canonize((a900, b1, b0)) == (a0, b0, b1)
 
+
 def test_expand():
     assert hd.expand(10) == [10]
     ax = ASet(3, "a")

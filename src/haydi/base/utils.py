@@ -1,5 +1,6 @@
 import operator as op
 
+
 def ncr(n, r):
     r = min(r, n-r)
     if r == 0:

@@ -22,6 +22,11 @@ class Join(Domain):
             size += s
         return size
 
+    def create_cn_iter(self):
+        for d in self.domains:
+            for item in d.create_cn_iter():
+                yield item
+
     def create_iter(self, step=0):
         if not self.domains:
             return

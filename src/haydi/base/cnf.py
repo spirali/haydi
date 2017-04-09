@@ -7,10 +7,12 @@ def aset_permutations_bounded(aset_and_bounds):
         *(tuple(itertools.permutations(aset.all()[:bound], bound))
           for aset, bound in aset_and_bounds))
 
+
 def aset_permutations_all(aset_and_bounds):
     return itertools.product(
         *(tuple(itertools.permutations(aset.all(), bound))
           for aset, bound in aset_and_bounds))
+
 
 def apply_permutation(item, perm):
     return replace_atoms(item, perm.get)
@@ -67,6 +69,7 @@ def get_bounds(item, original_bounds=None):
                 bound_dict[atom.parent] = index
     return bound_dict
 
+
 def remove_gaps(item):
     atoms = list(collect_atoms(item))
     if not atoms:
@@ -100,6 +103,7 @@ def remove_gaps(item):
         return apply_permutation_with_gaps(item, perm)
     else:
         return item
+
 
 def canonize(item, use_remove_gaps=True):
     if use_remove_gaps:
@@ -136,18 +140,6 @@ def is_canonical(item):
         if compare2(item, empty, item, p) > 0:
             return False
     return True
-
-
-def make_candidate_permutations(asets_and_bounds):
-    permutations = []
-    asets = [aset for aset, bound in asets_and_bounds]
-    for perm in aset_permutations(asets_and_bounds):
-        result = {}
-        for aset, p in zip(asets, perm):
-            for a1, a2 in zip(aset.all(), p):
-                result[a1] = a2
-        permutations.append(result)
-    return permutations
 
 
 def create_candidate_permutations(item, bounds):
@@ -204,6 +196,7 @@ def canonical_builder(domain, item, make_fn, extra_bounds):
                     for result in canonical_builder(
                             next_domain, result, make_fn, new_bounds):
                         yield result
+
 
 def expand(item, use_remove_gaps=True):
     if use_remove_gaps:

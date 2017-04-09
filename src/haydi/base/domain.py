@@ -1,6 +1,4 @@
 
-from . import action
-
 
 class Domain(object):
     """
@@ -71,76 +69,36 @@ class Domain(object):
         """
         Action: Get all maximal elements from domain
         """
-        return action.MaxAll(self, key_fn)
+        return self.iterate().max_all(key_fn)
 
     def groups(self, key_fn, max_items_per_group=None):
-        """
-        Action: It groups elements by keys
-
-        Args:
-            key_fn(callable): Function applied on each element to get the key
-            max_items_per_group(int): The limit of elements for each group.
-               Elements over the limit are thrown away.
-        """
-        return action.Groups(self, key_fn, max_items_per_group)
+        return self.iterate().groups(key_fn, max_items_per_group)
 
     def groups_counts(self, key_fn, max_items_per_group):
-        """
-        Action: The same idea as method :meth:`groups` but remembers also total
-        count of all elements (even forgotten)
-        """
-        return action.GroupsAndCounts(self, key_fn, max_items_per_group)
+        return self.iterate().groups_counts(key_fn, max_items_per_group)
 
-    def collect(self, postprocess_fn=None):
+    def collect(self):
         """
-        Action: Materialize all elements in domain.
+        x.collect() is shortcut for x.iterate().collect()
 
         Example:
             >>> hd.Range(4).collect().run()
             [0, 1, 2, 3]
         """
-        return action.Collect(self, postprocess_fn)
-
-    def first(self, fn=None, default=None):
-        """
-        Action: Take the first element of the collection
-
-        Takes first element of collection. If `fn` is not ``None`` then
-        collection is first filtered by `fn`.
-
-        If domain is empty then `default` is returned.
-        """
-        def helper(value):
-            if value:
-                return value[0]
-            else:
-                return default
-        f = self
-        if fn is not None:
-            f = f.filter(fn)
-        return f.take(1).collect(postprocess_fn=helper)
+        return self.iterate().collect()
 
     def reduce(self, reduce_fn, init_value=0, associative=True):
-        """
-        Action: Reduce domain
+        return self.iterate().reduce(reduce_fn, init_value, associative)
 
-        Example:
-            >>> hd.Range(4).reduce(lambda x, y: x + y, init_value=10).run()
-            16
-        """
-        return action.Reduce(self, reduce_fn, init_value, associative)
-
-    # Transformations
+    # Prefixes
 
     def take(self, count):
-        """
-        Transformation: Take first `count` elements from domain
+        return self.iterate().take(count)
 
-        Example:
-            >>> list(hd.Range(10).take(3))
-            [0, 1, 2]
-        """
-        return transform.TakeTransformation(self, count)
+    def first(self, filter_fn=None, default=None):
+        return self.make_pipeline("iterate").first(filter_fn, default)
+
+    # Transformations
 
     def map(self, fn):
         """
@@ -150,7 +108,7 @@ class Domain(object):
             >>> list(hd.Range(4).map(lambda x: x + 10))
             [10, 11, 12, 13]
         """
-        return transform.MapTransformation(self, fn)
+        return TransformedDomain(self, transform.MapTransformation(fn))
 
     def filter(self, fn, strict=False):
         """
@@ -165,12 +123,17 @@ class Domain(object):
             >>> list(hd.Range(4).filter(lambda x: x % 2 == 1))
             [1, 3]
         """
-        return transform.FilterTransformation(self, fn, strict)
+        return TransformedDomain(
+            self, transform.FilterTransformation(fn, strict))
 
     # Others
     def run(self, parallel=False, timeout=None):
-        """A shortuct for ``self.collect.run(parallel)``"""
+        """A shortcut for ``self.collect.run(parallel)``"""
         return self.collect().run(parallel, timeout)
+
+    # Shortcuts
+    # def take(self, count):
+    #     return transform.iterate().take(count)
 
     def create_iter(self, step=0):
         """Creates an interator over all elements of domain"""
@@ -188,29 +151,26 @@ class Domain(object):
     def __iter__(self):
         return self.create_iter()
 
+    def make_pipeline(self, method):
+        return Pipeline(self, method)
+
     def generate_one(self):
         """Generate a random element from the domain"""
-        raise NotImplementedError()
+        raise Exception("Domain {} do not support generation"
+                        .format(type(self).__name__))
+
+    def iterate(self):
+        return self.make_pipeline("iterate")
 
     def generate(self, count=None):
-        """
-        Create a domain from random elements of `self`
-
-        If `count` is ``None`` then the resulting domain is infinite, otherwise
-        `count` serves as the number of elements for domain.
-
-        Example:
-           >>> list(hd.Range(4).generate(5)) # doctest: +SKIP
-           [1, 3, 3, 2, 0]
-        """
-        domain = GeneratingDomain(self.generate_one)
+        pipeline = self.make_pipeline("generate")
         if count is None:
-            return domain
+            return pipeline
         else:
-            # The following may be considered as hack,
-            # but it is quite ok for now:)
-            domain.steps = count
-            return domain.take(count)
+            return pipeline.take(count)
+
+    def cnfs(self):
+        return self.make_pipeline("cnfs")
 
     def __repr__(self):
         ITEMS_LIMIT = 4
@@ -251,24 +211,40 @@ class StepSkip(object):
         return not self.__eq__(other)
 
 
-skip1 = StepSkip(1)
+class TransformedDomain(Domain):
 
+    def __init__(self, parent, transformation):
+        name = type(transformation).__name__
+        super(TransformedDomain, self).__init__(name)
+        self.parent = parent
+        self.transformation = transformation
+        transformation.init_transformed_domain(self, parent)
 
-class GeneratingDomain(Domain):
-
-    def __init__(self, generate_fn, name=None):
-        Domain.__init__(self, name)
-        self._size = None
-        self.generate_fn = generate_fn
+    def _compute_size(self):
+        return self.transformation.size_of_transformed_domain(self.parent.size)
 
     def create_iter(self, step=0):
-        while True:
-            yield self.generate_fn()
+        return self.transformation.transform_iter(
+            self.parent.create_iter(step))
 
-    def create_step_iter(self, step):
-        return self.create_iter()
+    def create_skip_iter(self, step=0):
+        return self.transformation.transform_skip_iter(
+            self.parent.create_step_iter(step))
+
+    def make_pipeline(self, method):
+        pipeline = self.parent.make_pipeline(method)
+        return pipeline.add_transformation(self.transformation)
+
+    """ For debugging purpose now disabled
+    def generate_one(self):
+        return self.generate().first().run()
+    """
+
+
+skip1 = StepSkip(1)
 
 
 from .product import Product  # noqa
 from .join import Join  # noqa
 from . import transform  # noqa
+from .pipeline import Pipeline  # noqa

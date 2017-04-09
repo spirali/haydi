@@ -202,18 +202,16 @@ def test_product_cache():
 
 
 def test_product_steps():
-    a = hd.Range(20).take(10).filter(lambda x: x % 2 == 0).take(4)
+    a = hd.Range(4).filter(lambda x: x % 2 == 0)
     p = a * a
 
-    assert a.size == 4
     assert p.size == 16
-    assert not a.step_jumps
-    assert not p.step_jumps
+    assert a.step_jumps
+    assert p.step_jumps
 
-    a = hd.Range(20).take(10).filter(lambda x: x % 2 == 0 and x < 8)
+    a = hd.Range(10).filter(lambda x: x % 2 == 0 and x < 8)
     p = a * a
 
-    assert a.size == 10
     assert p.size == 100
     assert a.step_jumps
     assert p.step_jumps
@@ -285,7 +283,7 @@ def test_product_steps3():
 def test_uproduct_steps():
 
     items = (1, 2, 7, 8)
-    a = hd.Range(20).take(10).filter(lambda x: x in items)
+    a = hd.Range(10).filter(lambda x: x in items)
     p = hd.Product((a, a), unordered=True)
 
     assert p.size == 45

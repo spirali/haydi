@@ -1,5 +1,3 @@
-from .haydisession import session
-
 
 class Action(object):
 
@@ -7,32 +5,6 @@ class Action(object):
     worker_reduce_init = None
     global_reduce_fn = None
     global_reduce_init = None
-
-    def __init__(self, domain):
-        """
-        :type domain: haydi.base.factory.IteratorFactory
-        """
-        self.domain = domain
-
-    def run(self, parallel=False, timeout=None,
-            dump_jobs=False, otf_trace=False):
-        """
-        :type parallel: bool
-        :type timeout: int
-        :type dump_jobs: bool
-        :type otf_trace: bool
-        :return: Returns the computed result.
-        """
-        ctx = session.get_context(parallel)
-        result = ctx.run(self.domain,
-                         self.worker_reduce_fn,
-                         self.worker_reduce_init,
-                         self.global_reduce_fn,
-                         self.global_reduce_init,
-                         timeout,
-                         dump_jobs,
-                         otf_trace)
-        return self.postprocess(result)
 
     def postprocess(self, value):
         return value
@@ -42,24 +14,12 @@ class Action(object):
 
 
 class Collect(Action):
-
-    def __init__(self, domain, postprocess_fn):
-        """
-        :type domain: haydi.base.factory.IteratorFactory
-        """
-        super(Collect, self).__init__(domain)
-        if postprocess_fn:
-            self.postprocess = postprocess_fn
+    pass
 
 
 class Reduce(Action):
 
-    def __init__(self, domain, reduce_fn, init_value=0, associative=True):
-        """
-        :type domain: haydi.base.factory.IteratorFactory
-        :type fn: function
-        """
-        super(Reduce, self).__init__(domain)
+    def __init__(self, reduce_fn, init_value=0, associative=True):
         if associative:
             self.worker_reduce_fn = reduce_fn
         self.global_reduce_fn = reduce_fn
@@ -68,7 +28,7 @@ class Reduce(Action):
 
 class MaxAll(Action):
 
-    def __init__(self, domain, key_fn):
+    def __init__(self, key_fn):
         """
         :type domain: haydi.base.factory.IteratorFactory
         :type key_fn: function
@@ -93,7 +53,6 @@ class MaxAll(Action):
             else:
                 return pair1
 
-        super(MaxAll, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
         self.worker_reduce_init = lambda: (None, None)
         self.global_reduce_fn = global_fn
@@ -105,7 +64,7 @@ class MaxAll(Action):
 
 class Groups(Action):
 
-    def __init__(self, domain, key_fn, max_items_per_group):
+    def __init__(self, key_fn, max_items_per_group):
         def worker_fn(samples, item):
             value = key_fn(item)
             if value is None:
@@ -131,7 +90,6 @@ class Groups(Action):
                 samples1[key] = samples2[key]
             return samples1
 
-        super(Groups, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
         self.worker_reduce_init = lambda: {}
         self.global_reduce_fn = global_fn
@@ -139,7 +97,7 @@ class Groups(Action):
 
 class GroupsAndCounts(Action):
 
-    def __init__(self, domain, key_fn, max_items_per_group):
+    def __init__(self, key_fn, max_items_per_group):
         def worker_fn(samples, item):
             value = key_fn(item)
             if value is None:
@@ -169,7 +127,6 @@ class GroupsAndCounts(Action):
                 samples1[key] = samples2[key]
             return samples1
 
-        super(GroupsAndCounts, self).__init__(domain)
         self.worker_reduce_fn = worker_fn
         self.worker_reduce_init = lambda: {}
         self.global_reduce_fn = global_fn
