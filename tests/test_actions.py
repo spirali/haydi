@@ -1,7 +1,8 @@
 from testutils import init
 init()
 
-import haydi as hd # noqa
+import haydi as hd  # noqa
+
 
 def test_collect():
     result = hd.Range(10).iterate().collect().run()
@@ -13,6 +14,7 @@ def test_collect2():
     result = hd.Range(10).collect().run()
     expected = range(10)
     assert result == expected
+
 
 def test_reduce():
     r = hd.Range(100).reduce(lambda x, y: x + y, 100).run()

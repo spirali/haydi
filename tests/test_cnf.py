@@ -1,10 +1,10 @@
 from testutils import init
 init()
 
-import haydi as hd # noqa
-from haydi.base import canonicals as hdc # noqa
-from haydi.base import basictypes as hdt # noqa
-from haydi import ASet # noqa
+import haydi as hd  # noqa
+from haydi.base import cnf as hdc  # noqa
+from haydi.base import basictypes as hdt  # noqa
+from haydi import ASet  # noqa
 
 
 def test_atom_is_canonical():

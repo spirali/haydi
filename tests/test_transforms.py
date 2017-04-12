@@ -1,7 +1,7 @@
 from testutils import init
 init()
 
-import haydi as hd # noqa
+import haydi as hd  # noqa
 
 
 """
@@ -19,6 +19,7 @@ def test_take():
     assert range(10) == list(r.take(100))
     assert range(5) == list(r.take(5))
 """
+
 
 def test_map():
     r = hd.Range(5)
