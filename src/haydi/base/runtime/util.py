@@ -1,38 +1,6 @@
 from datetime import datetime, timedelta
 import time
-#  import cloudpickle
 import logging
-
-
-class ResultSaver(object):
-    def __init__(self, id, write_count):
-        """
-        :type id: int
-        :type write_count: int
-        """
-        self.time = datetime.now()
-        self.id = id
-        self.write_count = write_count
-        self.results = []
-        self.counter = 0
-
-    def handle_job(self, scheduler, job):
-        self.results.append(job.result)
-
-        if len(self.results) % self.write_count == 0:
-            self._write_partial_result(self.results, self.counter)
-            self.results = []
-            self.counter += 1
-
-    def _write_partial_result(self, results, counter):
-        filename = "haydi-{}-{}-{}".format(
-                int(time.mktime(self.time.timetuple())),
-                self.id,
-                counter)
-        with open(filename, "w") as f:
-            cloudpickle.dump(results, f)
-        haydi_logger.info("Writing file {} ({} results)".format(
-            filename, len(results)))
 
 
 class TimeoutManager(object):

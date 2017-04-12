@@ -17,7 +17,7 @@ try:
     from distributed.http import HTTPScheduler
 
     from .scheduler import JobScheduler
-    from .util import haydi_logger, ResultSaver, ProgressLogger, TimeoutManager
+    from .util import haydi_logger, ProgressLogger, TimeoutManager
 
     package_import_error = None
 except Exception as e:
@@ -138,18 +138,12 @@ class DistributedContext(object):
                 - connect to an existing cluster located at (ip, port)
             - If `spawn_workers` is ``n``
                 - create a local cluster with ``n`` workers
-        write_partial_results (int):
-            - If `write_partial_results` is ``None``
-                - no partial results can be saved
-            - If `write_partial_results` is ``n``
-                - partial results are saved after every ``n-th`` job
     """
 
     def __init__(self,
                  ip="127.0.0.1",
                  port=8787,
-                 spawn_workers=0,
-                 write_partial_results=None):
+                 spawn_workers=0):
         """
 
         :type ip: string
@@ -158,15 +152,11 @@ class DistributedContext(object):
         :param port: port of distributed scheduler
         :type spawn_workers: int
         :param spawn_workers: True if a computation cluster should be spawned
-        :type write_partial_results: int
-        :param write_partial_results:
-            n -> every n jobs a temporary result will be saved to disk
-            None -> no temporary results will be stored
         """
 
         if package_import_error:
-            raise HaydiException("distributed and monotonic must"
-                                 "be properly installed in"
+            raise HaydiException("distributed and monotonic must "
+                                 "be properly installed in "
                                  "order to use the DistributedContext\n"
                                  "Error:\n{}"
                                  .format(package_import_error))
@@ -175,7 +165,6 @@ class DistributedContext(object):
         self.ip = ip
         self.port = port
         self.active = False
-        self.write_partial_results = write_partial_results
         self.execution_count = 0
 
         if spawn_workers > 0:
@@ -191,9 +180,15 @@ class DistributedContext(object):
         else:
             self.executor = Client((ip, port))
 
-    def run(self, domain,
-            worker_reduce_fn, worker_reduce_init,
-            global_reduce_fn, global_reduce_init,
+    def run(self,
+            domain,
+            method,
+            transformations,
+            take_count,
+            worker_reduce_fn,
+            worker_reduce_init,
+            global_reduce_fn,
+            global_reduce_init,
             timeout=None,
             dump_jobs=False,
             otf_trace=False):
@@ -204,7 +199,7 @@ class DistributedContext(object):
 
         tracer.trace_workers(self._get_worker_count())
 
-        strategy = self._create_strategy(domain)
+        strategy = self._create_strategy(domain, method)
 
         size = strategy.get_size(domain)
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
@@ -216,16 +211,12 @@ class DistributedContext(object):
                                  self._get_worker_count(),
                                  strategy,
                                  timeout, domain,
+                                 transformations,
                                  worker_reduce_fn,
                                  worker_reduce_init,
                                  tracer)
 
         computation = DistributedComputation(scheduler, timeout, dump_jobs)
-
-        if self.write_partial_results is not None:
-            result_saver = ResultSaver(self.execution_count,
-                                       self.write_partial_results)
-            computation.add_callback(result_saver.handle_job)
 
         progress_logger = ProgressLogger(timedelta(seconds=10))
         computation.add_callback(progress_logger.handle_job)
@@ -238,8 +229,8 @@ class DistributedContext(object):
         if worker_reduce_fn is None:
             results = list(itertools.chain.from_iterable(results))
 
-        if size:
-            results = results[:domain.size]  # trim results to required size
+        if take_count:
+            results = results[:take_count]
 
         haydi_logger.info("Size of domain: {}".format(domain.size))
         tracer.trace_finish()
@@ -262,9 +253,10 @@ class DistributedContext(object):
 
         return workers
 
-    def _create_strategy(self, explorer):
-        if explorer.generator:
+    def _create_strategy(self, domain, method):
+        if method == "generate":
             return GeneratorStrategy()
-        if explorer.step_jumps:
+        elif domain.step_jumps:
             return StepStrategy()
-        return PrecomputeSourceStrategy()
+        else:
+            return PrecomputeSourceStrategy()

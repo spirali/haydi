@@ -48,6 +48,7 @@ class JobScheduler(object):
                  strategy,
                  timeout,
                  domain,
+                 transformations,
                  worker_reduce_fn,
                  worker_reduce_init,
                  tracer):
@@ -58,6 +59,7 @@ class JobScheduler(object):
         :type timeout: datetime.timedelta
         :param timeout: timeout for the computation
         :param domain: domain to be iterated
+        :type transformations: tuple of haydi.base.transform.Transformation
         :param worker_reduce_fn:
         :param worker_reduce_init:
         :type tracer: haydi.base.runtime.trace.Tracer
@@ -68,6 +70,7 @@ class JobScheduler(object):
         self.strategy = strategy
         self.tracer = tracer
         self.domain = domain
+        self.transformations = transformations
         self.worker_reduce_fn = worker_reduce_fn
         self.worker_reduce_init = worker_reduce_init
         self.index_scheduled = 0
@@ -221,7 +224,8 @@ class JobScheduler(object):
         for job_size in job_distribution:
             if job_size > 0:
                 start = self.index_scheduled
-                batches.append(self.strategy.get_args_for_batch(start,
+                batches.append(self.strategy.get_args_for_batch(self,
+                                                                start,
                                                                 job_size))
                 self.index_scheduled = start + job_size
 

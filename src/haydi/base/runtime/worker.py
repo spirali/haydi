@@ -3,6 +3,7 @@ import random
 import socket
 import time
 
+from .iteration import generate
 from .scheduler import Job
 
 
@@ -52,6 +53,9 @@ def worker_step(arg):
     worker_args, start, size = arg
     iterator = worker_args["domain"].iterate_steps(start, start + size)
 
+    for tr in worker_args["transformations"]:
+        iterator = tr.transform_skip_iter(iterator)
+
     return worker_compute(iterator, start, size,
                           worker_args["timelimit"],
                           worker_args["reduce_fn"],
@@ -66,6 +70,9 @@ def worker_precomputed(arg):
     worker_args, domain, size = arg
     iterator = domain.create_iter()
 
+    for tr in worker_args["transformations"]:
+        iterator = tr.transform_iter(iterator)
+
     return worker_compute(iterator, 0, size,
                           worker_args["timelimit"],
                           worker_args["reduce_fn"],
@@ -74,17 +81,21 @@ def worker_precomputed(arg):
 
 def worker_generator(arg):
     """
-        :type arg: (dict, haydi.base.domain.Domain, int, int)
+        :type arg: (dict, int, int)
         :rtype: Job
         """
-    worker_args, domain, start, size = arg
-    domain_iter = domain.create_iter()
+    worker_args, start, size = arg
+    domain_iter = generate(worker_args["domain"])
 
     def iterator():
         for i in xrange(size):
             yield domain_iter.next()
 
-    return worker_compute(iterator(), start, size,
+    it = iterator()
+    for tr in worker_args["transformations"]:
+        it = tr.transform_iter(it)
+
+    return worker_compute(it, start, size,
                           worker_args["timelimit"],
                           worker_args["reduce_fn"],
                           worker_args["reduce_init"])

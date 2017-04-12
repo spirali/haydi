@@ -1,18 +1,6 @@
-from .util import TimeoutManager
 import itertools
 
-
-def iterate_with_timeout(iterator, timeout):
-    timeout_mgr = TimeoutManager(timeout)
-    for item in iterator:
-        yield item
-        if timeout_mgr.is_finished():
-            return
-
-
-def _generate(domain):
-    while True:
-        yield domain.generate_one()
+from .iteration import choose_iterator, iterate_with_timeout
 
 
 class SerialContext(object):
@@ -30,17 +18,7 @@ class SerialContext(object):
             dump_jobs=False,
             otf_trace=False):
 
-        if method == "iterate":
-            it = domain.create_iter()
-        elif method == "generate":
-            it = _generate(domain)
-        elif method == "cnfs":
-            it = domain.create_cn_iter()
-        else:
-            raise Exception("Internal error, invalid method")
-
-        for tr in transformations:
-            it = tr.transform_iter(it)
+        it = choose_iterator(domain, method, transformations)
 
         if take_count is not None:
             it = itertools.islice(it,
