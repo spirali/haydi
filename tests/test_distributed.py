@@ -159,3 +159,17 @@ def test_dist_timeout(cluster4):
         True, timeout=timedelta(seconds=6))
     assert result is not None
     assert result > 0
+
+
+@slow
+def test_dist_precompute(cluster4):
+    size = 1000
+
+    r1 = hd.Range(size).map(lambda x: x + 1).filter(lambda x: x % 2 == 0)
+    r1_res = r1.run(True)
+
+    r2 = hd.Range(size).map(lambda x: x + 1).filter(lambda x: x % 2 == 0)
+    r2.step_jumps = False
+    r2_res = r2.run(True)
+
+    assert r1_res == r2_res

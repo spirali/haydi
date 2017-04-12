@@ -46,6 +46,7 @@ class JobScheduler(object):
                  executor,
                  worker_count,
                  strategy,
+                 size,
                  timeout,
                  domain,
                  transformations,
@@ -56,6 +57,7 @@ class JobScheduler(object):
         :param executor: distributed executor
         :param worker_count: number of workers in the cluster
         :type strategy: haydi.base.runtime.strategy.WorkerStrategy
+        :param size: size of iterated domain
         :type timeout: datetime.timedelta
         :param timeout: timeout for the computation
         :param domain: domain to be iterated
@@ -66,7 +68,7 @@ class JobScheduler(object):
         """
         self.executor = executor
         self.worker_count = worker_count
-        self.size = strategy.get_size(domain)
+        self.size = size
         self.strategy = strategy
         self.tracer = tracer
         self.domain = domain

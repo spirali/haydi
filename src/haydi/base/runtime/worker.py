@@ -3,7 +3,7 @@ import random
 import socket
 import time
 
-from .iteration import generate
+from .iteration import generate, iterate_steps, apply_transformations
 from .scheduler import Job
 
 
@@ -51,10 +51,9 @@ def worker_step(arg):
     :rtype: Job
     """
     worker_args, start, size = arg
-    iterator = worker_args["domain"].iterate_steps(start, start + size)
-
-    for tr in worker_args["transformations"]:
-        iterator = tr.transform_skip_iter(iterator)
+    iterator = iterate_steps(worker_args["domain"],
+                             worker_args["transformations"],
+                             start, start + size)
 
     return worker_compute(iterator, start, size,
                           worker_args["timelimit"],
@@ -64,14 +63,12 @@ def worker_step(arg):
 
 def worker_precomputed(arg):
     """
-    :type arg: (dict, haydi.base.domain.Domain, int)
+    :type arg: (dict, haydi.base.values.Values, int)
     :rtype: Job
     """
-    worker_args, domain, size = arg
-    iterator = domain.create_iter()
-
-    for tr in worker_args["transformations"]:
-        iterator = tr.transform_iter(iterator)
+    worker_args, values, size = arg
+    iterator = apply_transformations(values.create_iter(),
+                                     worker_args["transformations"])
 
     return worker_compute(iterator, 0, size,
                           worker_args["timelimit"],
@@ -91,9 +88,7 @@ def worker_generator(arg):
         for i in xrange(size):
             yield domain_iter.next()
 
-    it = iterator()
-    for tr in worker_args["transformations"]:
-        it = tr.transform_iter(it)
+    it = apply_transformations(iterator(), worker_args["transformations"])
 
     return worker_compute(it, start, size,
                           worker_args["timelimit"],

@@ -1,4 +1,4 @@
-from haydi.base.runtime.util import TimeoutManager
+from .util import TimeoutManager
 
 
 def iterate_with_timeout(iterator, timeout):
@@ -14,6 +14,20 @@ def generate(domain):
         yield domain.generate_one()
 
 
+def iterate_steps(domain, transformations, start, end):
+    from haydi import StepSkip
+
+    i = start
+    it = apply_transformations(domain.create_step_iter(start), transformations)
+    while i < end:
+        v = next(it)
+        if isinstance(v, StepSkip):
+            i += v.value
+        else:
+            yield v
+            i += 1
+
+
 def apply_transformations(iterator, transformations):
     for tr in transformations:
         iterator = tr.transform_iter(iterator)
@@ -21,8 +35,6 @@ def apply_transformations(iterator, transformations):
 
 
 def choose_iterator(domain, method, transformations=None):
-    it = None
-
     if method == "iterate":
         it = domain.create_iter()
     elif method == "generate":

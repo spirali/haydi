@@ -1,4 +1,5 @@
 from haydi import Values
+from haydi.base.runtime.iteration import choose_iterator
 from .worker import worker_step, worker_precomputed, worker_generator
 
 
@@ -7,8 +8,11 @@ class WorkerStrategy(object):
         self.worker_args = None
         self.worker_args_future = None
 
-    def get_size(self, domain):
-        return domain.size
+    def get_size(self, domain, method, take_count):
+        if method == "generate" and take_count:
+            return take_count
+        else:
+            return domain.size
 
     def start(self, scheduler):
         self.worker_args = self._create_worker_args(scheduler)
@@ -44,16 +48,15 @@ class StepStrategy(WorkerStrategy):
 
 
 class PrecomputeSourceStrategy(WorkerStrategy):
-    def __init__(self):
+    def __init__(self, method):
         super(PrecomputeSourceStrategy, self).__init__()
         self.iterator = None
-
-    def get_size(self, domain):
-        return domain.get_source().size
+        self.method = method
 
     def start(self, scheduler):
         super(PrecomputeSourceStrategy, self).start(scheduler)
-        self.iterator = scheduler.domain.get_source().create_iter()
+        self.iterator = choose_iterator(scheduler.domain.get_source(),
+                                        self.method)
 
     def get_args_for_batch(self, scheduler, start, job_size):
         values = []
@@ -61,7 +64,7 @@ class PrecomputeSourceStrategy(WorkerStrategy):
             values.append(self.iterator.next())
 
         return (self.worker_args_future,
-                self._set_source(scheduler.domain, values),
+                Values(values),
                 job_size)
 
     def _create_worker_args(self, scheduler):
@@ -75,9 +78,6 @@ class PrecomputeSourceStrategy(WorkerStrategy):
             "reduce_init": scheduler.worker_reduce_init,
             "timelimit": timelimit
         }
-
-    def _set_source(self, domain, values):
-        return domain.set_source(Values(values))
 
     def _get_worker_fn(self):
         return worker_precomputed

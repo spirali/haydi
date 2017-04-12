@@ -201,7 +201,7 @@ class DistributedContext(object):
 
         strategy = self._create_strategy(domain, method)
 
-        size = strategy.get_size(domain)
+        size = strategy.get_size(domain, method, take_count)
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
         start_msg = "Starting run with size {} and worker count {} on {}". \
             format(size, self._get_worker_count(), name)
@@ -210,6 +210,7 @@ class DistributedContext(object):
         scheduler = JobScheduler(self.executor,
                                  self._get_worker_count(),
                                  strategy,
+                                 size,
                                  timeout, domain,
                                  transformations,
                                  worker_reduce_fn,
@@ -259,4 +260,4 @@ class DistributedContext(object):
         elif domain.step_jumps:
             return StepStrategy()
         else:
-            return PrecomputeSourceStrategy()
+            return PrecomputeSourceStrategy(method)
