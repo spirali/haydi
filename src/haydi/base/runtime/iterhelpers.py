@@ -34,7 +34,7 @@ def apply_transformations(iterator, transformations):
     return iterator
 
 
-def choose_iterator(domain, method, transformations=None):
+def make_iter_by_method(domain, method):
     if method == "iterate":
         it = domain.create_iter()
     elif method == "generate":
@@ -43,8 +43,4 @@ def choose_iterator(domain, method, transformations=None):
         it = domain.create_cn_iter()
     else:
         raise Exception("Internal error, invalid method")
-
-    if transformations:
-        it = apply_transformations(it, transformations)
-
     return it

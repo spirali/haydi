@@ -9,7 +9,7 @@ from Queue import Empty
 from datetime import timedelta, datetime
 
 from haydi.base.exception import HaydiException, TimeoutException
-from .strategy import StepStrategy, PrecomputeSourceStrategy, GeneratorStrategy
+from .strategy import StepStrategy, PrecomputeStrategy, GeneratorStrategy
 from .trace import OTFTracer, Tracer
 
 try:
@@ -24,7 +24,38 @@ except Exception as e:
     package_import_error = e
 
 
+def check_package_requirements():
+    if package_import_error:
+        raise HaydiException("Packages 'distributed' and 'monotonic' must "
+                             "be properly installed in "
+                             "order to use the DistributedContext\n"
+                             "Error:\n{}"
+                             .format(package_import_error))
+
+
+def get_worker_count(executor):
+    workers = 0
+    for name, value in executor.ncores().items():
+        workers += value
+
+    if workers == 0:
+        raise HaydiException("There are no workers")
+
+    return workers
+
+
+def create_strategy(self, pipeline):
+    method = pipeline
+    if method == "generate":
+        return GeneratorStrategy()
+    elif method == "iterate" and pipeline.domain.step_jumps:
+        return StepStrategy()
+    else:
+        return PrecomputeStrategy(method)
+
+
 class DistributedComputation(object):
+
     def __init__(self, scheduler, timeout, dump_jobs=False):
         self.scheduler = scheduler
         self.timeout_mgr = TimeoutManager(timeout) if timeout else None
@@ -154,12 +185,7 @@ class DistributedContext(object):
         :param spawn_workers: True if a computation cluster should be spawned
         """
 
-        if package_import_error:
-            raise HaydiException("distributed and monotonic must "
-                                 "be properly installed in "
-                                 "order to use the DistributedContext\n"
-                                 "Error:\n{}"
-                                 .format(package_import_error))
+        check_package_requirements()
 
         self.worker_count = spawn_workers
         self.ip = ip
@@ -181,17 +207,11 @@ class DistributedContext(object):
             self.executor = Client((ip, port))
 
     def run(self,
-            domain,
-            method,
-            transformations,
-            take_count,
-            worker_reduce_fn,
-            worker_reduce_init,
-            global_reduce_fn,
-            global_reduce_init,
+            pipeline,
             timeout=None,
             dump_jobs=False,
             otf_trace=False):
+
         if otf_trace:
             tracer = OTFTracer("otf-{}".format(int(time.time())))
         else:
@@ -199,23 +219,18 @@ class DistributedContext(object):
 
         tracer.trace_workers(self._get_worker_count())
 
-        strategy = self._create_strategy(domain, method)
+        strategy = self._create_strategy(pipeline)
 
-        size = strategy.get_size(domain, method, take_count)
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
         start_msg = "Starting run with size {} and worker count {} on {}". \
             format(size, self._get_worker_count(), name)
         haydi_logger.info(start_msg)
 
         scheduler = JobScheduler(self.executor,
-                                 self._get_worker_count(),
+                                 pipeline,
+                                 get_worker_count(),
                                  strategy,
-                                 size,
-                                 timeout, domain,
-                                 transformations,
-                                 worker_reduce_fn,
-                                 worker_reduce_init,
-                                 tracer)
+                                 timeout)
 
         computation = DistributedComputation(scheduler, timeout, dump_jobs)
 
@@ -244,20 +259,3 @@ class DistributedContext(object):
             else:
                 return reduce(global_reduce_fn, results, global_reduce_init())
 
-    def _get_worker_count(self):
-        workers = 0
-        for name, value in self.executor.ncores().items():
-            workers += value
-
-        if workers == 0:
-            raise HaydiException("There are no workers")
-
-        return workers
-
-    def _create_strategy(self, domain, method):
-        if method == "generate":
-            return GeneratorStrategy()
-        elif domain.step_jumps:
-            return StepStrategy()
-        else:
-            return PrecomputeSourceStrategy(method)

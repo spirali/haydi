@@ -1,31 +1,28 @@
 import itertools
 
-from .iteration import choose_iterator, iterate_with_timeout
+import iterhelpers
 
 
 class SerialContext(object):
 
-    def run(self,
-            domain,
-            method,
-            transformations,
-            take_count,
-            worker_reduce_fn,
-            worker_reduce_init,
-            global_reduce_fn,
-            global_reduce_init,
-            timeout=None,
-            dump_jobs=False,
-            otf_trace=False):
+    def run(self, pipeline,
+            timeout=None, dump_jobs=None, otf_trace=None):
+        it = iterhelpers.make_iter_by_method(pipeline.domain, pipeline.method)
+        it = iterhelpers.apply_transformations(it, pipeline.transformations)
 
-        it = choose_iterator(domain, method, transformations)
-
-        if take_count is not None:
+        if pipeline.take_count is not None:
             it = itertools.islice(it,
-                                  take_count)
+                                  pipeline.take_count)
 
         if timeout:
-            it = iterate_with_timeout(it, timeout)
+            it = iterhelpers.iterate_with_timeout(it, timeout)
+
+        action = pipeline.action
+        print action
+        worker_reduce_fn = action.worker_reduce_fn
+        global_reduce_fn = action.global_reduce_fn
+        worker_reduce_init = action.worker_reduce_init
+        global_reduce_init = action.global_reduce_init
 
         if worker_reduce_fn:
             if worker_reduce_init is None:

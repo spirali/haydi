@@ -1,5 +1,5 @@
 from haydi import Values
-from haydi.base.runtime.iteration import choose_iterator
+from haydi.base.runtime.iterhelpers import make_iter_by_method
 from .worker import worker_step, worker_precomputed, worker_generator
 
 
@@ -55,8 +55,8 @@ class PrecomputeSourceStrategy(WorkerStrategy):
 
     def start(self, scheduler):
         super(PrecomputeSourceStrategy, self).start(scheduler)
-        self.iterator = choose_iterator(scheduler.domain.get_source(),
-                                        self.method)
+        self.iterator = make_iter_by_method(scheduler.domain.get_source(),
+                                            self.method)
 
     def get_args_for_batch(self, scheduler, start, job_size):
         values = []

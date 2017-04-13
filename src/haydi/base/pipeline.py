@@ -6,11 +6,12 @@ from .haydisession import session
 
 class Pipeline(object):
 
+    action = action.Collect()
+
     def __init__(self, domain, method):
         self.domain = domain
         self.method = method
         self.transformations = ()
-        self.action = None
         self.take_count = None
 
     def __iter__(self):
@@ -82,22 +83,12 @@ class Pipeline(object):
         :type otf_trace: bool
         :return: Returns the computed result.
         """
-        a = self.action
-        if a is None:
-            a = action.Collect()
         ctx = session.get_context(parallel)
-        result = ctx.run(self.domain,
-                         self.method,
-                         self.transformations,
-                         self.take_count,
-                         a.worker_reduce_fn,
-                         a.worker_reduce_init,
-                         a.global_reduce_fn,
-                         a.global_reduce_init,
+        result = ctx.run(self,
                          timeout,
                          dump_jobs,
                          otf_trace)
-        return a.postprocess(result)
+        return self.action.postprocess(result)
 
     def filter(self, fn, strict=False):
         return self.add_transformation(
