@@ -74,19 +74,16 @@ class Pipeline(object):
         pipeline.transformations += (transformation,)
         return pipeline
 
-    def run(self, parallel=False, timeout=None,
-            dump_jobs=False, otf_trace=False):
+    def run(self, parallel=False, timeout=None, otf_trace=False):
         """
         :type parallel: bool
         :type timeout: int
-        :type dump_jobs: bool
         :type otf_trace: bool
         :return: Returns the computed result.
         """
         ctx = session.get_context(parallel)
         result = ctx.run(self,
                          timeout,
-                         dump_jobs,
                          otf_trace)
         return self.action.postprocess(result)
 

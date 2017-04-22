@@ -150,13 +150,13 @@ def test_dist_samples_and_counts(cluster4):
 
 @slow
 def test_dist_timeout(cluster4):
-    r = hd.Range(1000000)
+    r = hd.Range(100000)
 
     def fn(x):
-        return sum([i for i in xrange(x * x)])
+        return sum(xrange(x * x))
 
     result = r.map(fn).max_all(lambda x: x).run(
-        True, timeout=timedelta(seconds=6))
+        True, timeout=timedelta(seconds=4))
     assert result is not None
     assert result > 0
 

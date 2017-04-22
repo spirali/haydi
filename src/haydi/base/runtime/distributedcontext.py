@@ -1,12 +1,11 @@
 from __future__ import print_function
 
 import itertools
-import json
 import os
 import socket
 import time
 from Queue import Empty
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from haydi.base.exception import HaydiException, TimeoutException
 from .strategy import StepStrategy, PrecomputeStrategy, GeneratorStrategy
@@ -53,100 +52,6 @@ def create_strategy(pipeline, timeout=None):
         return PrecomputeStrategy(pipeline, timeout)
 
 
-class DistributedComputation(object):
-
-    def __init__(self, scheduler, timeout, dump_jobs=False):
-        self.scheduler = scheduler
-        self.timeout_mgr = TimeoutManager(timeout) if timeout else None
-        self.dump_jobs = dump_jobs
-        self.callbacks = []
-
-    def add_callback(self, fn):
-        self.callbacks.append(fn)
-
-    def iterate_jobs(self):
-        self.scheduler.start()
-
-        jobs = []
-        try:
-            while not (self.scheduler.completed or self.scheduler.canceled):
-                if self._is_timeouted():
-                    raise TimeoutException()
-
-                try:
-                    jobs.append(self._consume_job())
-                except Empty:
-                    time.sleep(3)
-
-            # extract remaining jobs
-            while True:
-                try:
-                    jobs.append(self._consume_job())
-                except Empty:
-                    break
-
-        except KeyboardInterrupt:
-            pass
-        except TimeoutException:
-            haydi_logger.info("Run timeouted after {} seconds".format(
-                self.timeout_mgr.get_time_from_start()))
-
-        self.scheduler.stop()
-
-        # order the results
-        jobs.sort(key=lambda job: job.start_index)
-
-        self._log_statistics(self.scheduler, jobs)
-
-        if self.dump_jobs:
-            self._dump_jobs(jobs)
-
-        return jobs
-
-    def _consume_job(self):
-        job = self.scheduler.job_queue.get(block=False)
-        self._on_job_completed(job)
-        return job
-
-    def _on_job_completed(self, job):
-        for cb in self.callbacks:
-            cb(self.scheduler, job)
-
-    def _is_timeouted(self):
-        return self.timeout_mgr and self.timeout_mgr.is_finished()
-
-    def _log_statistics(self, scheduler, jobs):
-        haydi_logger.info("Total scheduled: {}".format(
-            scheduler.index_scheduled))
-        haydi_logger.info("Total completed: {}".format(
-            scheduler.index_completed))
-
-        size_hist = {}
-        for job in jobs:
-            if job.size not in size_hist:
-                size_hist[job.size] = []
-            size_hist[job.size].append(job.get_duration())
-
-        for size, times in sorted(size_hist.iteritems(), key=lambda x: x[0]):
-            count = len(times)
-            haydi_logger.info("Batch size {} had {} jobs with avg time {}"
-                              .format(size, count, sum(times) / float(count)))
-
-    def _dump_jobs(self, jobs):
-        jobs = map(lambda job: {
-                    "start": job.start_time,
-                    "end": job.end_time,
-                    "duration": job.get_duration(),
-                    "size": job.size,
-                    "index": job.start_index,
-                    "worker": job.worker_id,
-                    "completed": job.result is not None
-                }, jobs)
-
-        with open("jobs-{}.json".format(datetime.now()), "w") as f:
-            json.dump(jobs, f)
-
-
 class DistributedContext(object):
     """
     Parallel context that uses the
@@ -190,7 +95,6 @@ class DistributedContext(object):
         self.ip = ip
         self.port = port
         self.active = False
-        self.execution_count = 0
 
         if spawn_workers > 0:
             self.cluster = LocalCluster(ip=ip,
@@ -208,7 +112,6 @@ class DistributedContext(object):
     def run(self,
             pipeline,
             timeout=None,
-            dump_jobs=False,
             otf_trace=False):
 
         if otf_trace:
@@ -224,7 +127,7 @@ class DistributedContext(object):
 
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
         start_msg = "Starting run with size {} and worker count {} on {}". \
-            format(size, worker_count , name)
+            format(size, worker_count, name)
         haydi_logger.info(start_msg)
 
         scheduler = JobScheduler(self.executor,
@@ -233,14 +136,7 @@ class DistributedContext(object):
                                  timeout,
                                  tracer)
 
-        computation = DistributedComputation(scheduler, timeout, dump_jobs)
-
-        progress_logger = ProgressLogger(timedelta(seconds=10))
-        computation.add_callback(progress_logger.handle_job)
-
-        jobs = computation.iterate_jobs()
-        self.execution_count += 1
-
+        jobs = self._run_computation(scheduler, timeout)
         results = [job.result for job in jobs]
 
         action = pipeline.action
@@ -262,3 +158,67 @@ class DistributedContext(object):
             else:
                 return reduce(action.global_reduce_fn, results,
                               action.global_reduce_init())
+
+    def _run_computation(self, scheduler, timeout):
+        progress_logger = ProgressLogger(timedelta(seconds=10))
+        jobs = []
+        timeout_mgr = TimeoutManager(timeout) if timeout else None
+
+        def consume_job():
+            job = scheduler.job_queue.get(block=False)
+            jobs.append(job)
+            progress_logger.handle_job(scheduler, job)
+
+        def is_timeouted():
+            return timeout_mgr and timeout_mgr.is_finished()
+
+        scheduler.start()
+
+        try:
+            while not (scheduler.completed or scheduler.canceled):
+                if is_timeouted():
+                    raise TimeoutException()
+
+                try:
+                    consume_job()
+                except Empty:
+                    time.sleep(3)
+
+            # extract remaining jobs
+            while True:
+                try:
+                    consume_job()
+                except Empty:
+                    break
+
+        except KeyboardInterrupt:
+            pass
+        except TimeoutException:
+            haydi_logger.info("Run timeouted after {} seconds".format(
+                timeout_mgr.get_time_from_start()))
+
+        scheduler.stop()
+
+        # order the results
+        jobs.sort(key=lambda job: job.start_index)
+
+        self._log_statistics(scheduler, jobs)
+
+        return jobs
+
+    def _log_statistics(self, scheduler, jobs):
+        haydi_logger.info("Total scheduled: {}".format(
+            scheduler.index_scheduled))
+        haydi_logger.info("Total completed: {}".format(
+            scheduler.index_completed))
+
+        size_hist = {}
+        for job in jobs:
+            if job.size not in size_hist:
+                size_hist[job.size] = []
+            size_hist[job.size].append(job.get_duration())
+
+        for size, times in sorted(size_hist.iteritems(), key=lambda x: x[0]):
+            count = len(times)
+            haydi_logger.info("Batch size {} had {} jobs with avg time {}"
+                              .format(size, count, sum(times) / float(count)))

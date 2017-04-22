@@ -6,7 +6,7 @@ import iterhelpers
 class SerialContext(object):
 
     def run(self, pipeline,
-            timeout=None, dump_jobs=None, otf_trace=None):
+            timeout=None, otf_trace=None):
         it = iterhelpers.make_iter_by_method(pipeline.domain, pipeline.method)
         it = iterhelpers.apply_transformations(it, pipeline.transformations)
 
