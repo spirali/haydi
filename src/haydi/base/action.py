@@ -9,9 +9,6 @@ class Action(object):
     def postprocess(self, value):
         return value
 
-    def __iter__(self):
-        return iter(self.run())
-
 
 class Collect(Action):
     pass

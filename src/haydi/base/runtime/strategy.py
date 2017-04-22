@@ -1,45 +1,43 @@
 from haydi import Values
 from haydi.base.runtime.iterhelpers import make_iter_by_method
+from haydi.base.runtime.util import TimeoutManager
 from .worker import worker_step, worker_precomputed, worker_generator
 
 
 class WorkerStrategy(object):
-    def __init__(self):
-        self.worker_args = None
-        self.worker_args_future = None
+    def __init__(self, pipeline, timeout=None):
+        self.pipeline = pipeline
+        self.timeout_mgr = TimeoutManager(timeout) if timeout else None
+        self.size = self._compute_size(pipeline)
 
-    def get_size(self, domain, method, take_count):
-        if method == "generate" and take_count:
-            return take_count
+    def _compute_size(self, pipeline):
+        if pipeline.method == "generate" and pipeline.take_count:
+            return pipeline.take_count
         else:
-            return domain.size
+            return pipeline.domain.size
 
-    def start(self, scheduler):
-        self.worker_args = self._create_worker_args(scheduler)
-        [self.worker_args_future] = scheduler.executor.scatter(
-            [self.worker_args], broadcast=True)
-
-    def get_args_for_batch(self, scheduler, start, job_size):
-        return (self.worker_args_future, start, job_size)
-
-    def create_futures(self, scheduler, batches):
-        return scheduler.executor.map(self._get_worker_fn(), batches)
-
-    def _create_worker_args(self, scheduler):
-        timelimit = None
-        if scheduler.timeout_mgr:
-            timelimit = scheduler.timeout_mgr.end
-
+    def create_cached_args(self):
         return {
-            "domain": scheduler.domain,
-            "transformations": scheduler.transformations,
-            "reduce_fn": scheduler.worker_reduce_fn,
-            "reduce_init": scheduler.worker_reduce_init,
-            "timelimit": timelimit
+            "domain": self.pipeline.domain,
+            "transformations": self.pipeline.transformations,
+            "reduce_fn": self.pipeline.action.worker_reduce_fn,
+            "reduce_init": self.pipeline.action.worker_reduce_init,
+            "timelimit": self._get_timelimit()
         }
+
+    def get_args_for_batch(self, cached_args, start, job_size):
+        return (cached_args, start, job_size)
+
+    def create_job(self, batches):
+        return (self._get_worker_fn(), batches)
 
     def _get_worker_fn(self):
         raise NotImplementedError()
+
+    def _get_timelimit(self):
+        if self.timeout_mgr:
+            return self.timeout_mgr.end
+        return None
 
 
 class StepStrategy(WorkerStrategy):
@@ -47,37 +45,26 @@ class StepStrategy(WorkerStrategy):
         return worker_step
 
 
-class PrecomputeSourceStrategy(WorkerStrategy):
-    def __init__(self, method):
-        super(PrecomputeSourceStrategy, self).__init__()
-        self.iterator = None
-        self.method = method
+class PrecomputeStrategy(WorkerStrategy):
+    def __init__(self, pipeline, timeout):
+        super(PrecomputeStrategy, self).__init__(pipeline, timeout)
+        self.iterator = make_iter_by_method(pipeline.domain.get_source(),
+                                            pipeline.method)
 
-    def start(self, scheduler):
-        super(PrecomputeSourceStrategy, self).start(scheduler)
-        self.iterator = make_iter_by_method(scheduler.domain.get_source(),
-                                            self.method)
+    def create_cached_args(self):
+        return {
+            "transformations": self.pipeline.transformations,
+            "reduce_fn": self.pipeline.action.worker_reduce_fn,
+            "reduce_init": self.pipeline.action.worker_reduce_init,
+            "timelimit": self._get_timelimit()
+        }
 
-    def get_args_for_batch(self, scheduler, start, job_size):
+    def get_args_for_batch(self, cached_args, start, job_size):
         values = []
         for i in xrange(job_size):
             values.append(self.iterator.next())
 
-        return (self.worker_args_future,
-                Values(values),
-                job_size)
-
-    def _create_worker_args(self, scheduler):
-        timelimit = None
-        if scheduler.timeout_mgr:
-            timelimit = scheduler.timeout_mgr.end
-
-        return {
-            "transformations": scheduler.transformations,
-            "reduce_fn": scheduler.worker_reduce_fn,
-            "reduce_init": scheduler.worker_reduce_init,
-            "timelimit": timelimit
-        }
+        return (cached_args, Values(values), start, job_size)
 
     def _get_worker_fn(self):
         return worker_precomputed

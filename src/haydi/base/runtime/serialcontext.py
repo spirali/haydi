@@ -18,7 +18,7 @@ class SerialContext(object):
             it = iterhelpers.iterate_with_timeout(it, timeout)
 
         action = pipeline.action
-        print action
+
         worker_reduce_fn = action.worker_reduce_fn
         global_reduce_fn = action.global_reduce_fn
         worker_reduce_init = action.worker_reduce_init

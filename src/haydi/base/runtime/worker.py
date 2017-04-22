@@ -63,14 +63,14 @@ def worker_step(arg):
 
 def worker_precomputed(arg):
     """
-    :type arg: (dict, haydi.base.values.Values, int)
+    :type arg: (dict, haydi.base.values.Values, int, int)
     :rtype: Job
     """
-    worker_args, values, size = arg
+    worker_args, values, start, size = arg
     iterator = apply_transformations(values.create_iter(),
                                      worker_args["transformations"])
 
-    return worker_compute(iterator, 0, size,
+    return worker_compute(iterator, start, size,
                           worker_args["timelimit"],
                           worker_args["reduce_fn"],
                           worker_args["reduce_init"])

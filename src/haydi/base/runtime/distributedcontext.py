@@ -44,14 +44,13 @@ def get_worker_count(executor):
     return workers
 
 
-def create_strategy(self, pipeline):
-    method = pipeline
-    if method == "generate":
-        return GeneratorStrategy()
-    elif method == "iterate" and pipeline.domain.step_jumps:
-        return StepStrategy()
+def create_strategy(pipeline, timeout=None):
+    if pipeline.method == "generate":
+        return GeneratorStrategy(pipeline, timeout)
+    elif pipeline.method == "iterate" and pipeline.domain.step_jumps:
+        return StepStrategy(pipeline, timeout)
     else:
-        return PrecomputeStrategy(method)
+        return PrecomputeStrategy(pipeline, timeout)
 
 
 class DistributedComputation(object):
@@ -217,20 +216,22 @@ class DistributedContext(object):
         else:
             tracer = Tracer()
 
-        tracer.trace_workers(self._get_worker_count())
+        worker_count = get_worker_count(self.executor)
+        tracer.trace_workers(worker_count)
 
-        strategy = self._create_strategy(pipeline)
+        strategy = create_strategy(pipeline, timeout)
+        size = strategy.size
 
         name = "{} (pid {})".format(socket.gethostname(), os.getpid())
         start_msg = "Starting run with size {} and worker count {} on {}". \
-            format(size, self._get_worker_count(), name)
+            format(size, worker_count , name)
         haydi_logger.info(start_msg)
 
         scheduler = JobScheduler(self.executor,
-                                 pipeline,
-                                 get_worker_count(),
+                                 worker_count,
                                  strategy,
-                                 timeout)
+                                 timeout,
+                                 tracer)
 
         computation = DistributedComputation(scheduler, timeout, dump_jobs)
 
@@ -242,20 +243,22 @@ class DistributedContext(object):
 
         results = [job.result for job in jobs]
 
-        if worker_reduce_fn is None:
+        action = pipeline.action
+
+        if action.worker_reduce_fn is None:
             results = list(itertools.chain.from_iterable(results))
 
-        if take_count:
-            results = results[:take_count]
+        if pipeline.take_count:
+            results = results[:pipeline.take_count]
 
-        haydi_logger.info("Size of domain: {}".format(domain.size))
+        haydi_logger.info("Size of domain: {}".format(pipeline.domain.size))
         tracer.trace_finish()
 
-        if global_reduce_fn is None or len(results) == 0:
+        if action.global_reduce_fn is None or len(results) == 0:
             return results
         else:
-            if global_reduce_init is None:
-                return reduce(global_reduce_fn, results)
+            if action.global_reduce_init is None:
+                return reduce(action.global_reduce_fn, results)
             else:
-                return reduce(global_reduce_fn, results, global_reduce_init())
-
+                return reduce(action.global_reduce_fn, results,
+                              action.global_reduce_init())

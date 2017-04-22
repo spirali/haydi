@@ -46,35 +46,21 @@ class JobScheduler(object):
                  executor,
                  worker_count,
                  strategy,
-                 size,
                  timeout,
-                 domain,
-                 transformations,
-                 worker_reduce_fn,
-                 worker_reduce_init,
                  tracer):
         """
         :param executor: distributed executor
         :param worker_count: number of workers in the cluster
         :type strategy: haydi.base.runtime.strategy.WorkerStrategy
-        :param size: size of iterated domain
         :type timeout: datetime.timedelta
         :param timeout: timeout for the computation
-        :param domain: domain to be iterated
-        :type transformations: tuple of haydi.base.transform.Transformation
-        :param worker_reduce_fn:
-        :param worker_reduce_init:
         :type tracer: haydi.base.runtime.trace.Tracer
         """
         self.executor = executor
         self.worker_count = worker_count
-        self.size = size
+        self.size = strategy.size
         self.strategy = strategy
         self.tracer = tracer
-        self.domain = domain
-        self.transformations = transformations
-        self.worker_reduce_fn = worker_reduce_fn
-        self.worker_reduce_init = worker_reduce_init
         self.index_scheduled = 0
         self.index_completed = 0
         self.job_size = None
@@ -88,9 +74,12 @@ class JobScheduler(object):
         self.job_thread = None
         self.completed = False
         self.canceled = False
+        self.cached_args = None
 
     def start(self):
-        self.strategy.start(self)
+        self.cached_args = self.strategy.create_cached_args()
+        self.executor.scatter([self.cached_args], broadcast=True)
+
         self.job_thread = Thread(target=self._iterate_jobs)
         self.job_thread.daemon = True
         self.job_thread.start()
@@ -226,16 +215,16 @@ class JobScheduler(object):
         for job_size in job_distribution:
             if job_size > 0:
                 start = self.index_scheduled
-                batches.append(self.strategy.get_args_for_batch(self,
-                                                                start,
-                                                                job_size))
+                batches.append(self.strategy.get_args_for_batch(
+                    self.cached_args, start, job_size))
                 self.index_scheduled = start + job_size
 
         if len(batches) > 0:
             self.tracer.trace_index_scheduled(self.index_scheduled)
             self.tracer.trace_comment("Sending {} jobs with size {}"
                                       .format(len(batches), self.job_size))
-            futures = self.strategy.create_futures(self, batches)
+            args = self.strategy.create_job(batches)
+            futures = self.executor.map(args[0], args[1])
             self.ordered_futures += futures
             return futures
         else:
