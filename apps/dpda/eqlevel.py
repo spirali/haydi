@@ -105,7 +105,7 @@ class NormDecomposition(object):
         self.norms = [[None] * n_states for i in xrange(n_states * n_symbols)]
         rules = []
         self.n_states = n_states
-        for rule in pda.items():
+        for rule in pda.items:
             lrule, rrule = rule
             if rrule[1]:
                 rules.append(rule)
@@ -167,7 +167,7 @@ class PdaLTS(hd.DLTS):
 
     def __init__(self, pda, actions):
         hd.DLTS.__init__(self, actions)
-        self.pda = pda
+        self.pda = pda.to_dict()
 
     def step(self, conf, action):
         if len(conf) == 1:
