@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
-import time
 import logging
+import time
+from datetime import datetime, timedelta
 
 
 class TimeoutManager(object):
@@ -52,24 +52,9 @@ class ProgressLogger(object):
                     scheduler.index_completed))
 
 
-class JobOffsetLogger(object):
-    def __init__(self):
-        self.iterated = 0
-        self.histogram = []
-
-    def handle_job(self, scheduler, job):
-        if self.iterated % 10 == 0 and len(self.histogram) > 1:
-            offset_sum = 0
-
-            for i in xrange(len(self.histogram) - 1):
-                diff = self.histogram[i + 1] - self.histogram[i]
-                offset_sum += abs(diff)
-
-            offset = offset_sum / float(len(self.histogram) - 1)
-            self.histogram = []
-
-            haydi_logger.info("Job offset: {}".format(offset))
-        self.histogram.append(time.time())
+def setup_logger():
+    logging.basicConfig(level=logging.DEBUG)
+    return logging.getLogger("Haydi")
 
 
-haydi_logger = logging.getLogger("Haydi")
+haydi_logger = setup_logger()
