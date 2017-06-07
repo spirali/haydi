@@ -4,12 +4,29 @@ init()
 from haydi.base import basictypes as hdt  # noqa
 from haydi import ASet  # noqa
 
+import pytest
+
 
 def test_aset_flags():
     ax = ASet(3, "a")
     assert not ax.filtered
     assert ax.step_jumps
     assert ax.strict
+
+
+def test_aset_name_conflict():
+    ax = ASet(3, "a")
+    with pytest.raises(Exception):
+        ax = ASet(3, "a")
+    bx = ASet(2, "b")
+    with pytest.raises(Exception):
+        ax = ASet(3, "a")
+    with pytest.raises(Exception):
+        bx = ASet(3, "b")
+    cx = ASet(2, "a", False)
+    assert ax.size == 3
+    assert bx.size == 2
+    assert cx.size == 2
 
 
 def test_compare_atoms():

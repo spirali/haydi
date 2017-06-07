@@ -1,5 +1,9 @@
 from .basictypes import Atom
 from .domain import Domain
+from threading import Lock
+
+aset_names = set()
+aset_names_mutex = Lock()
 
 
 class ASet(Domain):
@@ -9,12 +13,26 @@ class ASet(Domain):
 
     counter = 1
 
-    def __init__(self, size, name):
+    def __init__(self, size, name, ensure_uniqueness=True):
+        if ensure_uniqueness:
+            with aset_names_mutex:
+                if name in aset_names:
+                    raise Exception("Aset name is not unique")
+                aset_names.add(name)
+        else:
+            name += "#{}".format(id(self))
+
         Domain.__init__(self, name)
+        self.unique = ensure_uniqueness
         self._size = size
         self.aset_id = ASet.counter
         self.cache = tuple(Atom(self, i) for i in xrange(size))
         ASet.counter += 1
+
+    def __del__(self):
+        if self.unique:
+            with aset_names_mutex:
+                aset_names.remove(self.name)
 
     def get(self, index):
         assert index >= 0 and index < self._size
