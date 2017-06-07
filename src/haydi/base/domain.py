@@ -65,11 +65,11 @@ class Domain(object):
 
     # Actions
 
-    def max_all(self, key_fn):
+    def max(self, key_fn, size=None):
         """
         Action: Get all maximal elements from domain
         """
-        return self.iterate().max_all(key_fn)
+        return self.iterate().max(key_fn, size)
 
     def groups(self, key_fn, max_items_per_group=None):
         return self.iterate().groups(key_fn, max_items_per_group)

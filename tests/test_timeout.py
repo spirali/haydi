@@ -12,6 +12,6 @@ def test_maxall_timeout():
     def fn(x):
         return sum(xrange(x * x))
 
-    result = r.map(fn).max_all(lambda x: x).run(timeout=timedelta(seconds=3))
+    result = r.map(fn).max(lambda x: x).run(timeout=timedelta(seconds=3))
     assert result is not None
     assert result > 0

@@ -23,9 +23,9 @@ class Reduce(Action):
         self.global_reduce_init = lambda: init_value
 
 
-class MaxAll(Action):
+class Max(Action):
 
-    def __init__(self, key_fn):
+    def __init__(self, key_fn, size):
         """
         :type domain: haydi.base.factory.IteratorFactory
         :type key_fn: function
@@ -36,7 +36,8 @@ class MaxAll(Action):
             best_value, best_items = pair
             if best_value is None or value > best_value:
                 return (value, [item])
-            if value == best_value:
+            if value == best_value and (size is None or
+                                        len(best_items) < size):
                 best_items.append(item)
             return pair
 
@@ -44,7 +45,16 @@ class MaxAll(Action):
             best_value1, best_items1 = pair1
             best_value2, best_items2 = pair2
             if best_value1 == best_value2:
-                return (best_value1, best_items1 + best_items2)
+                if size is None:
+                    return (best_value1, best_items1 + best_items2)
+                elif len(best_items1) == size:
+                    return pair1
+                elif len(best_items2) == size:
+                    return pair2
+                else:
+                    return (best_value1,
+                            best_items1 + best_items2[:size -
+                                                      len(best_items1)])
             elif best_value1 < best_value2:
                 return pair2
             else:

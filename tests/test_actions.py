@@ -32,14 +32,20 @@ def test_first_not_found():
     assert r == -1
 
 
-def test_max_all():
+def test_max():
     f = [("A", 10), ("A", 10), ("B", 20), ("C", 10), ("D", 20), ("E", 5)]
     v = hd.Values(f)
-    result = v.max_all(lambda x: x[1]).run()
+    result = v.max(lambda x: x[1]).run()
     assert result == [("B", 20), ("D", 20)]
 
+    result = v.max(lambda x: x[1], 10).run()
+    assert result == [("B", 20), ("D", 20)]
+
+    result = v.max(lambda x: x[1], 1).run()
+    assert result == [("B", 20)]
+
     result = list(v.filter(
-        lambda x: x[1] < 20).max_all(lambda x: x[1]))
+        lambda x: x[1] < 20).max(lambda x: x[1]))
     assert result == [("A", 10), ("A", 10), ("C", 10)]
 
 

@@ -22,9 +22,9 @@ class Pipeline(object):
         pipeline.action = action.Collect()
         return pipeline
 
-    def max_all(self, key_fn):
+    def max(self, key_fn, size=None):
         pipeline = copy(self)
-        pipeline.action = action.MaxAll(key_fn)
+        pipeline.action = action.Max(key_fn, size)
         return pipeline
 
     def groups(self, key_fn, max_items_per_group=None):

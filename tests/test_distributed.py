@@ -155,7 +155,7 @@ def test_dist_timeout(cluster4):
     def fn(x):
         return sum(xrange(x * x))
 
-    result = r.map(fn).max_all(lambda x: x).run(
+    result = r.map(fn).max(lambda x: x).run(
         True, timeout=timedelta(seconds=4))
     assert result is not None
     assert result > 0
