@@ -245,4 +245,5 @@ class JobScheduler(object):
             return -1
 
     def _has_more_work(self):
-        return not self.size or self.index_scheduled < self.size
+        return (not self.size or self.index_scheduled < self.size)\
+               and not self.strategy.exhausted

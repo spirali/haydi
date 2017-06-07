@@ -9,6 +9,7 @@ class WorkerStrategy(object):
         self.pipeline = pipeline
         self.timeout_mgr = TimeoutManager(timeout) if timeout else None
         self.size = self._compute_size(pipeline)
+        self.exhausted = False
 
     def _compute_size(self, pipeline):
         if pipeline.method == "generate" and pipeline.take_count:
@@ -48,7 +49,7 @@ class StepStrategy(WorkerStrategy):
 class PrecomputeStrategy(WorkerStrategy):
     def __init__(self, pipeline, timeout):
         super(PrecomputeStrategy, self).__init__(pipeline, timeout)
-        self.iterator = make_iter_by_method(pipeline.domain.get_source(),
+        self.iterator = make_iter_by_method(pipeline.domain,
                                             pipeline.method)
 
     def create_cached_args(self):
@@ -61,8 +62,13 @@ class PrecomputeStrategy(WorkerStrategy):
 
     def get_args_for_batch(self, cached_args, start, job_size):
         values = []
-        for i in xrange(job_size):
-            values.append(self.iterator.next())
+
+        if not self.exhausted:
+            for i in xrange(job_size):
+                try:
+                    values.append(self.iterator.next())
+                except StopIteration:
+                    self.exhausted = True
 
         return (cached_args, Values(values), start, job_size)
 

@@ -163,13 +163,11 @@ def test_dist_timeout(cluster4):
 
 @slow
 def test_dist_precompute(cluster4):
-    size = 1000
+    states = hd.ASet(2, "q")
+    alphabet = hd.ASet(2, "a")
 
-    r1 = hd.Range(size).map(lambda x: x + 1).filter(lambda x: x % 2 == 0)
-    r1_res = r1.run(True)
+    delta = hd.Mapping(states * alphabet, states)
+    r1 = delta.cnfs().run()
+    r2 = delta.cnfs().run(True)
 
-    r2 = hd.Range(size).map(lambda x: x + 1).filter(lambda x: x % 2 == 0)
-    r2.step_jumps = False
-    r2_res = r2.run(True)
-
-    assert r1_res == r2_res
+    assert len(r1) == len(r2)
