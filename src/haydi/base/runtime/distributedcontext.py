@@ -7,13 +7,13 @@ import time
 from Queue import Empty
 from datetime import timedelta
 
-from haydi.base.exception import HaydiException, TimeoutException
-from .strategy import StepStrategy, PrecomputeStrategy, GeneratorStrategy
-from .trace import OTFTracer, Tracer
-
 try:
     from distributed import Client, LocalCluster
     from distributed.http import HTTPScheduler
+
+    from haydi.base.exception import HaydiException, TimeoutException
+    from .strategy import StepStrategy, PrecomputeStrategy, GeneratorStrategy
+    from .trace import OTFTracer, Tracer
 
     from .scheduler import JobScheduler
     from .util import haydi_logger, ProgressLogger, TimeoutManager
