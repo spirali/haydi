@@ -136,10 +136,9 @@ class JobScheduler(object):
         :rtype: list of distributed.client.Future
         :return: newly scheduled futures
         """
-        self._check_falloff()
         duration = self._get_avg_duration()
         delta = duration / float(self.target_time_active)
-        delta = self._clamp(delta, 0.6, 1.25)
+        delta = self._clamp(delta, 0.5, 1.25)
 
         previous_size = self.job_size
         self.job_size = int(self.job_size / delta)
@@ -152,18 +151,6 @@ class JobScheduler(object):
         return self._create_futures(self._create_distribution(
             self.worker_count * count_per_worker, self.job_size))
 
-    def _check_falloff(self):
-        if not self.timeout_mgr:
-            return
-
-        total = self.timeout_mgr.get_total_time()
-        remaining = self.timeout_mgr.get_remaining_time()
-        limit = total * 0.2
-
-        if remaining < limit:
-            ratio = remaining / float(limit)
-            self.target_time_active = self.target_time * ratio
-
     def _clamp(self, value, minimum, maximum):
         return min(maximum, max(minimum, value))
 
@@ -174,7 +161,7 @@ class JobScheduler(object):
 
     def _init_futures(self, count_per_worker):
         job_count = self.worker_count * count_per_worker
-        self.job_size = 50
+        self.job_size = 200
 
         if self.size:
             total_size = int(math.ceil(self.size / float(job_count)))
