@@ -187,7 +187,7 @@ class Domain(object):
                 items += ", ..."
             elif self.size > ITEMS_LIMIT:
                 items += ", ..."
-            extra = "{{{0}}}".format(items)
+            extra = " {{{0}}}".format(items)
         else:
             if self.filtered:
                 extra = " filtered"
