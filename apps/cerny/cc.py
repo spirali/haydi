@@ -1,4 +1,5 @@
 import haydi as hd
+from haydi.ext.xenv import ExperimentEnv
 
 
 class SyncDLTS(hd.DLTS):
@@ -34,12 +35,23 @@ def compute(n_states, n_alphabet):
     max_steps = (n_states**3 - n_states) / 6
     pipeline = delta.cnfs().map(check_automaton) \
                            .max(lambda x: x[1] if x else 0, size=1)
-    result = pipeline.run()
-    print(result)
+    return pipeline
+
+
+N_SIZE = 5
+A_SIZE = 2
 
 
 def main():
-    compute(4, 2)
+    env = ExperimentEnv("sync",
+                        globals(),
+                        ["N_SIZE", "A_SIZE"])
+    env.parse_args()
+
+    results = env.run(
+        compute(N_SIZE, A_SIZE),
+        write=True)
+    print(results)
 
 
 if __name__ == "__main__":
