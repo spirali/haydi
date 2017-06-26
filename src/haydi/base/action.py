@@ -73,6 +73,7 @@ class Max(Action):
 class Groups(Action):
 
     def __init__(self, key_fn, max_items_per_group):
+
         def worker_fn(samples, item):
             value = key_fn(item)
             if value is None:
@@ -80,7 +81,8 @@ class Groups(Action):
             items = samples.get(value)
             if items is None:
                 samples[value] = [item]
-            elif len(items) < max_items_per_group:
+            elif (max_items_per_group is None or
+                  len(items) < max_items_per_group):
                 items.append(item)
             return samples
 

@@ -2,6 +2,7 @@ from .domain import Domain
 from .basictypes import Set, compare
 from .cnf import canonical_builder
 from .utils import ncr
+import random
 
 
 class Subsets(Domain):
@@ -66,6 +67,18 @@ class Subsets(Domain):
                 i -= 1
 
     def generate_one(self):
+        domain_size = self.size
+        if self.max_size == self.min_size:
+            size = self.min_size
+        else:
+            i = random.randint(0, domain_size - 1)
+            for size in range(self.max_size, self.min_size, -1):
+                c = ncr(domain_size, size)
+                if i < c:
+                    break
+                i -= c
+            else:
+                size = self.min_size
         raise Exception("TODO")
 
     def create_cn_iter(self):

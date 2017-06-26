@@ -1,6 +1,6 @@
 
-Running in a distributed environment
-====================================
+Distributed computation
+=======================
 
 .. currentmodule:: haydi
 

@@ -303,9 +303,10 @@ def NamedProduct(named_domains,
         else:
             type_name = name
     ntuple = namedtuple(type_name, [n for n, d in named_domains])
-    domain = Product([d for n, d in named_domains], unordered=unordered)
+    domain = Product([d for n, d in named_domains],
+                     unordered=unordered)
     domain = domain.map(make_instance)
-    domain.name = name
+    domain.set_name(name)
     del n
     del d
     return domain

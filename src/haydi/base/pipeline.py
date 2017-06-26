@@ -59,11 +59,8 @@ class Pipeline(object):
         pipeline.take_count = count
         return pipeline
 
-    def first(self, filter_fn=None, default=None):
-        if filter_fn:
-            pipeline = self.filter(filter_fn)
-        else:
-            pipeline = copy(self)
+    def first(self, default=None):
+        pipeline = copy(self)
         pipeline.take_count = 1
         pipeline.action = action.Collect()
         pipeline.action.postprocess = lambda x: x[0] if x else default

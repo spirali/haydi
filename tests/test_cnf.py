@@ -283,3 +283,29 @@ def test_expand():
 
     assert set(hd.expand((a1, a2))) == set(((a0, a1), (a0, a2), (a1, a0),
                                             (a1, a2), (a2, a0), (a2, a1)))
+
+
+def test_is_isomoprhic():
+
+    assert hd.is_isomorphic(0, 0)
+    assert not hd.is_isomorphic(0, 1)
+    assert not hd.is_isomorphic("a", 1)
+
+    a0, a1 = ASet(2, "a")
+    b0, b1 = ASet(2, "b")
+
+    assert not hd.is_isomorphic(a0, b0)
+    assert not hd.is_isomorphic(a1, b0)
+    assert hd.is_isomorphic(a0, a1)
+    assert hd.is_isomorphic(b0, b1)
+
+    x = (a0, a1)
+    y = (a1, a0)
+    z = (a0, a0)
+    w = (b0, a0)
+
+    assert hd.is_isomorphic(x, y)
+    assert not hd.is_isomorphic(x, z)
+    assert not hd.is_isomorphic(x, w)
+
+

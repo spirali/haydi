@@ -25,4 +25,4 @@ from .base.runtime.distributedcontext import DistributedContext  # noqa
 from .base.haydisession import session  # noqa
 
 # Canonical forms
-from .base.cnf import canonize, expand  # noqa
+from .base.cnf import canonize, expand, is_isomorphic, compare, sort  # noqa

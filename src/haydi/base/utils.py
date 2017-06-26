@@ -2,6 +2,7 @@ import operator as op
 
 
 def ncr(n, r):
+    """Returns a combination number (n, r)"""
     r = min(r, n-r)
     if r == 0:
         return 1

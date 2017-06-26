@@ -207,3 +207,9 @@ def expand(item, use_remove_gaps=True):
     sort(items)
     unique(items)
     return items
+
+
+def is_isomorphic(item1, item2):
+    if type(item1) != type(item2):
+        return False
+    return canonize(item1) == canonize(item2)

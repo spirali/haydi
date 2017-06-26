@@ -1,14 +1,28 @@
 
 Installation
 ============
-For simple sequential computation Haydi has no external requirements.
-If you want to parallelize the computation (see
-`distributed environment <distributed.html>`_), the
-`distributed <http://distributed.readthedocs.io>`_ library is required.
 
-Haydi can be installed using ``pip``::
+Haydi is a pure Python package for Python 2.7+.
 
-    pip install git+https://github.com/spirali/haydi.git
+Basic installation
+------------------
 
-Haydi should be fully compatible with `PyPy <http://pypy.org/>`_
-and you are encouraged to use it as it can provide a substantial speed-up.
+Haydi itself can be installed simply by ``pip``::
+
+  pip install git+https://github.com/spirali/haydi.git
+
+
+Distributed run
+---------------
+
+For *distributed run* you need to install `dask/distributed
+<http://distributed.readthedocs.io>`_::
+
+  pip install distributed
+
+
+PyPy
+----
+
+Haydi is fully compatible with `PyPy <http://pypy.org/>`_ that can provide a
+substantial speed-up.

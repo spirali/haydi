@@ -28,6 +28,9 @@ class Domain(object):
             self._size = s
         return s
 
+    def set_name(self, name):
+        self._name = name
+
     def _compute_size(self):
         return None
 
@@ -102,8 +105,8 @@ class Domain(object):
     def take(self, count):
         return self.iterate().take(count)
 
-    def first(self, filter_fn=None, default=None):
-        return self.make_pipeline("iterate").first(filter_fn, default)
+    def first(self, default=None):
+        return self.make_pipeline("iterate").first(default)
 
     # Transformations
 

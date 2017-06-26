@@ -23,12 +23,12 @@ def test_reduce():
 
 
 def test_first_found():
-    r = hd.Range(100).first(lambda x: x == 50).run()
+    r = hd.Range(100).filter(lambda x: x == 50).first().run()
     assert r == 50
 
 
 def test_first_not_found():
-    r = hd.Range(100).first(lambda x: x >= 100, -1).run()
+    r = hd.Range(100).filter(lambda x: x >= 100).first(-1).run()
     assert r == -1
 
 
@@ -66,6 +66,14 @@ def test_samples():
         5: [("E", 5)],
     }
     assert expected == result
+
+
+def test_groups_default_arg():
+    assert hd.Range(10).groups(lambda x: x % 3).run() == {
+        0: [0, 3, 6, 9],
+        1: [1, 4, 7],
+        2: [2, 5, 8]
+    }
 
 
 def test_samples_counts():

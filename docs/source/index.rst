@@ -6,24 +6,19 @@
 Haydi
 =====
 
-Environment for fast experiments with abstract structures
-
-Basic features:
-  - Provided as python package
-  - Supports distributed computations (via distributed)
-  - Works with PyPy
-  - BSD license
-
-
 .. toctree::
    :maxdepth: 2
    :caption: User guide
 
+   overview
    install
-   firststeps
    domains
-   example1
+   pipeline
+   btypes
+   cnfs
    distributed
+   cookbook
+   perftips
 
 
 .. toctree::
