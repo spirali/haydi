@@ -1,17 +1,12 @@
 Domains
 =======
 
-Base class for Domains
-----------------------
+.. currentmodule:: haydi
 
-.. autoclass:: haydi.Domain
-   :members:
+.. autosummary::
+    :toctree: _autosummary
+    :template: class.rst
 
-
-Standard domains
-----------------
-
-.. autoclass:: haydi.Range
-   :show-inheritance:
-
-
+    Domain
+    Range
+    Set
