@@ -1,7 +1,14 @@
 # coding=utf-8
 
 import os
+import sys
 from setuptools import setup, find_packages
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+DOC_DIR = os.path.join(ROOT_DIR, "docs/source")
+
+sys.path.append(DOC_DIR)
+from conf import version  # noqa
 
 
 def read(fname):
@@ -9,7 +16,7 @@ def read(fname):
 
 setup(
     name="haydi",
-    version="0.1",
+    version=str(version),
     author="Stanislav Böhm",
     author_email="stanislav.bohm@vsb.cz",
     description="Generator and enumerator for automata related problems",
