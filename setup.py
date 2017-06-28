@@ -17,11 +17,11 @@ def read(fname):
 setup(
     name="haydi",
     version=str(version),
-    author="Stanislav Böhm",
+    author="Haydi team",
     author_email="stanislav.bohm@vsb.cz",
     description="Generator and enumerator for automata related problems",
     license="MIT",
-    keywords="dpda map reduce",
+    keywords="enumeration, combinatorics, canonical representation",
     url="http://haydi.readthedocs.io",
     packages=find_packages('src'),
     package_dir={'': 'src'},

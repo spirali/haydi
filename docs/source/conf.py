@@ -32,7 +32,6 @@
 
 import sys
 import os
-import datetime
 
 DOC_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROOT_DIR = os.path.dirname(DOC_DIR)
@@ -73,7 +72,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Haydi'
-copyright = u'2016-{}, Haydi team'.format(datetime.datetime.now().year)
+copyright = u'2016-2017 Haydi team'
 author = u'Haydi team'
 
 # The version info for the project you're documenting, acts as replacement for
