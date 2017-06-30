@@ -1,3 +1,5 @@
+import utils
+
 
 class Action(object):
 
@@ -26,10 +28,9 @@ class Reduce(Action):
 class Max(Action):
 
     def __init__(self, key_fn, size):
-        """
-        :type domain: haydi.base.factory.IteratorFactory
-        :type key_fn: function
-        """
+
+        if key_fn is None:
+            key_fn = utils.identity
 
         def worker_fn(pair, item):
             value = key_fn(item)

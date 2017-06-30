@@ -10,8 +10,15 @@ class Domain(object):
     strict = False
 
     def __init__(self, name=None):
-        self.name = name
+        self._name = name
         self._size = -1
+
+    @property
+    def name(self):
+        if self._name:
+            return self._name
+        else:
+            return self.__class__.__name__
 
     @property
     def size(self):
@@ -65,7 +72,7 @@ class Domain(object):
 
     # Actions
 
-    def max(self, key_fn, size=None):
+    def max(self, key_fn=None, size=None):
         """
         Action: Get all maximal elements from domain
         """
@@ -175,10 +182,7 @@ class Domain(object):
     def __repr__(self):
         ITEMS_LIMIT = 4
         ITEMS_CHAR_LIMIT = 50
-        if self.name:
-            name = self.name
-        else:
-            name = self.__class__.__name__
+        name = self.name
 
         if not self.filtered and self.size is not None:
             items = ", ".join(map(repr, self.take(ITEMS_LIMIT)))

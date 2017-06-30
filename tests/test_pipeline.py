@@ -20,3 +20,14 @@ def test_cnfs():
 
     result = (ax * (ax + bx)).cnfs().filter(lambda x: x[1].parent == bx).run()
     assert result == [(ax.get(0), bx.get(0))]
+
+
+def test_pipeline_repr():
+    r = hd.Range(4)
+    assert repr(r.iterate()) == \
+        "<Pipeline for Range: method=iterate action=Collect>"
+
+    p = r.cnfs().map(lambda x: x + 1).filter(lambda x: x % 2).max(0)
+    assert repr(p) == \
+        "<Pipeline for Range: method=cnfs ts=[MapTransformation, " \
+        "FilterTransformation] action=Max>"

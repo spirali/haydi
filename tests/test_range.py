@@ -61,3 +61,8 @@ def test_iter_set():
 def test_range_name():
     r = hd.Range(3, 10, 5, name="Test")
     assert r.name == "Test"
+
+
+def test_range_repr():
+    r = hd.Range(10)
+    assert repr(r) == "<Range size=10 {0, 1, 2, 3, ...}>"

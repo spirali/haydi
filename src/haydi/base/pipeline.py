@@ -22,7 +22,7 @@ class Pipeline(object):
         pipeline.action = action.Collect()
         return pipeline
 
-    def max(self, key_fn, size=None):
+    def max(self, key_fn=None, size=None):
         pipeline = copy(self)
         pipeline.action = action.Max(key_fn, size)
         return pipeline
@@ -95,5 +95,17 @@ class Pipeline(object):
         return self.add_transformation(
             transform.MapTransformation(fn))
 
+    def __repr__(self):
+        s = "<Pipeline for {}: method={}".format(self.domain.name,
+                                                 self.method)
+        if self.transformations:
+            s += " ts=[{}]".format(
+                ", ".join(t.__class__.__name__ for t in self.transformations))
+
+        if self.action:
+            s += " action={}".format(self.action.__class__.__name__)
+
+        s += ">"
+        return s
 
 from . import transform  # noqa

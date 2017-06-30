@@ -48,6 +48,12 @@ def test_max():
         lambda x: x[1] < 20).max(lambda x: x[1]))
     assert result == [("A", 10), ("A", 10), ("C", 10)]
 
+    result = hd.Range(10).max().run()
+    assert result == [9]
+
+    result = hd.Range(10).iterate().max().run()
+    assert result == [9]
+
 
 def test_samples():
     f = [("A", 10), ("A", 10), ("B", 20),
