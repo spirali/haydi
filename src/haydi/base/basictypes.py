@@ -22,6 +22,12 @@ class Set(object):
     def to_set(self):
         return set(self.items)
 
+    def to_frozenset(self):
+        return frozenset(self.items)
+
+    def contains(self, value):
+        return value in self.items
+
     def __len__(self):
         return len(self.items)
 

@@ -209,3 +209,22 @@ def test_set_hash():
     m2 = hdt.Set((ax.get(2), 11))
     assert m1 == m2
     assert hash(m1) == hash(m2)
+
+
+def test_set_contains():
+    s = hdt.Set(("a", "c", "b"))
+    assert s.contains("a")
+    assert not s.contains("d")
+
+
+def test_map_conversion():
+    m = hdt.Map((
+        ("a", 11), ("b", 12)
+    ))
+    assert m.to_dict() == {"a": 11, "b": 12}
+
+
+def test_set_conversion():
+    s = hdt.Set(("a", "c", "b"))
+    assert s.to_set() == {"a", "b", "c"}
+    assert s.to_frozenset() == frozenset(("a", "b", "c"))
