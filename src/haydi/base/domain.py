@@ -181,7 +181,7 @@ class Domain(object):
             name = self.__class__.__name__
 
         if not self.filtered and self.size is not None:
-            items = ", ".join(map(str, self.take(ITEMS_LIMIT)))
+            items = ", ".join(map(repr, self.take(ITEMS_LIMIT)))
             if len(items) > ITEMS_CHAR_LIMIT:
                 items = items[:ITEMS_CHAR_LIMIT - 5]
                 items += ", ..."

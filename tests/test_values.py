@@ -43,3 +43,8 @@ def test_cnfs_values():
     a0, a1, a2 = ax
     assert list(hd.CnfValues((a0,)).create_cn_iter()) == [a0]
     assert list(hd.CnfValues((a0,))) == [a0, a1, a2]
+
+
+def test_values_repr():
+    v = hd.Values(("abc", 321, (2.2, 1)))
+    assert repr(v) == "<Values size=3 {'abc', 321, (2.2, 1)}>"
