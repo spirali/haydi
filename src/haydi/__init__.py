@@ -6,10 +6,10 @@ from .base.domain import Domain, StepSkip  # noqa
 from .base.aset import ASet  # noqa
 from .base.range import Range  # noqa
 from .base.product import Product, NamedProduct  # noqa
-from .base.sequence import Sequence  # noqa
+from .base.sequence import Sequences  # noqa
 from .base.values import Values, CnfValues  # noqa
 from .base.join import Join  # noqa
-from .base.mapping import Mapping  # noqa
+from .base.mapping import Mappings  # noqa
 from .base.subsets import Subsets  # noqa
 from .base.permutations import Permutations  # noqa
 

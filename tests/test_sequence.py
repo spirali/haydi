@@ -11,9 +11,9 @@ def test_sequence_flags():
     f = a.filter(lambda x: True)
     m = a.map(lambda x: True)
 
-    p1 = hd.Sequence(a, 2)
-    p2 = hd.Sequence(f, 2)
-    p3 = hd.Sequence(m, 2)
+    p1 = hd.Sequences(a, 2)
+    p2 = hd.Sequences(f, 2)
+    p3 = hd.Sequences(m, 2)
 
     assert not p1.filtered
     assert p2.filtered
@@ -29,7 +29,7 @@ def test_sequence_flags():
 
 
 def test_sequence_iterate():
-    s = hd.Sequence(hd.Range(3), 0, 2)
+    s = hd.Sequences(hd.Range(3), 0, 2)
 
     expected = [(), (0,), (1,), (2,),
                 (0, 0), (0, 1), (0, 2),
@@ -43,11 +43,11 @@ def test_sequence_iterate():
 
 
 def test_sequence_iterate_empty():
-    assert list(hd.Sequence(hd.Range(3), 0)) == [()]
+    assert list(hd.Sequences(hd.Range(3), 0)) == [()]
 
 
 def test_sequence_generate():
-    s = hd.Sequence(hd.Range(3), 5)
+    s = hd.Sequences(hd.Range(3), 5)
     result = list(s.generate(200))
     assert len(result)
     for r in result:
@@ -58,7 +58,7 @@ def test_sequence_generate():
 
 def test_sequence_iter_set():
     r2 = hd.Range(4)
-    p = hd.Sequence(r2, 3)
+    p = hd.Sequences(r2, 3)
 
     a = list(p)
     b = []
@@ -71,5 +71,5 @@ def test_sequence_iter_set():
 
 
 def test_sequence_name():
-    s = hd.Sequence(hd.Range(10), 2, name="TestSequence")
+    s = hd.Sequences(hd.Range(10), 2, name="TestSequence")
     assert s.name == "TestSequence"

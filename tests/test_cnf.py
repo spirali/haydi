@@ -44,14 +44,14 @@ def test_map_is_canonical():
     bx = ASet(2, "b")
     b1, b2 = bx.all()
 
-    ms = hd.Mapping(ax, bx)
+    ms = hd.Mappings(ax, bx)
     c = [item for item in ms if hdc.is_canonical(item)]
 
     m1 = hd.Map(((a1, b1), (a2, b1)))
     m2 = hd.Map(((a1, b1), (a2, b2)))
     assert hdt.compare_sequence([m1, m2], c) == 0
 
-    ms = hd.Mapping(ax, ax)
+    ms = hd.Mappings(ax, ax)
     c = [item for item in ms if hdc.is_canonical(item)]
     m1 = hd.Map(((a1, a1), (a2, a1)))
     m2 = hd.Map(((a1, a1), (a2, a2)))
@@ -146,22 +146,22 @@ def test_canonical_mapping():
     m1 = hd.Map([(b0, b0), (b1, b0)])
     m2 = hd.Map([(b0, b0), (b1, b1)])
     m3 = hd.Map([(b0, b1), (b1, b0)])
-    result = list(hd.Mapping(bx, bx).create_cn_iter())
+    result = list(hd.Mappings(bx, bx).create_cn_iter())
     assert result == [m1, m2, m3]
 
     m1 = hd.Map([(b0, a0), (b1, a0)])
     m2 = hd.Map([(b0, a0), (b1, a1)])
-    result = list(hd.Mapping(bx, ax).create_cn_iter())
+    result = list(hd.Mappings(bx, ax).create_cn_iter())
     assert result == [m1, m2]
 
     m1 = hd.Map([(0, a0), (1, a0)])
     m2 = hd.Map([(0, a0), (1, a1)])
-    result = list(hd.Mapping(hd.Range(2), ax).create_cn_iter())
+    result = list(hd.Mappings(hd.Range(2), ax).create_cn_iter())
     assert result == [m1, m2]
 
     m1 = hd.Map([(0, b0), (1, b0)])
     m2 = hd.Map([(0, b0), (1, b1)])
-    result = list(hd.Mapping(hd.Range(2), bx).create_cn_iter())
+    result = list(hd.Mappings(hd.Range(2), bx).create_cn_iter())
     assert result == [m1, m2]
 
 
@@ -180,16 +180,16 @@ def test_cannonical_prod_map():
     pb = bx * bx
     pab = ax * bx
 
-    m = hd.Mapping(bx, pb)
+    m = hd.Mappings(bx, pb)
     bf_check(m)
 
-    m = hd.Mapping(pb, bx)
+    m = hd.Mappings(pb, bx)
     bf_check(m)
 
-    m = hd.Mapping(pb, pb)
+    m = hd.Mappings(pb, pb)
     bf_check(m)
 
-    m = hd.Mapping(pab, bx)
+    m = hd.Mappings(pab, bx)
     bf_check(m)
 
 
@@ -198,9 +198,9 @@ def test_canonical_map_prod():
     bx = ASet(2, "b")
     cx = ASet(1, "b")
 
-    m1 = hd.Mapping(bx, cx)
-    m2 = hd.Mapping(ax, ax)
-    m3 = hd.Mapping(ax, bx)
+    m1 = hd.Mappings(bx, cx)
+    m2 = hd.Mappings(ax, ax)
+    m3 = hd.Mappings(ax, bx)
 
     bf_check(m1 * bx)
     bf_check(m1 * cx)
@@ -217,26 +217,26 @@ def test_canonical_map_map():
     ax = ASet(2, "a")
     bx = ASet(2, "b")
 
-    m1 = hd.Mapping(ax, bx)
-    m2 = hd.Mapping(ax, ax)
+    m1 = hd.Mappings(ax, bx)
+    m2 = hd.Mappings(ax, ax)
 
-    m = hd.Mapping(m1, m2)
+    m = hd.Mappings(m1, m2)
     bf_check(m)
 
-    m = hd.Mapping(m1, m1)
+    m = hd.Mappings(m1, m1)
     bf_check(m)
 
-    m = hd.Mapping(m2, m1)
+    m = hd.Mappings(m2, m1)
     bf_check(m)
 
 
 def test_canonical_sequence():
     ax = ASet(2, "a")
 
-    s = hd.Sequence(ax, 0, 4)
+    s = hd.Sequences(ax, 0, 4)
     bf_check(s)
 
-    s = hd.Sequence(ax * ax, 0, 4)
+    s = hd.Sequences(ax * ax, 0, 4)
     bf_check(s)
 
 

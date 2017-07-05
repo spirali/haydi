@@ -4,7 +4,7 @@ from .basictypes import Map, compare
 from .cnf import canonical_builder, get_bounds
 
 
-class Mapping(Domain):
+class Mappings(Domain):
 
     def __init__(self, key_domain, value_domain, name=None):
         keys_size = key_domain.size
@@ -14,7 +14,7 @@ class Mapping(Domain):
         else:
             keys = None
         product = Product((value_domain,) * keys_size)
-        super(Mapping, self).__init__(name)
+        super(Mappings, self).__init__(name)
         self._set_flags_from_domain(value_domain)
         self.key_domain = key_domain
         self.value_domain = value_domain

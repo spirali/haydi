@@ -5,13 +5,13 @@ from .join import Join
 from .cnf import canonical_builder
 
 
-class Sequence(Domain):
+class Sequences(Domain):
 
     def __init__(self, domain, min_length, max_length=None, name=None):
         if max_length is None:
             max_length = min_length
 
-        super(Sequence, self).__init__(name)
+        super(Sequences, self).__init__(name)
         self._set_flags_from_domain(domain)
         self.min_length = min_length
         self.max_length = max_length

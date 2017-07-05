@@ -52,12 +52,12 @@ def test_domain_filter():
     assert p.filtered
     assert not (r * r).filtered
 
-    assert hd.Sequence(d, 2).filtered
-    assert not hd.Sequence(r, 2).filtered
+    assert hd.Sequences(d, 2).filtered
+    assert not hd.Sequences(r, 2).filtered
 
-    assert not hd.Mapping(d, r).filtered
-    assert hd.Mapping(r, d).filtered
-    assert not hd.Mapping(r, r).filtered
+    assert not hd.Mappings(d, r).filtered
+    assert hd.Mappings(r, d).filtered
+    assert not hd.Mappings(r, r).filtered
 
     assert hd.Product((d, d), unordered=True).filtered
     assert not hd.Product((r, r), unordered=True).filtered
