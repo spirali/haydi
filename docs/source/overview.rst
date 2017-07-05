@@ -6,7 +6,7 @@ Haydi (Haystack diver) is a framework for generating discrete structures;
 primarily developed for automata generating, but designed for usage beyond this
 use case.
 
-* Pure Python implementation (Python 2.6+, PyPy supported)
+* Pure Python implementation (Python 2.7+, PyPy supported)
 * MIT license
 * Sequential or distributed computation (via `dask/distributed`_)
 
@@ -31,7 +31,7 @@ Example of usage
 
 * or **iterate all non-isomorphic ones**::
 
-    >>> list(graphs.cnfs())  # cnfs = cannonical forms
+    >>> list(graphs.cnfs())  # cnfs = canonical forms
     [{}, {(n0, n0)}, {(n0, n0), (n1, n1)}, {(n0, n0), (n0, n1)}, {(n0, n0), (n0,
     n1), (n1, n1)}, {(n0, n0), (n0, n1), (n1, n0)}, {(n0, n0), (n0, n1), (n1, n0),
     (n1, n1)}, {(n0, n0), (n1, n0)}, {(n0, n1)}, {(n0, n1), (n1, n0)}]
@@ -42,14 +42,14 @@ Example of usage
     [{(n1, n0)}, {(n1, n1), {(n0, n0)}, {(n0, n1), (n1, n0)}]
 
 
-* Haydi supports standard operations like **map, filter, and reduce**::
+* Haydi supports standard operations like **map, filter and reduce**::
 
     >>> op = graphs.map(lambda g: len(g)).reduce(lambda x, y: x + y, associative=True)
     >>> op.run()
 
-* We can run it transparently as **distributed application**::
+* We can run it transparently as a **distributed application**::
 
-    >>> from haydi import DistributedContext, session
+    >>> from haydi import DistributedContext
     >>> dctx = DistributedContext("hostname", 1234)  # Address of dask/distributed server
     >>> op.run(ctx=dctx)
 

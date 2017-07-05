@@ -7,7 +7,7 @@ Haydi is a pure Python package for Python 2.7+.
 Basic installation
 ------------------
 
-Haydi itself can be installed simply by ``pip``::
+Haydi itself can be installed simply with ``pip``::
 
   pip install git+https://github.com/spirali/haydi.git
 

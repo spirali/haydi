@@ -3,21 +3,23 @@
 Canonical forms
 ===============
 
+.. currentmodule:: haydi
+
 This section covers a feature that serves to iterate only non-isomorphic
-elements in a domain. It is a based on iterating over canonical elements
+elements in a domain. It is based on iterating over canonical elements
 -- one element for each equivalence class of isomorphism.
 
 Basic building blocks for the whole machinery are *Atoms* and *ASets*,
-that defines allows to define allowed bijections between elements.
+that allows to define allowed bijections between elements.
 
 
 Atoms and ASets
 ---------------
 
-Domain :class:`haydi.ASet` contains a finite number of instances of class
-:class:`haydi.Atom`. When a new ASet is created, a number of atoms and a name
-have to be specified. With a new ASet, new atoms are created. Each atom
-remembers its index number and parent ASet that creates it::
+Domain :class:`ASet` contains a finite number of instances of class
+:class:`Atom`. When a new ASet is created a number of atoms and a name
+have to be specified. With a new ASet new atoms are created. Each atom
+remembers its index number and parent ASet that created it::
 
     >>> aset = hd.ASet(3, "a")  # Create a new Aset
     >>> aset
@@ -31,40 +33,40 @@ remembers its index number and parent ASet that creates it::
     <ASet id=1 size=3 name=a>
 
 
-From perspective of methods pipeline ``iterate()`` and ``generate()``, ASet
-behaves as a kind of fancy :class:`haydi.Range` that wraps numbers into special
+From perspective of pipeline methods ``iterate()`` and ``generate()``, ASet
+behaves as a kind of fancy :class:`Range` that wraps numbers into special
 objects.
 
-The main difference between :class:`haydi.Range` and :class:`handi.ASet` arises
+The main difference between :class:`Range` and :class:`ASet` arises
 when we introduce *isomorphism*. Let us remind that two (discrete) objects are
 *isomorphic* if there exits a *bijection* between them that preserves the
 structure.
 
 In our case, we are establishing bijection between atoms and two objects are
-isomorphic when we can obtain one from another by replacing atoms according the
+isomorphic when we can obtain one from another by replacing atoms according to the
 bijection.
 
-Let us show some examples, that uses :func:`haydi.is_isomorphic` that checks
+Let us show some examples that use :func:`haydi.is_isomorphic` which checks
 isomorphism::
 
     >>> a0, a1, a2 = hd.ASet(3, "a")
 
-    >>> hd.is_isomorphic(a0, a1)  # doctest: +SKIP
+    >>> hd.is_isomorphic(a0, a1)
     True  # Because there is bijection: a0 -> a1; a1 -> a0; a2 -> a2
 
-    >>> hd.is_isomorphic((a0, a1), a1)  # doctest: +SKIP
+    >>> hd.is_isomorphic((a0, a1), a1)
     False  # No mapping between atoms can bring us from a tuple to an atom
 
-    >>> hd.is_isomorphic((a0, a1), (a1, a2))  # doctest: +SKIP
+    >>> hd.is_isomorphic((a0, a1), (a1, a2))
     True  # Because there is mapping: a0 -> a1; a1 -> a2; a2 -> a0
 
-    >>> hd.is_isomorphic((a0, a0), (a0, a1))  # doctest: +SKIP
+    >>> hd.is_isomorphic((a0, a0), (a0, a1))
     False  # The explanation below
 
 The bijection between objects in the last case cannot exists. The first tuple
 represents a pair of the same object and "renaming" a0 to anything else preserves
 this property. The second one represents a pair of two different atoms (even
-from the same ASet), and any renaming cannot achieve the property of the first one
+from the same ASet) and any renaming cannot achieve the property of the first one
 (any mapping containing ``a0 -> a0; a1 -> a0`` is not bijective)
 
 
@@ -130,8 +132,8 @@ Since we are interested only in finite (basic) objects, they contain only
 finitely many atoms, so there are only finitely many bijections (recall that
 ASet are finite). Therefore, each class of equivalence induced by
 isomorphism is also finite. Together with the linear ordering defined by
-:func:`hayd.compare`, each equivalence class has the smallest element. We call
-this element as *canonical form* of the class.
+:func:`haydi.compare`, each equivalence class has the smallest element. We call
+this element a *canonical form* of the class.
 
 The pipeline method ``cnfs()`` iterates only through canonical elements in a
 domain, therefore we obtain only one element for each equivalence class.
@@ -174,6 +176,8 @@ Let us show some examples::
 TODO: A more complex example
 
 
+.. _strict-domains:
+
 Strict domains
 --------------
 
@@ -182,9 +186,9 @@ domain* is a domain that contains only basic objects and is closed under
 isomorphism (if it contains an element, it contains also all isomorphic ones).
 However, it is usually not a problem to fulfill these criteria in practice.
 
-All elementary domains except :class:`haydi.Values` is always strict. (For more
-information about :class:`hayd.Values` in context of this section see TODO
-LINK). The strictness of a domain can be checked by reading attribute
+All elementary domains except :class:`Values` are always strict. (For more
+information about :class:`Values` in context of this section see :ref:`below <cnf-values>`).
+The strictness of a domain can be checked by reading its attribute
 ``strict``::
 
   >>> hd.Range(10).strict
@@ -198,7 +202,7 @@ domains are also strict, e.g.::
   True
 
 The only places where we have to be more careful are transformations and when we
-create strict domain from explicit elements. These topics are covered in next
+create a strict domain from explicit elements. These topics are covered in next
 two subsections.
 
 
@@ -240,19 +244,21 @@ is strict, then the resulting domain is still strict.
 
 .. warning::
 
-   It is the user responsibility to assure that strict filter removes all
-   isomorphic elements. Fortunately, in practice it usually desired behavior of
-   filters. However, if the rule of strict filter is broken, the behavior of
+   It is the user's responsibility to assure that strict filter removes all
+   isomorphic elements. Fortunately, in practice it is usually the desired
+   behavior of filters. However, if the rule of strict filter is broken, the behavior of
    ``cnfs()`` is undefined on such a domain.
 
 
-Domain :class:`hd.CnfValues`
-----------------------------
+.. _cnf-values:
 
-Domain :class:`haydi.Values` creates a non-strict domain, since we cannot assure
-that all invariants is assured. If you want to create a strict domain from
-explicit elements, you can use :class:`haydi.CnfValues`. The difference is that
-:class:`haidi.CnfValues` takes **only** canonical elements::
+Domain :class:`CnfValues`
+-------------------------
+
+Domain :class:`Values` creates a non-strict domain, since we cannot assure
+that all invariants are valid. If you want to create a strict domain from
+explicit elements, you can use :class:`CnfValues`. The difference is that
+:class:`CnfValues` takes **only** canonical elements::
 
     >>> aset = hd.ASet(3, "a")
     >>> a0, a1, a2 = aset

@@ -129,15 +129,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.61399264"
-     inkscape:cx="417.26762"
+     inkscape:cx="175.40804"
      inkscape:cy="380"
      inkscape:current-layer="layer1"
      id="namedview4156"
      showgrid="false"
-     inkscape:window-width="1600"
-     inkscape:window-height="1139"
+     inkscape:window-width="1920"
+     inkscape:window-height="1027"
      inkscape:window-x="0"
-     inkscape:window-y="32"
+     inkscape:window-y="0"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata4158">
@@ -389,6 +389,6 @@
          sodipodi:role="line"
          x="341.38287"
          y="62.984055"
-         id="tspan9172">.run(parallel=True)</tspan></text>
+         id="tspan9172">.run(ctx=parallelCtx)</tspan></text>
   </g>
 </svg>

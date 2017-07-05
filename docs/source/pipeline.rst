@@ -2,9 +2,11 @@
 Pipeline
 ========
 
+.. currentmodule:: haydi
+
 This section contains a description of how to work with elements of domains.
 The main message of this section is that there are three basic methods of
-domains that composes pipeline over a stream of elements of a domain:
+creating a stream of elements from a domain:
 
 * ``iterate()`` -- stream of all elements in domain
 * ``cnfs()`` -- stream of all canonical elements in domain
@@ -46,15 +48,15 @@ Iterate
 ~~~~~~~
 
 A pipeline that iterates through all elements is created by method
-``iterate()``
+``iterate()``:
 
    >>> domain = hd.Range(2) * hd.Range(2)
    >>> domain.iterate()
    <Pipeline for Product: method=iterate action=Collect>
 
-The calling ``iterate()`` creates a pipeline object. Moreover we can also see
+Calling ``iterate()`` on a domain creates a pipeline object. Moreover we can also see
 that the default action is *Collect*. This action simply takes all elements and
-put them into the list. More details about actions is below in TODO LINK.
+put them into the list. More details about actions can be found :ref:`below <actions>`.
 
 The pipeline is a lazy object and no elements are actually constructed. To run
 the pipeline, we need to call ``run()`` method::
@@ -70,8 +72,8 @@ stream is *not* guaranteed.
 Canonical forms
 ~~~~~~~~~~~~~~~
 
-Iterating over canonical elements are little bit special, hence
-there is a dedicated section about this topic: TODO LINK
+Iterating over canonical elements is a little bit special, hence
+there is a dedicated section about this topic: :doc:`cnfs`.
 
 
 Random elements
@@ -87,9 +89,9 @@ number of generated elements::
 
 By default, all elements are generated with the same probability, however in
 several places, it can be configured. See the API documentation for
-:class:`haydi.Join`.
+:class:`Join`.
 
-When the argument of ``generate`` is ``None``, than we obtain an infinite
+When the argument of ``generate`` is ``None``, then we obtain an infinite
 pipeline of random instances. It usually makes sense in combination with a
 filter and setting a limit after the filter.
 
@@ -101,7 +103,7 @@ For example, the following code generates 10 pairs whose sum is 11:
 
 Transformation ``take(5)`` limits the pipeline for the first five elements. As
 an exercise we left what happens when we put ``5`` as the argument for
-``generate`` and remove ``take``.
+``generate`` and remove the ``take``. TODO
 
 
 Transformations
@@ -111,8 +113,8 @@ The current version offers three *pipeline transformations*:
 
 * ``map(fn)`` -- maps the function ``fn`` on each element that goes through the
   pipeline
-* ``filter(fn)`` -- calls the function for each element in pipeline
-* ``take(count)`` -- takes only first ``count`` number of elements from pipeline
+* ``filter(fn)`` -- filters elements in the pipeline according to the provided function
+* ``take(count)`` -- takes only first ``count`` elements from pipeline
 
 At the first sight, there is an overlap between transformations on domains and
 in the pipeline. In fact, they have in many cases completely the same effect::
@@ -123,17 +125,17 @@ in the pipeline. In fact, they have in many cases completely the same effect::
   >>> domain.iterate().map(lambda x: x * 10).run()  # Transformation in pipeline
   [0, 10, 20, 30, 40]
 
-So why to distinguish transformations in pipelines and on domains? The reason is
+So why distinguish transformations in pipelines and on domains? The reason is
 that in the pipeline, we know that process of the domain creation is completed
-and have more freedom for addition features and optimizations. We already have a
+and have more freedom for additional features and optimizations. We already have a
 stream of elements; therefore, we can introduce ``take`` transformation.
-Moreover, the pipeline transformations do not have limitation in case of strict
-domains (TODO LINK), that in important in the usage of ``cnfs()``.
+Moreover, the pipeline transformations do not have limitation in case of
+:ref:`strict-domains` that are important in the usage of ``cnfs()``.
 
-For performance reasons, pipeline transformations provides more opportunities
+For performance reasons, pipeline transformations provide more opportunities
 for efficient distributed computations. Therefore, Haydi prefers *map* and
 *filter* transformations as pipeline transformations rather than domain
-transformations. For this reasons, Haydi automatically moves last
+transformations. For this reason, Haydi automatically moves last
 transformations on domains to the pipeline; therefore, the above example
 actually creates the same pipeline (with one pipeline transformation)::
 
@@ -142,9 +144,9 @@ actually creates the same pipeline (with one pipeline transformation)::
   >>> domain.iterate().map(lambda x: x * 10)
   <Pipeline for Range: method=iterate ts=[MapTransformation] action=Collect>
 
-Of course 'inner' domain transformations, cannot be moved. For example the
+Of course 'inner' domain transformations cannot be moved. For example the
 following code creates a pipeline without any transformation (the transformation
-remains in hidden inside the domain composition)::
+remains hidden inside the domain composition)::
 
   >>> domain = hd.Subsets(hd.Range(3).map(lambda x: x * x))
   >>> domain.iterate().run()
@@ -153,12 +155,15 @@ remains in hidden inside the domain composition)::
   <Pipeline for Subsets: method=iterate action=Collect>
 
 
-Action
-------
 
-*Action* is a terminal operation on the stream of elements. There are the
-following list of actions; the more details can be found
-in API documentation of :class:`haydi.Pipeline`.
+.. _actions:
+
+Actions
+-------
+
+*Action* is a terminal operation on a stream of elements. There are the
+following list of actions; more details can be found
+in API documentation of :class:`Pipeline`.
 
 Collect
 ~~~~~~~
@@ -177,8 +182,8 @@ The *collect* is the default action; therefore, the above code is equivalent to:
 First
 ~~~~~
 
-Action *first*, takes the first element from the stream. If the the stream is
-empty, then it returns the provided argument (the default is ``None``).
+Action *first* takes the first element from the stream. If the stream is
+empty it returns the provided argument (the default is ``None``).
 
     >>> hd.Range(5).iterate().first().run()
     0
@@ -191,18 +196,18 @@ empty, then it returns the provided argument (the default is ``None``).
 Reduce
 ~~~~~~
 
-Action *reduce* applies an binary operation on elements of the stream::
+Action *reduce* applies a binary operation on elements of the stream::
 
   >>> hd.Range(10).reduce(lambda x, y: x + y).run()
   45
 
-You can optionally specified default value::
+You can optionally specify an initial value::
 
   >>> hd.Range(10).reduce(lambda x, y: x + y, -3).run()
   42
 
 It is assumed by default that the operation is associative,
-if it is not true, you have to explicitly specify it::
+if that is not true, you have to explicitly specify it::
 
   >>> hd.Range(10).reduce(lambda x, y: x - y, 100, associative=False).run()
   55
@@ -213,11 +218,11 @@ Max
 ~~~
 
 Action *max* gathers maximal elements in the stream, optionally it can take a
-function that extract a an object used for comparison. The second optional
-argument specifies the limit on maximal elements. No more than limit number of
-elements is returned, the rest of maximal elements is thrown away. Which maximal
-elements are thrown away and what are returned is not specified. If the value of
-the argument is ``None`` (default) then all maximal elements are gathered::
+function that extracts a value from the element that is used for comparison.
+The second optional argument specifies the limit of maximal elements.
+No more than the limit number of elements is returned, the rest of maximal elements is thrown away.
+Which maximal elements are thrown away and what are returned is not specified.
+If the value of the argument is ``None`` (default) then all maximal elements are gathered::
 
   >>> domain = hd.Range(5) * hd.Range(5)
 
@@ -234,13 +239,13 @@ the argument is ``None`` (default) then all maximal elements are gathered::
 Groups
 ~~~~~~
 
-Action *groups* divides elements in the streams into group according to a key.
+Action *groups* divides elements in the stream into groups according to a key.
 The method takes a function that is applied on each element to obtain the key.
 
   >>> hd.Range(10).groups(lambda x: x % 3).run()
   {0: [0, 3, 6, 9], 1: [1, 4, 7], 2: [2, 5, 8]}
 
-Optionally it takes an integer argument that limits the size of the group. No
+Optionally it takes an integer argument that limits the size of groups. No
 more than the limit number of elements is returned for each group. What elements
 in the group are thrown away and what are returned is not specified.
 
@@ -262,7 +267,12 @@ The ``run(ctx=None, timeout=None, otf_trace=False)`` method invokes the
 pipeline. By default it creates a executes a sequential computation without any
 time limit. This can be changed by parameters.
 
-SIMPLE TODO
+The ``ctx`` parameter defines a context that is used to run the computation on
+the pipeline. Using this parameter you can run a parallelized
+:doc:`distributed computation <distributed>`.
+``timeout`` expects an ``int`` (number of seconds) or a ``datetime`` object.
+This controls the maximum permitted time of the computation. If the allocated
+time runs out, the computation will stop and return a partial result.
 
 
 Shortcuts
@@ -308,8 +318,8 @@ the result of pipeline where missing elements are filled by defaults::
 Immutability of pipelines
 -------------------------
 
-Pipelines are immutable objects as same domains; therefore, calling methods on
-them actually creates new objects. Therefore it makes safe to reuse them::
+Pipelines are immutable objects as same domains; therefore calling methods on
+them actually creates new objects. It is thus safe to reuse them::
 
   >>> pipeline = hd.Range(5).iterate()
   >>> pipeline.take(2).run()
