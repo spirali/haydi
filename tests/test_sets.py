@@ -35,10 +35,17 @@ def test_sets_iter():
                        hd.Set((1,)), hd.Set((1, 2)), hd.Set((2,))]
 
 
-def test_size():
+def test_sets_size():
     r = hd.Range(3)
     assert hd.Subsets(r, 2).size == 3
     assert hd.Subsets(r, 0).size == 1
     s = hd.Subsets(r * r, 1, 3)
     assert s.size == len(list(s))
     assert s.size == 129
+
+
+def test_sets_repr():
+    r = hd.Range(10)
+    assert repr(hd.Subsets(r)) == \
+        "<Subsets size=1024 " \
+        "{{}, {0}, {0, 1}, {0, 1, 2}, {0, 1, 2, 3}, ...}>"

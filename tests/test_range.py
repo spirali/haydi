@@ -65,4 +65,4 @@ def test_range_name():
 
 def test_range_repr():
     r = hd.Range(10)
-    assert repr(r) == "<Range size=10 {0, 1, 2, 3, ...}>"
+    assert repr(r) == "<Range size=10 {0, 1, 2, 3, 4, ...}>"

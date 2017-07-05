@@ -64,3 +64,39 @@ def test_domain_filter():
 
     result = list(hd.Product((d, d), unordered=True))
     assert set(result) == set(((4, 3),))
+
+
+def test_domain_repr():
+    domain = hd.Values([])
+    assert repr(domain) == "<Values size=0 {}>"
+
+    domain = hd.Values(["a"])
+    assert repr(domain) == "<Values size=1 {'a'}>"
+
+    domain = hd.Values(["a" * 1000])
+    assert repr(domain) == "<Values size=1 {'aaaaaaaaa ... aaaaaaaa'}>"
+
+    domain = hd.Values(["a", "b"])
+    assert repr(domain) == "<Values size=2 {'a', 'b'}>"
+
+    domain = hd.Values(["a" * 1000, "b" * 1000])
+    assert repr(domain) == \
+        "<Values size=2 {'aaaaaaaaa ... aaaaaaaa', " \
+        "'bbbbbbbb ... bbbbbbb'}>"
+
+    domain = hd.Values(["a", "b"] * 1000)
+    assert repr(domain) == \
+        "<Values size=2000 {'a', 'b', 'a', 'b', 'a', ...}>"
+
+    domain = hd.Values(["a" * 1000, "b" * 1000] * 1000)
+    assert repr(domain) == \
+        "<Values size=2000 {'aaaaaaaaa ... aaaaaaaa', " \
+        "'bbbbbbbb ... bbbbbbb', ...}>"
+
+    domain = hd.Range(2) * hd.Values(["a", "b", "c"]) * hd.Values(["x", "y"])
+    assert repr(domain) == \
+        ("<Product size=12 {(0, 'a', 'x'), (0, 'a', 'y'), "
+         "(0, 'b', 'x'), ...}>")
+
+    domain = hd.Values([], name="MyName")
+    assert repr(domain) == "<MyName size=0 {}>"

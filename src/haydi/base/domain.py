@@ -1,4 +1,4 @@
-
+import utils
 
 class Domain(object):
     """
@@ -183,24 +183,50 @@ class Domain(object):
         return self.make_pipeline("cnfs")
 
     def __repr__(self):
-        ITEMS_LIMIT = 4
-        ITEMS_CHAR_LIMIT = 50
-        name = self.name
+        ITEMS_LIMIT = 5
+        ITEM_CHAR_LIMIT = 24
+        CHAR_LIMIT = 48
 
-        if not self.filtered and self.size is not None:
-            items = ", ".join(map(repr, self.take(ITEMS_LIMIT)))
-            if len(items) > ITEMS_CHAR_LIMIT:
-                items = items[:ITEMS_CHAR_LIMIT - 5]
-                items += ", ..."
-            elif self.size > ITEMS_LIMIT:
-                items += ", ..."
-            extra = " {{{0}}}".format(items)
+        size = self.size
+        if size == 0:
+            extra = " {}"
+        elif not self.filtered and size is not None:
+            it = self.create_iter()
+            remaining = CHAR_LIMIT
+
+            tokens = [" {"]
+            last = size - 1
+
+            for i in xrange(ITEMS_LIMIT):
+                try:
+                    item_repr = repr(it.next())
+                except StopIteration:
+                    tokens = ["size of domain is not consistent with iterator"]
+                    break
+                item_repr = utils.limit_string_length(
+                    item_repr, min(remaining, ITEM_CHAR_LIMIT))
+                remaining -= len(item_repr)
+                tokens.append(item_repr)
+                if i == last:
+                    tokens.append("}")
+                    break
+                else:
+                    tokens.append(", ")
+                    remaining -= 2
+
+                if remaining <= 6:
+                    tokens.append("...}")
+                    break
+            else:
+                tokens.append("...}")
+
+            extra = "".join(tokens)
         else:
             if self.filtered:
                 extra = " filtered"
             else:
                 extra = ""
-        return "<{} size={}{}>".format(name, self.size, extra)
+        return "<{} size={}{}>".format(self.name, self.size, extra)
 
 
 class StepSkip(object):

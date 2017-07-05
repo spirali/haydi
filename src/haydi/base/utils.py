@@ -13,3 +13,13 @@ def ncr(n, r):
 
 def identity(x):
     return x
+
+
+def limit_string_length(string, length):
+    assert length > 5
+    l = len(string)
+    if l <= length:
+        return string
+
+    half = length / 2
+    return string[:half - 2] + " ... " + string[l - half + 3 - length % 2:]
