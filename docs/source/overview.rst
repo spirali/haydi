@@ -50,9 +50,8 @@ Example of usage
 * We can run it transparently as **distributed application**::
 
     >>> from haydi import DistributedContext, session
-    >>> ctx = DistributedContext("hostname", 1234)  # Address of dask/distributed server
-    >>> session.set_parallel_context(ctx)
-    >>> op.run(parallel=True)
+    >>> dctx = DistributedContext("hostname", 1234)  # Address of dask/distributed server
+    >>> op.run(ctx=dctx)
 
 * Visualization::
 

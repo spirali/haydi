@@ -20,9 +20,8 @@ from .base.lts import DLTS, DLTSProduct, dlts_from_dict  # noqa
 # Basic types
 from .base.boolean import Boolean  # noqa
 
-# Session
+# Context
 from .base.runtime.distributedcontext import DistributedContext  # noqa
-from .base.haydisession import session  # noqa
 
 # Canonical forms
 from .base.cnf import canonize, expand, is_isomorphic, compare, sort  # noqa

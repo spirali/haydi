@@ -137,9 +137,9 @@ class Domain(object):
             self, transform.FilterTransformation(fn, strict))
 
     # Others
-    def run(self, parallel=False, timeout=None):
-        """A shortcut for ``self.collect.run(parallel)``"""
-        return self.collect().run(parallel, timeout)
+    def run(self, ctx=None, timeout=None):
+        """A shortcut for ``self.collect().run(ctx, timeout)``"""
+        return self.collect().run(ctx, timeout)
 
     # Shortcuts
     # def take(self, count):

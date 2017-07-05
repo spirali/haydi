@@ -258,7 +258,7 @@ SIMPLE TODO
 Run
 ---
 
-The ``run(parallel=False, timeout=None, otf_trace=False)`` method invokes the
+The ``run(ctx=None, timeout=None, otf_trace=False)`` method invokes the
 pipeline. By default it creates a executes a sequential computation without any
 time limit. This can be changed by parameters.
 
@@ -274,7 +274,7 @@ pipeline:
 * Method: ``iterate``
 * Transformations: None
 * Action: ``collect``
-* Run: ``run(parallel=False)``
+* Run: ``run()``
 
 Therefore, we can call ``.run()`` directly on domain and obtain the same results
 as using ``.iterate().collect().run()``. It automatically creates a default
