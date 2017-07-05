@@ -49,16 +49,16 @@ isomorphism::
 
     >>> a0, a1, a2 = hd.ASet(3, "a")
 
-    >>> hd.is_isomorphic(a0, a1)
+    >>> hd.is_isomorphic(a0, a1)  # doctest: +SKIP
     True  # Because there is bijection: a0 -> a1; a1 -> a0; a2 -> a2
 
-    >>> hd.is_isomorphic((a0, a1), a1)
+    >>> hd.is_isomorphic((a0, a1), a1)  # doctest: +SKIP
     False  # No mapping between atoms can bring us from a tuple to an atom
 
-    >>> hd.is_isomorphic((a0, a1), (a1, a2))
+    >>> hd.is_isomorphic((a0, a1), (a1, a2))  # doctest: +SKIP
     True  # Because there is mapping: a0 -> a1; a1 -> a2; a2 -> a0
 
-    >>> hd.is_isomorphic((a0, a0), (a0, a1))
+    >>> hd.is_isomorphic((a0, a0), (a0, a1))  # doctest: +SKIP
     False  # The explanation below
 
 The bijection between objects in the last case cannot exists. The first tuple
@@ -78,10 +78,10 @@ color.
     >>> a0, a1 = hd.ASet(2, "a")
     >>> b0, b1 = hd.ASet(2, "b")
 
-    >>> hd.is_isomorphic(a0, b0)
+    >>> hd.is_isomorphic(a0, b0)  # doctest: +SKIP
     False  # There cannot be a map containing a0 -> b0
 
-    >>> hd.is_isomorphic((a0, b1), (a1, b0))
+    >>> hd.is_isomorphic((a0, b1), (a1, b0))  # doctest: +SKIP
     True  # There is the bijection: a0 -> a1; a1 -> a0; b0 -> b1; b1 -> b0
 
 The bijection in the second case is correct, since each atom has an image from

@@ -96,7 +96,7 @@ filter and setting a limit after the filter.
 For example, the following code generates 10 pairs whose sum is 11:
 
    >>> domain = hd.Range(10) * hd.Range(10)
-   >>> domain.generate().filter(lambda x: x[0] + x[1] == 11).take(5).run()
+   >>> domain.generate().filter(lambda x: x[0] + x[1] == 11).take(5).run()  # doctest: +SKIP
    [(3, 8), (5, 6), (9, 2), (3, 8), (6, 5)]
 
 Transformation ``take(5)`` limits the pipeline for the first five elements. As
@@ -180,12 +180,12 @@ First
 Action *first*, takes the first element from the stream. If the the stream is
 empty, then it returns the provided argument (the default is ``None``).
 
-  >>> hd.Range(5).iterate().first().run()
-  0
-  >>> hd.Range(5).filter(lambda x: x > 10).first().run()
-  None
-  >>> hd.Range(5).filter(lambda x: x > 10).first("no value").run()
-  'no value'
+    >>> hd.Range(5).iterate().first().run()
+    0
+    >>> hd.Range(5).filter(lambda x: x > 10).first().run()  # doctest: +SKIP
+    None
+    >>> hd.Range(5).filter(lambda x: x > 10).first("no value").run()
+    'no value'
 
 
 Reduce
@@ -237,14 +237,14 @@ Groups
 Action *groups* divides elements in the streams into group according to a key.
 The method takes a function that is applied on each element to obtain the key.
 
-  >>> hd.Range(10).groups(lambda x: x % 3).groups()
+  >>> hd.Range(10).groups(lambda x: x % 3).run()
   {0: [0, 3, 6, 9], 1: [1, 4, 7], 2: [2, 5, 8]}
 
 Optionally it takes an integer argument that limits the size of the group. No
 more than the limit number of elements is returned for each group. What elements
 in the group are thrown away and what are returned is not specified.
 
-  >>> hd.Range(10).groups(lambda x: x % 3, 2).groups()
+  >>> hd.Range(10).groups(lambda x: x % 3, 2).run()
   {0: [0, 3], 1: [1, 4], 2: [2, 5]}
 
 

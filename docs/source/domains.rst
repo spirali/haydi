@@ -99,7 +99,7 @@ The domain :class:`haydi.Subsets` creates a sets of elements of a given domain;
 the following example creates the power set::
 
       >>> hd.Subsets(hd.Range(2))
-          <Subsets size=4 {{}, {0}, {0, 1}, {1}}>
+      <Subsets size=4 {{}, {0}, {0, 1}, {1}}>
 
 When one argument is provided, it is used to limit subsets to a given size::
 
@@ -126,7 +126,7 @@ domain::
      >>> a = hd.Range(2)
      >>> b = hd.Values(["a", "b"])
      >>> hd.Mappings(a, b)
-     <Mapping size=4 {{0: 'a'; 1: 'a'}, {0: 'a'; 1: 'b'}, {0: 'b'; , ...}>
+     <Mappings size=4 {{0: 'a'; 1: 'a'}, {0: 'a'; 1: 'b'}, {0: 'b'; , ...}>
 
 .. note ::
 
@@ -209,7 +209,7 @@ elements are removed is configured by providing a function that is called for
 each element and should return True/False. When the function returns True, then
 the element is put into the new domain.
 
-    >>> a = hd.Range(10).filter(lambda x: x % 2 == 0 and x > 5)
+    >>> hd.Range(10).filter(lambda x: x % 2 == 0 and x > 5)
     <FilterTransformation size=10 filtered>
 
 As we can see, the returned repr string is a different from what we have seen so

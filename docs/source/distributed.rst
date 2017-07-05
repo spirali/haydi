@@ -8,9 +8,10 @@ Haydi can parallelize computation by using a cluster of workers to iterate
 through a domain. First you have to create a :class:`DistributedContext`
 and pass it to the :func:`<haydi.Domain.run>` method.
 
->>> from haydi import session, DistributedContext # doctest: +SKIP
->>> dctx = DistributedContext() # doctest: +SKIP
->>> hd.Range(1000).map(lambda x: x + 1).collect().run(ctx=dctx)
+    >>> from haydi import DistributedContext
+    >>> dctx = DistributedContext(spawn_workers=4)
+    >>> hd.Range(100).map(lambda x: x + 1).collect().run(ctx=dctx)
+    [1, 2, 3, 4, ...]
 
 If you want to parallelize the computation on a single computer,
 :class:`DistributedContext` can spawn local workers for you.
@@ -39,6 +40,6 @@ You can thus only parallelize the "outer-most" part of the iterator chain.
 
 >>> def worker(x):
 ...     r = hd.Range(x)
-...     return r.collect().run(dctx) # invalid! run() must be used
+...     return r.collect().run(DistributedContext(spawn_workers=4)) # invalid! run() must be used
 >>>
->>> hd.Range(100).map(worker).run(dctx) # doctest: +SKIP
+>>> hd.Range(100).map(worker).run(DistributedContext(spawn_workers=4)) # doctest: +SKIP
