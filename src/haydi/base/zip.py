@@ -8,18 +8,18 @@ class Zip(Domain):
         domains = tuple(domains)
         self._set_flags_from_domains(domains)
         self.domains = domains
+        self.strict = False
 
     def _compute_size(self):
-        return min([d.size for d in self.domains])
+        return min(d.size for d in self.domains)
 
     def create_cn_iter(self):
-        return self.create_iter()
+        raise NotImplementedError()
 
     def create_iter(self, step=0):
-        if not self.domains:
-            return
+        assert step == 0
 
-        if step >= self.size:
+        if not self.domains:
             return
 
         iters = tuple(map(lambda d: d.create_iter(step), self.domains))
