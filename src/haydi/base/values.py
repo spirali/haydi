@@ -37,6 +37,9 @@ class Values(Domain):
         else:
             return iter(self.values)
 
+    def to_values(self, max_size=None):
+        return self
+
 
 class CnfValues(Domain):
 
@@ -56,3 +59,6 @@ class CnfValues(Domain):
         for item in self.values:
             for item2 in expand(item):
                 yield item2
+
+    def to_values(self, max_size=None):
+        return self

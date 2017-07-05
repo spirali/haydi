@@ -286,6 +286,10 @@ class Product(Domain):
                 result *= s
             return result
 
+    def _to_values_inner(self, max_size=None):
+        return Product(tuple(d.to_values(max_size) for d in self.domains),
+                       self.name, self.unordered, self.cache_size)
+
     def __mul__(self, other):
         return Product(self.domains + (other,))
 

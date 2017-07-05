@@ -307,5 +307,3 @@ def test_is_isomoprhic():
     assert hd.is_isomorphic(x, y)
     assert not hd.is_isomorphic(x, z)
     assert not hd.is_isomorphic(x, w)
-
-

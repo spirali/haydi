@@ -1,5 +1,6 @@
 import utils
 
+
 class Domain(object):
     """
     Base class for domains
@@ -182,6 +183,18 @@ class Domain(object):
     def cnfs(self):
         return self.make_pipeline("cnfs")
 
+    def to_values(self, max_size=None):
+        if max_size is None:
+            max_size = self.size
+
+        if self.size <= max_size:
+            return Values(tuple(iter(self)))
+        else:
+            return self._to_values_inner(max_size)
+
+    def _to_values_inner(self, max_size=None):
+        return self
+
     def __repr__(self):
         ITEMS_LIMIT = 5
         ITEM_CHAR_LIMIT = 24
@@ -281,3 +294,4 @@ from .product import Product  # noqa
 from .join import Join  # noqa
 from . import transform  # noqa
 from .pipeline import Pipeline  # noqa
+from .values import Values  # noqa

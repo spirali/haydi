@@ -1,3 +1,4 @@
+from haydi import Values
 from testutils import init
 init()
 
@@ -48,3 +49,21 @@ def test_cnfs_values():
 def test_values_repr():
     v = hd.Values(("abc", 321, (2.2, 1)))
     assert repr(v) == "<Values size=3 {'abc', 321, (2.2, 1)}>"
+
+
+def test_to_values():
+    a = hd.Range(10)
+    assert isinstance(a.to_values(), Values)
+
+    c = a * a
+    assert isinstance(c.to_values(), Values)
+
+
+def test_to_values_max_size():
+    a = hd.Range(10)
+    assert a.to_values(max_size=a.size - 1) == a
+
+    b = a * a
+    c = b.to_values(max_size=a.size)
+    assert b != c
+    assert (isinstance(d, Values) for d in c.domains)
