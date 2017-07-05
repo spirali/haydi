@@ -7,7 +7,7 @@ primarily developed for automata generating, but designed for usage beyond this
 use case.
 
 * Pure Python implementation (Python 2.6+, PyPy supported)
-* BSD-2 license
+* MIT license
 * Sequential or distributed computation (via `dask/distributed`_)
 
 .. _`dask/distributed`: https://github.com/dask/distributed
