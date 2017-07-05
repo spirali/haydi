@@ -31,11 +31,10 @@ class Values(Domain):
         return random.choice(self.values)
 
     def create_iter(self, step=0):
-        if step:
-            # TODO: Lazy []
-            return iter(self.values[step:])
-        else:
-            return iter(self.values)
+        while step < len(self.values):
+            yield self.values[step]
+            step += 1
+        raise StopIteration()
 
     def to_values(self, max_size=None):
         return self
