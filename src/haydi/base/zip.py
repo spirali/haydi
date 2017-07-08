@@ -9,6 +9,7 @@ class Zip(Domain):
         self._set_flags_from_domains(domains)
         self.domains = domains
         self.strict = False
+        self.step_jumps = not self.filtered
 
     def _compute_size(self):
         return min(d.size for d in self.domains)
@@ -17,7 +18,8 @@ class Zip(Domain):
         raise NotImplementedError()
 
     def create_iter(self, step=0):
-        assert step == 0
+        if not self.step_jumps:
+            assert step == 0
 
         if not self.domains:
             return
