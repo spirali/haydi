@@ -23,3 +23,6 @@ class Permutations(Domain):
 
     def generate_one(self):
         return random.shuffle(tuple(self.domain))
+
+    def _remap_domains(self, transformation):
+        return Permutations(transformation(self.domain), self.name)

@@ -69,5 +69,9 @@ class Join(Domain):
                 return self.domains[i].generate_one()
         assert 0
 
+    def _remap_domains(self, transformation):
+        return Join((transformation(d) for d in self.domains),
+                    self.ratios, self.name)
+
     def __add__(self, other):
         return Join(self.domains + (other,))

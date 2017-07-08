@@ -46,3 +46,7 @@ class Sequences(Domain):
 
     def generate_one(self):
         return self.helper.generate_one()
+
+    def _remap_domains(self, transformation):
+        return Sequences(transformation(self.domain), self.min_length,
+                         self.max_length, self.name)

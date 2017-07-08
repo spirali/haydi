@@ -88,3 +88,26 @@ def test_join_iter_set():
 def test_join_name():
     j = hd.Join((hd.Range(10), hd.Range(10)), name="TestJoin")
     assert j.name == "TestJoin"
+
+
+def test_join_to_values():
+    a = hd.Range(5)
+    b = hd.Values(("a", "b"))
+    c = a + b
+
+    v = c.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(c) == list(v)
+
+
+def test_join_to_values_maxsize():
+    a = hd.Range(5)
+    b = hd.Values(("a", "b"))
+    c = a + b
+
+    v = c.to_values(max_size=5)
+
+    assert isinstance(v, hd.Join)
+    assert all(isinstance(d, hd.Values) for d in v.domains)
+    assert list(c) == list(v)

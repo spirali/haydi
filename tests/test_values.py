@@ -1,8 +1,7 @@
-from haydi import Values
 from testutils import init
 init()
 
-import haydi as hd # noqa
+import haydi as hd  # noqa
 
 
 def test_values_flags():
@@ -51,19 +50,25 @@ def test_values_repr():
     assert repr(v) == "<Values size=3 {'abc', 321, (2.2, 1)}>"
 
 
-def test_to_values():
-    a = hd.Range(10)
-    assert isinstance(a.to_values(), Values)
-
-    c = a * a
-    assert isinstance(c.to_values(), Values)
+def test_values_to_values():
+    v = hd.Values(("A", "B", "C"))
+    assert v.to_values() == v
 
 
-def test_to_values_max_size():
-    a = hd.Range(10)
-    assert a.to_values(max_size=a.size - 1) == a
+def test_cnfs_to_values():
+    ax = hd.ASet(3, "a")
+    a0, a1, a2 = ax
 
-    b = a * a
-    c = b.to_values(max_size=a.size)
-    assert b != c
-    assert (isinstance(d, Values) for d in c.domains)
+    c = hd.CnfValues((a0, ))
+    v = c.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(c) == list(v)
+
+
+def test_cnfs_to_cnf_values():
+    ax = hd.ASet(3, "a")
+    a0, a1, a2 = ax
+
+    c = hd.CnfValues((a0,))
+    assert c == c.to_cnf_values()

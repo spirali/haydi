@@ -190,9 +190,24 @@ class Domain(object):
         if self.size <= max_size:
             return Values(tuple(iter(self)))
         else:
-            return self._to_values_inner(max_size)
+            return self._remap_domains(lambda d: d.to_values(max_size))
 
-    def _to_values_inner(self, max_size=None):
+    def to_cnf_values(self, max_size=None):
+        if max_size is None:
+            max_size = self.size
+
+        if self.size <= max_size:
+            return CnfValues(tuple(self.cnfs()))
+        else:
+            return self._remap_domains(lambda d: d.to_cnfs_values(max_size))
+
+    def _remap_domains(self, transformation):
+        """
+        Should return a instance of the current domain with subdomains
+        transformed with the given transformation.
+        :param transformation: callable
+        :return: haydi.Domain
+        """
         return self
 
     def __repr__(self):
@@ -294,4 +309,4 @@ from .product import Product  # noqa
 from .join import Join  # noqa
 from . import transform  # noqa
 from .pipeline import Pipeline  # noqa
-from .values import Values  # noqa
+from .values import Values, CnfValues  # noqa

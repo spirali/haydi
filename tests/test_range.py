@@ -66,3 +66,18 @@ def test_range_name():
 def test_range_repr():
     r = hd.Range(10)
     assert repr(r) == "<Range size=10 {0, 1, 2, 3, 4, ...}>"
+
+
+def test_range_to_values():
+    r = hd.Range(10)
+    v = r.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(v) == list(r)
+
+
+def test_range_to_values_maxsize():
+    r = hd.Range(100)
+    v = r.to_values(max_size=r.size - 1)
+
+    assert r == v

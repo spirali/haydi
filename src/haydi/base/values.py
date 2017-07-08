@@ -59,5 +59,5 @@ class CnfValues(Domain):
             for item2 in expand(item):
                 yield item2
 
-    def to_values(self, max_size=None):
+    def to_cnf_values(self, max_size=None):
         return self

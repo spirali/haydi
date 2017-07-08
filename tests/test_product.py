@@ -331,3 +331,24 @@ def test_uproduct_steps2():
     assert list(c.iterate_steps(14, 26)) == [((1, 1), (1, 0))]
     assert set(c.iterate_steps(8, 36)) == \
         set((((1, 0), (0, 1)), ((1, 1), (1, 0)), ((1, 1), (0, 1))))
+
+
+def test_product_to_values():
+    r = hd.Range(10)
+    p = r * r
+
+    v = p.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(v) == list(p)
+
+
+def test_product_to_values_maxsize():
+    r = hd.Range(10)
+    p = r * r
+
+    v = p.to_values(max_size=r.size)
+
+    assert isinstance(v, hd.Product)
+    assert all(isinstance(d, hd.Values) for d in v.domains)
+    assert list(v) == list(p)

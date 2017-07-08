@@ -49,3 +49,24 @@ def test_sets_repr():
     assert repr(hd.Subsets(r)) == \
         "<Subsets size=1024 " \
         "{{}, {0}, {0, 1}, {0, 1, 2}, {0, 1, 2, 3}, ...}>"
+
+
+def test_sets_to_values():
+    r = hd.Range(4)
+    s = hd.Subsets(r)
+
+    v = s.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(v) == list(s)
+
+
+def test_sets_to_values_maxsize():
+    r = hd.Range(4)
+    s = hd.Subsets(r)
+
+    v = s.to_values(r.size)
+
+    assert isinstance(v, hd.Subsets)
+    assert isinstance(v.domain, hd.Values)
+    assert list(v) == list(s)

@@ -56,3 +56,27 @@ def test_mapping_set():
     for i in xrange(70):
         it = m.create_iter(i)
         assert list(it) == a[i:]
+
+
+def test_mapping_to_values():
+    a = hd.Range(5)
+    b = hd.Range(6)
+    c = hd.Mappings(a, b)
+
+    v = c.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(c) == list(v)
+
+
+def test_mapping_to_values_maxsize():
+    a = hd.Range(5)
+    b = hd.Range(6)
+    c = hd.Mappings(a, b)
+
+    v = c.to_values(max_size=6)
+
+    assert isinstance(v, hd.Mappings)
+    assert isinstance(v.key_domain, hd.Values)
+    assert isinstance(v.value_domain, hd.Values)
+    assert list(c) == list(v)

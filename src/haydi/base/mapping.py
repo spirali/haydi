@@ -53,3 +53,8 @@ class Mappings(Domain):
             return m, value_domain, False, get_bounds(keys[len(new_items)])
         return canonical_builder(
             value_domain, Map(()), make_fn, get_bounds(keys[0]))
+
+    def _remap_domains(self, transformation):
+        return Mappings(transformation(self.key_domain),
+                        transformation(self.value_domain),
+                        self.name)

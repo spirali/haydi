@@ -73,3 +73,22 @@ def test_sequence_iter_set():
 def test_sequence_name():
     s = hd.Sequences(hd.Range(10), 2, name="TestSequence")
     assert s.name == "TestSequence"
+
+
+def test_sequence_to_values():
+    s = hd.Sequences(hd.Range(3), 0, 2)
+
+    v = s.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(s) == list(v)
+
+
+def test_sequence_to_values_maxsize():
+    s = hd.Sequences(hd.Range(3), 0, 2)
+
+    v = s.to_values(max_size=3)
+
+    assert isinstance(v, hd.Sequences)
+    assert isinstance(v.domain, hd.Values)
+    assert list(s) == list(v)

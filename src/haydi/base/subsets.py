@@ -100,3 +100,7 @@ class Subsets(Domain):
             yield Set((), True)
         for item in canonical_builder(domain, Set((), True), make_fn, None):
             yield item
+
+    def _remap_domains(self, transformation):
+        return Subsets(transformation(self.domain), self.min_size,
+                       self.max_size, self.name)
