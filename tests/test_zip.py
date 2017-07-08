@@ -47,3 +47,20 @@ def test_zip_product_iterate():
     result = list(hd.Zip((hd.Range(4), c)))
     assert result == zip(xrange(4), itertools.product(xrange(1, 3),
                                                       ["a", "b"]))
+
+
+def test_zip_steps_attributes():
+    r = hd.Range(5)
+    v = hd.Values(("A", "B", "C"))
+
+    z = hd.Zip((r, v))
+
+    assert z.step_jumps
+    assert not z.filtered
+    assert not z.strict
+
+    r2 = r.filter(lambda x: x % 2 == 0)
+    z2 = hd.Zip((r2, v))
+
+    assert not z2.step_jumps
+    assert z2.filtered
