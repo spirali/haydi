@@ -64,3 +64,25 @@ def test_zip_steps_attributes():
 
     assert not z2.step_jumps
     assert z2.filtered
+
+
+def test_zip_to_values():
+    r = hd.Range(10)
+    r2 = hd.Range(10, 10)
+    z = hd.Zip((r, r2))
+
+    v = z.to_values()
+
+    assert isinstance(v, hd.Values)
+    assert list(v) == list(z)
+
+
+def test_zip_to_values_maxsize():
+    r = hd.Range(100)
+    z = hd.Zip((r, r))\
+
+    v = z.to_values(max_size=r.size - 1)
+
+    assert isinstance(v, hd.Zip)
+
+    assert list(z) == list(v)
