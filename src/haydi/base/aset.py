@@ -3,6 +3,12 @@ from .domain import Domain
 
 
 class ASet(Domain):
+    """
+    A domain of anonymous objects.
+
+    ASet is a domain of :class:``haydi.Atom``. It is a basic block for
+    canonical forms. See section TODO ref.
+    """
 
     step_jumps = True
     strict = True

@@ -3,9 +3,12 @@
 
 .. currentmodule:: haydi
 
+.. autoclass:: {{ objname }}
+
 {% block methods %}
 {% if methods %}
-.. rubric:: Methods
+.. rubric:: Summary
+
 .. autosummary::
 {% for item in methods %}
    ~{{ name }}.{{ item }}
@@ -13,5 +16,9 @@
 {% endif %}
 {% endblock %}
 
-.. autoclass:: {{ objname }}
-   :members:
+.. rubric:: Methods
+
+{% for item in methods %}
+.. automethod:: {{name}}.{{item}}
+{%- endfor %}
+

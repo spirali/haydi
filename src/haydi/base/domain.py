@@ -89,7 +89,7 @@ class Domain(object):
 
     def collect(self):
         """
-        x.collect() is shortcut for x.iterate().collect()
+        The method is shortcut for ``.iterate().collect()``
 
         Example:
             >>> hd.Range(4).collect().run()

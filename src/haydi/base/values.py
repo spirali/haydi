@@ -5,6 +5,19 @@ import random
 
 
 class Values(Domain):
+    """
+    A domain created from a collection.
+
+    Args:
+        values (collection): A collection of items that is
+                             used as the content for the new domain
+        name (string): Name of domain
+
+    Examples:
+
+        >>> hd.Values(("a", "b", 123, 431))
+        <Values size=4 {'a', 'b', 123, 431}>
+    """
 
     step_jumps = True
 

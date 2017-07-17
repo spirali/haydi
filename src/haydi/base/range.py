@@ -5,12 +5,28 @@ from random import randint
 
 
 class Range(Domain):
-    """Range of integers
+    """Domain that contains a range of integers
 
-    It is domain with a similar interface as :func:`xrange`.
+    The domain of integers in a given range. The interface is similar to
+    :func:`xrange`.
 
+    
     It may be called only just as ``Range(stop)`` that behaves like ``Range(0,
-    stop).``
+    stop, 1).``
+
+    When a single argument is provided:
+
+    Args:
+        end (int): End of interval (not included). Interval stards at 0,
+                   step is 1.
+
+    When two arguments are provided:
+
+    Args:
+        start (int): Start of the range
+        end (int): End of the range (not included), step is 1.
+
+    When three arguments are provided:
 
     Args:
         start (int): Start of the range
