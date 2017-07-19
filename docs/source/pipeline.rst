@@ -4,9 +4,9 @@ Pipeline
 
 .. currentmodule:: haydi
 
-This section contains a description of how to work with elements of domains.
-The main message of this section is that there are three basic methods of
-creating a stream of elements from a domain:
+This section contains a description of working with elements of domains. The
+main message of this section is that there are three basic methods of creating a
+stream of elements from a domain:
 
 * ``iterate()`` -- stream of all elements in domain
 * ``cnfs()`` -- stream of all canonical elements in domain
@@ -41,24 +41,25 @@ The whole pipeline is composed of the following elements:
 Method
 ------
 
-There are three methods how we can walk through a domain:
-iterate, iterate through canonical forms and random generation.
+There are three methods how we can walk through a domain: iterate, iterate
+through canonical forms and random generation.
 
 
 Iterate
 ~~~~~~~
 
 A pipeline that iterates through all elements is created by method
-``iterate()``:
+``iterate()``::
 
    >>> import haydi as hd
    >>> domain = hd.Range(2) * hd.Range(2)
    >>> domain.iterate()
    <Pipeline for Product: method=iterate action=Collect>
 
-Calling ``iterate()`` on a domain creates a pipeline object. Moreover we can also see
-that the default action is *Collect*. This action simply takes all elements and
-put them into the list. More details about actions can be found :ref:`below <actions>`.
+Calling ``iterate()`` on a domain creates a pipeline object. Moreover, we can
+also see that the default action is *Collect*. This action simply takes all
+elements and put them into the list. More details about actions can be found
+in Section :ref:`actions`.
 
 The pipeline is a lazy object and no elements are actually constructed. To run
 the pipeline, we need to call ``run()`` method::
@@ -71,11 +72,12 @@ guaranteed that each element in the domain occurs in the stream in the same
 number of occurrences as in the domain. The actual order of elements in the
 stream is *not* guaranteed.
 
+
 Canonical forms
 ~~~~~~~~~~~~~~~
 
-Iterating over canonical elements is a little bit special, hence
-there is a dedicated section about this topic: :doc:`cnfs`.
+Iterating over canonical elements is a little bit special, hence there is a
+dedicated section about this topic: :doc:`cnfs`.
 
 
 Random elements
@@ -157,15 +159,14 @@ remains hidden inside the domain composition)::
   <Pipeline for Subsets: method=iterate action=Collect>
 
 
-
 .. _actions:
 
 Actions
 -------
 
-*Action* is a terminal operation on a stream of elements. There are the
-following list of actions; more details can be found
-in API documentation of :class:`Pipeline`.
+*Action* is a terminal operation on a stream of elements. The list of operations
+follows; more details can be found in API documentation of :class:`Pipeline`.
+
 
 Collect
 ~~~~~~~
@@ -208,23 +209,23 @@ You can optionally specify an initial value::
   >>> hd.Range(10).reduce(lambda x, y: x + y, -3).run()
   42
 
-It is assumed by default that the operation is associative,
-if that is not true, you have to explicitly specify it::
+It is assumed by default that the operation is associative, if that is not true,
+you have to explicitly specify it::
 
   >>> hd.Range(10).reduce(lambda x, y: x - y, 100, associative=False).run()
   55
-
 
 
 Max
 ~~~
 
 Action *max* gathers maximal elements in the stream, optionally it can take a
-function that extracts a value from the element that is used for comparison.
-The second optional argument specifies the limit of maximal elements.
-No more than the limit number of elements is returned, the rest of maximal elements is thrown away.
-Which maximal elements are thrown away and what are returned is not specified.
-If the value of the argument is ``None`` (default) then all maximal elements are gathered::
+function that extracts a value from the element that is used for comparison. The
+second optional argument specifies the limit of maximal elements. No more than
+the limit number of elements is returned, the rest of maximal elements is thrown
+away. Which maximal elements are thrown away and what are returned is not
+specified. If the value of the argument is ``None`` (default) then all maximal
+elements are gathered::
 
   >>> domain = hd.Range(5) * hd.Range(5)
 
@@ -247,9 +248,9 @@ The method takes a function that is applied on each element to obtain the key.
   >>> hd.Range(10).groups(lambda x: x % 3).run()
   {0: [0, 3, 6, 9], 1: [1, 4, 7], 2: [2, 5, 8]}
 
-Optionally it takes an integer argument that limits the size of groups. No
-more than the limit number of elements is returned for each group. What elements
-in the group are thrown away and what are returned is not specified.
+Optionally, it takes an integer argument that limits the size of groups. No more
+than the limit number of elements is returned for each group. What elements in
+the group are thrown away and what are returned is not specified.
 
   >>> hd.Range(10).groups(lambda x: x % 3, 2).run()
   {0: [0, 3], 1: [1, 4], 2: [2, 5]}
@@ -270,17 +271,17 @@ pipeline. By default it creates a executes a sequential computation without any
 time limit. This can be changed by parameters.
 
 The ``ctx`` parameter defines a context that is used to run the computation on
-the pipeline. Using this parameter you can run a parallelized
-:doc:`distributed computation <distributed>`.
-``timeout`` expects an ``int`` (number of seconds) or a ``timedelta`` object.
-This controls the maximum permitted time of the computation. If the allocated
-time runs out, the computation will stop and return a partial result.
+the pipeline. Using this parameter you can run a parallelized :doc:`distributed
+computation <distributed>`. Argument ``timeout`` expects an ``float`` (number of
+seconds) or a ``timedelta`` object. This controls the maximum permitted time of
+the computation. If the allocated time runs out, the computation is stopped and
+a partial result is returned.
 
 
 Shortcuts
 ---------
 
-To make the code more concise, there are following defaults defined for the
+To make the code more concise, there are the following defaults defined for the
 pipeline:
 
 * Method: ``iterate``
@@ -292,8 +293,8 @@ Therefore, we can call ``.run()`` directly on domain and obtain the same results
 as using ``.iterate().collect().run()``. It automatically creates a default
 pipeline.
 
-In the same manner we can also directly call actions on domain. It creates a
-pipeline with ``iterate()``.
+In the same manner we can also directly call actions on a domain. It creates a
+pipeline with ``iterate()`` method.
 
 Examples::
 
@@ -320,7 +321,7 @@ the result of pipeline where missing elements are filled by defaults::
 Immutability of pipelines
 -------------------------
 
-Pipelines are immutable objects as same domains; therefore calling methods on
+Pipelines are immutable objects (as same domains); therefore, calling methods on
 them actually creates new objects. It is thus safe to reuse them::
 
   >>> pipeline = hd.Range(5).iterate()

@@ -32,7 +32,7 @@ Examples::
   >>> hd.ASet(3, "a")  # A set of three atoms
   <ASet id=1 size=3 name=a>
 
-  >>> hd.Bool()
+  >>> hd.Boolean()
   <Boolean size=2 {False, True}>
 
 
@@ -60,7 +60,7 @@ Cartesian product :math:`(A \times B)`
     >>> hd.Product((a, b))
     <Product size=6 {(0, 'a'), (0, 'b'), (0, 'c'), (1, 'a'), ...}>
 
-alternatively the same thing can be written by using the infix operator ``*``::
+alternatively, the same thing can be written by using the infix operator ``*``::
 
     >>> a * b
     <Product size=6 {(0, 'a'), (0, 'b'), (0, 'c'), (1, 'a'), ...}>
@@ -131,8 +131,8 @@ domain::
 
 .. note ::
 
-   Type of elements created by :class:`Mappings` is *not* the standard Python ``dict``,
-   but :class:`haydi.Map`. For more information, see :doc:`btypes`.
+   Type of elements created by :class:`Mappings` is *not* the standard Python
+   ``dict``, but :class:`haydi.Map`. For more information, see :doc:`btypes`.
 
 
 
@@ -155,7 +155,7 @@ The same behavior can be also achieved by `+` operator on domains::
   >>> a + b + c
   <Join size=6 {0, 1, 'abc', 'ikl', ...}>
 
-Note that join does not collapse the same elements in the joined domains::
+Note that Join does not collapse the same elements in the joined domains::
 
   >>> a = hd.Range(2)
   >>> b = hd.Range(3)
