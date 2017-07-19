@@ -15,6 +15,7 @@ generating :doc:`cnfs`).
 
 If you need, both types can be simply converted into the standard ones::
 
+    >>> import haydi as hd
     >>> a = hd.Range(2)
 
     >>> hd.Subsets(a).map(lambda s: s.to_set())  # Creates standard Python sets

@@ -16,6 +16,7 @@ The rest of this section describes the whole machinery in more detail. If you
 are interested in sequential computations only, and you want to handle the
 stream manually, you can just directly use Python iterators as follows::
 
+    >>> import haydi as hd
     >>> for x in hd.Subsets(hd.Range(10)).generate(5):  # print five random subsets
     >>>     print x
 
@@ -50,6 +51,7 @@ Iterate
 A pipeline that iterates through all elements is created by method
 ``iterate()``:
 
+   >>> import haydi as hd
    >>> domain = hd.Range(2) * hd.Range(2)
    >>> domain.iterate()
    <Pipeline for Product: method=iterate action=Collect>

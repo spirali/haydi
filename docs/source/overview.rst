@@ -2,13 +2,12 @@
 Overview
 ========
 
-Haydi (Haystack diver) is a framework for generating discrete structures;
-primarily developed for automata generating, but designed for usage beyond this
-use case.
+Haydi (Haystack diver) is a **framework for generating discrete structures**.
 
 * Pure Python implementation (Python 2.7+, PyPy supported)
 * MIT license
 * Sequential or distributed computation (via `dask/distributed`_)
+
 
 .. _`dask/distributed`: https://github.com/dask/distributed
 
@@ -19,7 +18,7 @@ Example of usage
   edges)::
 
     >>> import haydi as hd
-    >>> nodes = hd.ASet(2, "n")  # A two-element set with elements {n0, n1}
+    >>> nodes = hd.ASet(2, "n")  # A two-element set with (anonymous) elements {n0, n1}
     >>> graphs = hd.Subsets(nodes * nodes)  # Subsets of a cartesian product
 
 * Now we can **iterate all elements**::
@@ -39,20 +38,18 @@ Example of usage
 * or **generate random instances**::
 
     >>> list(graphs.generate(3))
-    [{(n1, n0)}, {(n1, n1), {(n0, n0)}, {(n0, n1), (n1, n0)}]
+    [{(n1, n0)}, {(n1, n1), (n0, n0)}, {(n0, n1), (n1, n0)}]
 
 
 * Haydi supports standard operations like **map, filter and reduce**::
 
-    >>> op = graphs.map(lambda g: len(g)).reduce(lambda x, y: x + y, associative=True)
-    >>> op.run()
+    >>> op = graphs.map(lambda g: len(g)).reduce(lambda x, y: x + y)
+    # Just a demonstration pipeline; nothing usefull
+    >>> op.run()  
 
 * We can run it transparently as a **distributed application**::
 
     >>> from haydi import DistributedContext
-    >>> dctx = DistributedContext("hostname", 1234)  # Address of dask/distributed server
-    >>> op.run(ctx=dctx)
-
-* Visualization::
-
-    >>> TODO
+    # We are now assuming that dask/distributed is running at hostname:1234
+    >>> context = DistributedContext("hostname", 1234)
+    >>> op.run(ctx=context)

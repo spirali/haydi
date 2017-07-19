@@ -21,6 +21,7 @@ Domain :class:`ASet` contains a finite number of instances of class
 have to be specified. With a new ASet new atoms are created. Each atom
 remembers its index number and parent ASet that created it::
 
+    >>> import haydi as hd
     >>> aset = hd.ASet(3, "a")  # Create a new Aset
     >>> aset
     <ASet id=1 size=3 name=a>
