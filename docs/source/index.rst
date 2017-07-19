@@ -26,6 +26,5 @@ Haydi
    :caption: Reference guide
 
    api-domains
-   api-context
    api-lts
    api-ext-xenv

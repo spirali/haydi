@@ -10,7 +10,12 @@ Domains
     ASet
     Boolean
     CnfValues
+    Join
+    Mappings
+    Product
     Range
+    Sequences
+    Subsets
     Values
 
 

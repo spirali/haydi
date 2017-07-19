@@ -15,7 +15,7 @@ class ExperimentEnv(object):
         self.name = name
         self.config_dict = config_dict
         self.config_names = config_names
-        self.parallel = False
+        self.ctx = None
         self.time = None
 
     def parse_args(self):
@@ -68,8 +68,7 @@ class ExperimentEnv(object):
             ctx = hd.DistributedContext(port=args.port, ip=args.scheduler)
 
         if ctx:
-            hd.session.set_parallel_context(ctx)
-            self.parallel = True
+            self.ctx = ctx
 
         self.time = args.time
 
@@ -80,7 +79,7 @@ class ExperimentEnv(object):
             print "\t{}: {}".format(name, config[name])
         print "Time:", self.time
 
-        results = action.run(self.parallel, timeout=self.time, **kwargs)
+        results = action.run(self.ctx, timeout=self.time, **kwargs)
         if write:
             filename = "{}-{}.data".format(
                 self.name, datetime.isoformat(datetime.now()))

@@ -1,7 +1,8 @@
 
 from copy import copy
+
+from .runtime.serialcontext import SerialContext
 from . import action
-from .haydisession import session
 
 
 class Pipeline(object):
@@ -71,14 +72,15 @@ class Pipeline(object):
         pipeline.transformations += (transformation,)
         return pipeline
 
-    def run(self, parallel=False, timeout=None, otf_trace=False):
+    def run(self, ctx=None, timeout=None, otf_trace=False):
         """
-        :type parallel: bool
         :type timeout: int
         :type otf_trace: bool
         :return: Returns the computed result.
         """
-        ctx = session.get_context(parallel)
+        if not ctx:
+            ctx = SerialContext()
+
         result = ctx.run(self,
                          timeout,
                          otf_trace)

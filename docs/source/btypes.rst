@@ -2,16 +2,18 @@
 Set and Map
 ===========
 
-Domains distributed with Haydi uses standard Python types almost in all places
-for example: :class:`haydi.Range` creates a domain where elements have type
-``int``, :class:`haydi.Product` and :class:`haydi.Sequences` uses ``tuple`` as
-elements in the resulting domains. The exceptions are :class:`haydi.Subsets`
-that uses :class:`haydi.Set` and :class:`haydi.Mappings` with
-:class:`haydi.Map`, even a natural choice would be a standard ``set`` and
-``dict``. The reason is a performance optimization during generation (mainly in
-generating canonical forms).
+.. currentmodule:: haydi
 
-If you need, both types can be simply converted into standard ones::
+Domains distributed with Haydi use standard Python types almost in all places
+for example: :class:`Range` creates a domain where elements have type
+``int``, :class:`Product` and :class:`Sequences` use ``tuple`` as
+elements in the resulting domains. The exceptions are :class:`Subsets`
+that use :class:`haydi.Set` and :class:`Mappings` with
+:class:`haydi.Map`, even though a natural choice would be a standard ``set`` and
+``dict``. The reason is a performance optimization during generation (mainly in
+generating :doc:`cnfs`).
+
+If you need, both types can be simply converted into the standard ones::
 
     >>> a = hd.Range(2)
 
