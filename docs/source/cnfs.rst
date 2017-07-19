@@ -6,20 +6,20 @@ Canonical forms
 .. currentmodule:: haydi
 
 This section covers a feature that serves to iterate only non-isomorphic
-elements in a domain. It is based on iterating over canonical elements
--- one element for each equivalence class of isomorphism.
+elements in a domain. It is based on iterating over canonical elements -- one
+element for each equivalence class of isomorphism.
 
-Basic building blocks for the whole machinery are *Atoms* and *ASets*,
-that allows to define allowed bijections between elements.
+Basic building blocks for the whole machinery are *Atoms* and *ASets*, that
+allows to define bijections between elements.
 
 
 Atoms and ASets
 ---------------
 
 Domain :class:`ASet` contains a finite number of instances of class
-:class:`Atom`. When a new ASet is created a number of atoms and a name
-have to be specified. With a new ASet new atoms are created. Each atom
-remembers its index number and parent ASet that created it::
+:class:`Atom`. When a new ASet is created a number of atoms and a name have to
+be specified. With a new ASet new atoms are created. Each atom remembers its
+index number and parent ASet that created it::
 
     >>> import haydi as hd
     >>> aset = hd.ASet(3, "a")  # Create a new Aset
@@ -38,14 +38,14 @@ From perspective of pipeline methods ``iterate()`` and ``generate()``, ASet
 behaves as a kind of fancy :class:`Range` that wraps numbers into special
 objects.
 
-The main difference between :class:`Range` and :class:`ASet` arises
-when we introduce *isomorphism*. Let us remind that two (discrete) objects are
+The main difference between :class:`Range` and :class:`ASet` arises when we
+introduce *isomorphism*. Let us remind that two (discrete) objects are
 *isomorphic* if there exits a *bijection* between them that preserves the
 structure.
 
 In our case, we are establishing bijection between atoms and two objects are
-isomorphic when we can obtain one from another by replacing atoms according to the
-bijection.
+isomorphic when we can obtain one from another by replacing atoms according to
+the bijection.
 
 Let us show some examples that use :func:`haydi.is_isomorphic` which checks
 isomorphism::
@@ -65,10 +65,10 @@ isomorphism::
     False  # The explanation below
 
 The bijection between objects in the last case cannot exists. The first tuple
-represents a pair of the same object and "renaming" a0 to anything else preserves
-this property. The second one represents a pair of two different atoms (even
-from the same ASet) and any renaming cannot achieve the property of the first one
-(any mapping containing ``a0 -> a0; a1 -> a0`` is not bijective)
+represents a pair of the same object and "renaming" a0 to anything else
+preserves this property. The second one represents a pair of two different atoms
+(even from the same ASet) and any renaming cannot achieve the property of the
+first one (any mapping containing ``a0 -> a0; a1 -> a0`` is not bijective)
 
 
 Atoms from different ASets
@@ -82,7 +82,7 @@ color.
     >>> b0, b1 = hd.ASet(2, "b")
 
     >>> hd.is_isomorphic(a0, b0)  # doctest: +SKIP
-    False  # There cannot be a map containing a0 -> b0
+    False  # Map containing a0 -> b0 is not allowed
 
     >>> hd.is_isomorphic((a0, b1), (a1, b0))  # doctest: +SKIP
     True  # There is the bijection: a0 -> a1; a1 -> a0; b0 -> b1; b1 -> b0
@@ -131,13 +131,13 @@ Canonical forms
 
 Since we are interested only in finite (basic) objects, they contain only
 finitely many atoms, so there are only finitely many bijections (recall that
-ASet are finite). Therefore, each class of equivalence induced by
+ASets are finite). Therefore, each class of equivalence induced by
 isomorphism is also finite. Together with the linear ordering defined by
 :func:`haydi.compare`, each equivalence class has the smallest element. We call
 this element a *canonical form* of the class.
 
 The pipeline method ``cnfs()`` iterates only through canonical elements in a
-domain, therefore we obtain only one element for each equivalence class.
+domain; therefore, we obtain only one element for each equivalence class.
 
 Let us show some examples::
 
@@ -165,16 +165,13 @@ Let us show some examples::
   [(a0, a0), (a0, a1)]
 
 
-  >>> s = Subsets(aset + bset)
+  >>> s = hd.Subsets(aset + bset, 2)
   >>> list(s)  # All elements
   [{a0, a1}, {a0, a2}, {a0, b0}, {a0, b1}, {a0, b2}, {a1, a2}, {a1, b0},
    {a1, b1}, {a1, b2}, {a2, b0}, {a2, b1}, {a2, b2}, {b0, b1}, {b0, b2}, {b1, b2}]
 
   >>> list(s.cnfs())  # Canonical forms
   [{a0, a1}, {a0, b0}, {b0, b1}]
-
-
-TODO: A more complex example
 
 
 .. _strict-domains:
@@ -187,10 +184,10 @@ domain* is a domain that contains only basic objects and is closed under
 isomorphism (if it contains an element, it contains also all isomorphic ones).
 However, it is usually not a problem to fulfill these criteria in practice.
 
-All elementary domains except :class:`Values` are always strict. (For more
-information about :class:`Values` in context of this section see :ref:`below <cnf-values>`).
-The strictness of a domain can be checked by reading its attribute
-``strict``::
+All elementary domains :class:`Range` and :class:`ASet` are always strict. (For
+more information about :class:`Values` in context of this section see
+:ref:`cnf-values`). The strictness of a domain can be checked by reading its
+attribute ``strict``::
 
   >>> hd.Range(10).strict
   True
@@ -215,8 +212,8 @@ some elements and left some isomorphic ones. A map may even returns some non-bas
 objects. Therefore, a domain created by transformation is non-strict by default.
 
 In most cases, when we want to use ``cnfs()`` while applying a transformation,
-we can simply move the transformation into the pipeline, where are no such restrictions,
-since in the pipeline we do not create a new domain::
+we can simply move the transformation into the pipeline, where are no such
+restrictions, since in the pipeline we do not create a new domain::
 
    >>> domain = hd.ASet(3, "a") * hd.Range(4)
 
@@ -230,8 +227,8 @@ since in the pipeline we do not create a new domain::
 
    >>> domain.cnfs().map(lambda x: SomeMyClass(x))  # This is ok, map is in pipeline
 
-If we really need to create a new strict domain by applying a transformation, it is now
-possible only with filter by the following way:
+If we really need to create a new strict domain by applying a transformation, it
+is now possible only with filter by the following way:
 
    >>> domain = hd.ASet(3, "a") * hd.Range(4)
    >>> new_domain = domain.filter(lambda x: x[1] != 2, strict=True)
@@ -247,8 +244,8 @@ is strict, then the resulting domain is still strict.
 
    It is the user's responsibility to assure that strict filter removes all
    isomorphic elements. Fortunately, in practice it is usually the desired
-   behavior of filters. However, if the rule of strict filter is broken, the behavior of
-   ``cnfs()`` is undefined on such a domain.
+   behavior of filters. However, if the rule of strict filter is broken, the
+   behavior of ``cnfs()`` is undefined on such a domain.
 
 
 .. _cnf-values:
