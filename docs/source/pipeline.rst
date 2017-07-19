@@ -270,7 +270,7 @@ time limit. This can be changed by parameters.
 The ``ctx`` parameter defines a context that is used to run the computation on
 the pipeline. Using this parameter you can run a parallelized
 :doc:`distributed computation <distributed>`.
-``timeout`` expects an ``int`` (number of seconds) or a ``datetime`` object.
+``timeout`` expects an ``int`` (number of seconds) or a ``timedelta`` object.
 This controls the maximum permitted time of the computation. If the allocated
 time runs out, the computation will stop and return a partial result.
 
