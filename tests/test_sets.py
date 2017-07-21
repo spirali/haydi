@@ -4,6 +4,12 @@ init()
 import haydi as hd # noqa
 
 
+def test_sets_strict():
+    r = hd.Range(2)
+    s = hd.Subsets(r, 0)
+    assert s.strict
+
+
 def test_sets_iter():
     r = hd.Range(2)
     s = hd.Subsets(r, 0)
@@ -70,3 +76,13 @@ def test_sets_to_values_maxsize():
     assert isinstance(v, hd.Subsets)
     assert isinstance(v.domain, hd.Values)
     assert list(v) == list(s)
+
+
+def test_sets_set_class():
+    r = hd.Range(2)
+    s = hd.Subsets(r, set_class=frozenset)
+    assert not s.strict
+    result = set(s)
+    expected = set([frozenset(), frozenset((0,)),
+                    frozenset((1,)), frozenset((0, 1))])
+    assert result == expected

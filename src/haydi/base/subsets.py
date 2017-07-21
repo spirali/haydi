@@ -7,7 +7,12 @@ import random
 
 class Subsets(Domain):
 
-    def __init__(self, domain, min_size=None, max_size=None, name=None):
+    def __init__(self,
+                 domain,
+                 min_size=None,
+                 max_size=None,
+                 set_class=Set,
+                 name=None):
         if min_size is None:
             min_size = 0
             if max_size is None:
@@ -22,6 +27,10 @@ class Subsets(Domain):
         self.domain = domain
         self.min_size = min_size
         self.max_size = max_size
+        self.set_class = set_class
+        assert not isinstance(self.set_class, str)
+        if set_class != Set and set_class is not tuple:
+            self.strict = False
         self.values = None
 
     def _compute_size(self):
@@ -35,8 +44,10 @@ class Subsets(Domain):
         min_size = self.min_size
         max_size = self.max_size
 
+        set_class = self.set_class
+
         if min_size == 0:
-            yield Set(())
+            yield set_class(())
 
         if max_size == 0:
             return
@@ -51,7 +62,7 @@ class Subsets(Domain):
             if i == last:
                 for v in domain.create_iter(indices[i]):
                     values[i] = v
-                    yield Set(values)
+                    yield set_class(values)
                 i -= 1
                 continue
             try:
@@ -62,7 +73,7 @@ class Subsets(Domain):
                 indices[i] = ii
                 iters[i] = domain.create_iter(ii)
                 if i >= min_size:
-                    yield Set(values[:i])
+                    yield set_class(values[:i])
             except StopIteration:
                 i -= 1
 
@@ -103,4 +114,4 @@ class Subsets(Domain):
 
     def _remap_domains(self, transformation):
         return Subsets(transformation(self.domain), self.min_size,
-                       self.max_size, self.name)
+                       self.max_size, self.set_class, self.name)

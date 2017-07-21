@@ -4,6 +4,12 @@ init()
 import haydi as hd # noqa
 
 
+def test_mapping_strict():
+    r = hd.Range(2)
+    s = hd.Mappings(r, r)
+    assert s.strict
+
+
 def test_mapping_int_int():
     r = hd.Range(2)
     m = hd.Mappings(r, r)
@@ -80,3 +86,19 @@ def test_mapping_to_values_maxsize():
     assert isinstance(v.key_domain, hd.Values)
     assert isinstance(v.value_domain, hd.Values)
     assert list(c) == list(v)
+
+
+def test_mappings_map_class():
+    r = hd.Range(2)
+    m = hd.Mappings(r, r, map_class=tuple)
+    assert m.strict
+    result = set(m)
+    expected = set([((0, 0), (1, 0)),
+                    ((0, 0), (1, 1)),
+                    ((0, 1), (1, 0)),
+                    ((0, 1), (1, 1))])
+    assert result == expected
+
+    m = hd.Mappings(r, r, map_class=dict)
+    assert not m.strict
+
