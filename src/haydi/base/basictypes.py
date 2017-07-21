@@ -108,7 +108,12 @@ def compare(item1, item2):
     type2 = type(item2)
 
     if type1 != type2:
-        return cmp(stype_table.index(type1), stype_table.index(type2))
+        try:
+            return cmp(stype_table.index(type1), stype_table.index(type2))
+        except ValueError:
+            raise Exception(
+                "Comparison with non-basic types: item1={}, item2={}".format(
+                    repr(item1), repr(item2)))
 
     if type1 == Atom:
         if item1.parent == item2.parent:
