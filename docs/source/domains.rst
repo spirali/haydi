@@ -115,7 +115,11 @@ Two arguments limit the subsets to a size in a given range::
 
    Type of elements created by :class:`Subsets` is *not* the standard Python
    ``set``, but :class:`haydi.Set`. For more information, see :doc:`btypes`.
+   This behavior can be overridden by argument ``set_class`::
 
+     >>> hd.Subsets(hd.Range(2), set_class=frozenset)
+     <Subsets size=4 {frozenset([]), frozenset([0]), frozenset([0, 1]), ...}>
+ 
 
 Mappings :math:`(A \rightarrow B)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -127,12 +131,19 @@ domain::
      >>> a = hd.Range(2)
      >>> b = hd.Values(["a", "b"])
      >>> hd.Mappings(a, b)
-     <Mappings size=4 {{0: 'a'; 1: 'a'}, {0: 'a'; 1: 'b'}, {0: 'b'; , ...}>
+     <Mappings size=4 {{0: 'a'; 1: 'a'}, {0: 'a'; 1: 'b'}, {0:  ... a'}, ...}>
+
 
 .. note ::
 
    Type of elements created by :class:`Mappings` is *not* the standard Python
    ``dict``, but :class:`haydi.Map`. For more information, see :doc:`btypes`.
+   This behavior can be overridden by argument ``map_class`::
+
+     >>> hd.Mappings(a, b, map_class=dict)
+     <Mappings size=4 {{0: 'a', 1: 'a'}, {0: 'a', 1: 'b'}, {0:  ... a'}, ...}>
+    
+
 
 
 
