@@ -83,7 +83,7 @@ class Map(object):
         return "{{{}}}".format("; ".join(r))
 
 
-stype_table = (Atom, int, str, tuple, Map, Set)
+stype_table = (Atom, int, str, tuple, Map, Set, bool, type(None))
 
 
 def is_equal(item1, item2):
@@ -124,7 +124,7 @@ def compare(item1, item2):
     if type1 == tuple:
         return compare_sequence(item1, item2)
 
-    if type1 == int or type2 == str:
+    if type1 == int or type2 == str or type1 == bool:
         return cmp(item1, item2)
 
     if type1 == Map:
@@ -132,6 +132,9 @@ def compare(item1, item2):
 
     if type1 == Set:
         return compare_sequence(item1.items, item2.items)
+
+    if item1 is None:
+        return 0
 
     raise Exception("Unknown type " + repr(type1) + " value: " + repr(item1))
 
@@ -167,7 +170,7 @@ def compare2(item1, perm1, item2, perm2):
     if type1 == tuple:
         return compare2_sequence(item1, perm1, item2, perm2)
 
-    if type1 == int or type2 == str:
+    if type1 == int or type1 == str or type1 == bool:
         return cmp(item1, item2)
 
     if type1 == Map or type1 == Set:
@@ -179,6 +182,9 @@ def compare2(item1, perm1, item2, perm2):
             items2.sort(cmp=lambda i1, i2: compare2(i1, perm2, i2, perm2))
         return compare2_sequence(items1, perm1, items2, perm2)
 
+    if item1 is None:
+        return 0
+
     raise Exception("Unknown type " + repr(type1) + " value: " + repr(item1))
 
 
@@ -189,7 +195,8 @@ def sort(items):
 def foreach_atom(item, fn):
     if isinstance(item, Atom):
         fn(item)
-    elif isinstance(item, int) or isinstance(item, str):
+    elif (isinstance(item, int) or isinstance(item, str) or
+          isinstance(item, bool) or item is None):
         return
     elif isinstance(item, tuple):
         for i in item:
@@ -204,7 +211,8 @@ def foreach_atom(item, fn):
 def replace_atoms(item, fn):
     if isinstance(item, Atom):
         return fn(item)
-    elif isinstance(item, int) or isinstance(item, str):
+    elif (isinstance(item, int) or isinstance(item, str) or
+          isinstance(item, bool) or item is None):
         return item
     elif isinstance(item, list) or isinstance(item, tuple):
         return tuple(replace_atoms(i, fn) for i in item)

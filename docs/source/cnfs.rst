@@ -104,7 +104,7 @@ So far, we have seen atoms and tuples of atoms in the examples. However, the who
 machinery around isomorphisms is implemented for objects that we call *basic
 objects* and are inductively defined as follows:
 
-* atoms, integers, and strings are basic objects
+* atoms, integers, strings, True, False, and None are basic objects
 * a tuple of basic objects is a basic object
 * :class:`haydi.Set` of basic objects is a basic object
 * :class:`haydi.Map` where keys and values are basic objects is a basic object

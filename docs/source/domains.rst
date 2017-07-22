@@ -16,9 +16,11 @@ One of basic structures in Haydi is :class:`Domain` that represents a generic
 collection of arbitrary objects. Elements in the domain can be iterated or
 randomly generated.
 
-There are four *elementary domains* shipped with Haydi: :class:`Range` (range of
+There are five *elementary domains* shipped with Haydi: :class:`Range` (range of
 integers), :class:`Values` (domain of explicitly listed Python objects),
-:class:`ASet` (set of atoms) and :class:`Boolean` (two-element domain).
+:class:`ASet` (set of atoms), :class:`Boolean` (two-element domain),
+and :class:`NoneDomain` (domain containing only one element: ``None``).
+
 Examples::
 
   >>> import haydi as hd
@@ -34,6 +36,9 @@ Examples::
 
   >>> hd.Boolean()
   <Boolean size=2 {False, True}>
+
+  >>> hd.NoneDomain()
+  <NoneDomain size=1 {None}>
 
 
 :class:`ASet` is a little bit special and it is designed for enumerating
@@ -115,7 +120,7 @@ Two arguments limit the subsets to a size in a given range::
 
    Type of elements created by :class:`Subsets` is *not* the standard Python
    ``set``, but :class:`haydi.Set`. For more information, see :doc:`btypes`.
-   This behavior can be overridden by argument ``set_class`::
+   This behavior can be overridden by argument ``set_class``::
 
      >>> hd.Subsets(hd.Range(2), set_class=frozenset)
      <Subsets size=4 {frozenset([]), frozenset([0]), frozenset([0, 1]), ...}>
@@ -138,7 +143,7 @@ domain::
 
    Type of elements created by :class:`Mappings` is *not* the standard Python
    ``dict``, but :class:`haydi.Map`. For more information, see :doc:`btypes`.
-   This behavior can be overridden by argument ``map_class`::
+   This behavior can be overridden by argument ``map_class``::
 
      >>> hd.Mappings(a, b, map_class=dict)
      <Mappings size=4 {{0: 'a', 1: 'a'}, {0: 'a', 1: 'b'}, {0:  ... a'}, ...}>

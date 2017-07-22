@@ -14,6 +14,20 @@ def test_atom_is_canonical():
     assert c == [ax.get(0)]
 
 
+def test_const_is_canonical():
+
+    assert hdc.is_canonical(0)
+    assert hdc.is_canonical(1)
+    assert hdc.is_canonical(2)
+
+    assert hdc.is_canonical("data")
+
+    assert hdc.is_canonical(True)
+    assert hdc.is_canonical(False)
+
+    assert hdc.is_canonical(None)
+
+
 def test_product_is_canonical():
 
     ax = ASet(5, "a")
