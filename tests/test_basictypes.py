@@ -171,11 +171,30 @@ def test_compare_types():
     ax = ASet(3, "a")
     a1 = ax.get(1)
 
+    class X(object):
+        def __init__(self, v):
+            self.v = v
+
+        def __cmp__(self, other):
+            if isinstance(other, X):
+                return cmp(self.v, other.v)
+            raise Exception("Not comparable")
+
+    class Y(object):
+        pass
+
     assert hdt.compare(a1, 10) == -1
     assert hdt.compare(a1, "A") == -1
     assert hdt.compare(a1, (a1,)) == -1
     assert hdt.compare("B", hdt.Map((a1, a1))) == -1
     assert hdt.compare((a1,), "C") == 1
+
+    assert hdt.compare((a1,), X(10)) == -1
+    assert hdt.compare(Y(), 10) == 1
+    assert hdt.compare(X(11), Y()) != 0
+    assert hdt.compare(X(10), X(10)) == 0
+    assert hdt.compare(X(10), X(100)) == -1
+    assert hdt.compare(X(100), X(10)) == 1
 
 
 def test_collect_atoms():
@@ -235,3 +254,11 @@ def test_set_conversion():
     s = hdt.Set(("a", "c", "b"))
     assert s.to_set() == {"a", "b", "c"}
     assert s.to_frozenset() == frozenset(("a", "b", "c"))
+
+
+def test_extern_types():
+    class X():
+        pass
+
+    hdt.Set((X(), X(), 10))
+    hdt.Map(((X(), X()), (X(), 10)))

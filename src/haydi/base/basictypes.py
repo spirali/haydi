@@ -109,11 +109,15 @@ def compare(item1, item2):
 
     if type1 != type2:
         try:
-            return cmp(stype_table.index(type1), stype_table.index(type2))
+            i1 = stype_table.index(type1)
         except ValueError:
-            raise Exception(
-                "Comparison with non-basic types: item1={}, item2={}".format(
-                    repr(item1), repr(item2)))
+            i1 = type1
+        try:
+            i2 = stype_table.index(type2)
+        except ValueError:
+            i2 = type2
+
+        return cmp(i1, i2)
 
     if type1 == Atom:
         if item1.parent == item2.parent:
@@ -136,7 +140,7 @@ def compare(item1, item2):
     if item1 is None:
         return 0
 
-    raise Exception("Unknown type " + repr(type1) + " value: " + repr(item1))
+    return cmp(item1, item2)
 
 
 def compare2_sequence(item1, perm1, item2, perm2):
@@ -157,7 +161,11 @@ def compare2(item1, perm1, item2, perm2):
     type2 = type(item2)
 
     if type1 != type2:
-        return cmp(stype_table.index(type1), stype_table.index(type2))
+        try:
+            return cmp(stype_table.index(type1), stype_table.index(type1))
+        except ValueError:
+            raise Exception("Non-basic type comparison: {} {}".format(
+                repr(item1), repr(item2)))
 
     if type1 == Atom:
         item1 = perm1.get(item1, item1)
