@@ -1,3 +1,4 @@
+import pytest
 from testutils import init
 init()
 
@@ -20,6 +21,16 @@ def test_cnfs():
 
     result = (ax * (ax + bx)).cnfs().filter(lambda x: x[1].parent == bx).run()
     assert result == [(ax.get(0), bx.get(0))]
+
+
+def test_cnfs_exception():
+
+    class X(object):
+        pass
+
+    x = hd.Values((X(), X(), X()))
+    with pytest.raises(Exception):
+        x.cnfs()
 
 
 def test_pipeline_repr():

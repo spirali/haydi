@@ -10,6 +10,10 @@ class Pipeline(object):
     action = action.Collect()
 
     def __init__(self, domain, method):
+        if method == "cnfs" and not domain.strict:
+            raise Exception(
+                "Canonical forms cannot be iterated only on non-strict domains"
+                "; domain '{}' is not strict".format(domain))
         self.domain = domain
         self.method = method
         self.transformations = ()
