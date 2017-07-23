@@ -32,11 +32,19 @@ class Subsets(Domain):
         if set_class != Set and set_class is not tuple:
             self.strict = False
         self.values = None
+        self._cache = None
 
     def _compute_size(self):
         domain_size = self.domain.size
         return sum(ncr(domain_size, i)
                    for i in xrange(self.min_size, self.max_size+1))
+
+    def _get_cache(self):
+        if self._cache is not None:
+            return self._cache
+        else:
+            self._cache = tuple(self.domain)
+            return self._cache
 
     def create_iter(self, step=0):
         assert step == 0  # sets not yet implemented
@@ -78,19 +86,19 @@ class Subsets(Domain):
                 i -= 1
 
     def generate_one(self):
-        domain_size = self.size
+        cache = self._get_cache()
         if self.max_size == self.min_size:
             size = self.min_size
         else:
-            i = random.randint(0, domain_size - 1)
+            i = random.randint(0, self.size - 1)
             for size in range(self.max_size, self.min_size, -1):
-                c = ncr(domain_size, size)
+                c = ncr(len(cache), size)
                 if i < c:
                     break
                 i -= c
             else:
                 size = self.min_size
-        raise Exception("TODO")
+        return self.set_class(random.sample(cache, size))
 
     def create_cn_iter(self):
         domain = self.domain

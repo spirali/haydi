@@ -86,3 +86,19 @@ def test_sets_set_class():
     expected = set([frozenset(), frozenset((0,)),
                     frozenset((1,)), frozenset((0, 1))])
     assert result == expected
+
+
+def test_sets_generate():
+    r = hd.Range(3)
+    s = hd.Subsets(r, 2, set_class=frozenset)
+    result = set(s.generate(100))
+    assert result == set(frozenset(s) for s in ((0, 1), (0, 2), (1, 2)))
+
+    r = hd.Range(3)
+    s = hd.Subsets(r, set_class=frozenset)
+    result = set(s.generate(160))
+    print(result)
+    assert result == set(frozenset(s) for s in
+                         ((), (0,), (1,), (2,),
+                          (0, 1), (0, 2), (1, 2),
+                          (0, 1, 2)))
