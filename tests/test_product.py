@@ -65,7 +65,7 @@ def test_product_mul():
     assert len(result) == 32
 
 
-def test_product_step_iter():
+def test_product_skip_iter():
     r1 = hd.Range(3)
     r2 = hd.Range(4)
     p = r1 * r2
@@ -73,7 +73,7 @@ def test_product_step_iter():
     a = list(p)
     b = []
     for i in xrange(40):
-        it = p.create_step_iter(i)
+        it = p.create_skip_iter(i)
         l = list(it)
         if l:
             b.append(l[0])

@@ -32,7 +32,7 @@ class ASet(Domain):
     def generate_one(self):
         raise Exception("TODO")
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         if step == 0:
             return iter(self.cache)
         else:

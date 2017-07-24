@@ -46,7 +46,7 @@ class Subsets(Domain):
             self._cache = tuple(self.domain)
             return self._cache
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         assert step == 0  # sets not yet implemented
         domain = self.domain
         min_size = self.min_size

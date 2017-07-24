@@ -18,7 +18,7 @@ def iterate_steps(domain, transformations, start, end):
     from haydi import StepSkip
 
     i = start
-    it = apply_transformations(domain.create_step_iter(start), transformations)
+    it = apply_transformations(domain.create_skip_iter(start), transformations)
     while i < end:
         v = next(it)
         if isinstance(v, StepSkip):

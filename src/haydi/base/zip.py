@@ -17,7 +17,7 @@ class Zip(Domain):
     def create_cn_iter(self):
         raise NotImplementedError()
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         if not self.step_jumps:
             assert step == 0
 

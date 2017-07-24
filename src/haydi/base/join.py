@@ -27,7 +27,7 @@ class Join(Domain):
             for item in d.create_cn_iter():
                 yield item
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step=0):
         if not self.domains:
             return
 
@@ -40,7 +40,7 @@ class Join(Domain):
             index += 1
 
         while index < len(self.domains):
-            it = self.domains[index].create_iter(step)
+            it = self.domains[index]._make_iter(step)
             step = 0
             for v in it:
                 yield v

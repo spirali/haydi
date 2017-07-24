@@ -17,7 +17,7 @@ class Domain(object):
 
     @property
     def name(self):
-        """ Name of domain. Serves only for debugging """
+        """ Name of domain. Serves only for debugging purpose. """
         if self._name:
             return self._name
         else:
@@ -39,8 +39,7 @@ class Domain(object):
         return s
 
     def set_name(self, name):
-        """
-        Creates a copy of domain with changed name.
+        """Creates a copy of domain with changed name.
         """
         domain = copy(self)
         domain._name = name
@@ -49,32 +48,30 @@ class Domain(object):
     def _compute_size(self):
         """Computes the size of domain
 
-        Each domain where size can be determined should implement this
-        method.
-
+        Each domain where size can be determined should overload this method.
         """
         return None
 
     def __mul__(self, other):
         """Creates a cartesian product of domains.
 
-        It is equivalent to
-        ``Product((self, other))``, see :class:`haydi.Product`
+        It is equivalent to ``Product((self, other))``, see
+        :class:`haydi.Product`
+
         """
         return Product((self, other))
 
     def __add__(self, other):
         """Join two domains
 
-        It is equivalent to
-        ``Join((self, other))``, see :class:`haydi.Join`
+        It is equivalent to ``Join((self, other))``, see :class:`haydi.Join`
         """
         return Join((self, other))
 
     def iterate_steps(self, start, end):
         """Create iterator over a given range of steps
 
-        It internally calls ``create_step_iter()`` and ignores StepSkips.
+        It internally calls ``create_skip_iter()`` and ignores StepSkips.
 
         Args:
             start (int): Index of first step
@@ -88,7 +85,7 @@ class Domain(object):
             [3, 6]
         """
         i = start
-        it = self.create_step_iter(start)
+        it = self.create_skip_iter(start)
         while i < end:
             v = next(it)
             if isinstance(v, StepSkip):
@@ -111,11 +108,11 @@ class Domain(object):
 
     # Actions
 
-    def max(self, key_fn=None, size=None):
+    def max(self, value_fn=None, size=None):
         """
         Shortcut for ``.iterate().max(...)``
         """
-        return self.iterate().max(key_fn, size)
+        return self.iterate().max(value_fn, size)
 
     def groups(self, key_fn, max_items_per_group=None):
         """
@@ -194,14 +191,14 @@ class Domain(object):
     # def take(self, count):
     #     return transform.iterate().take(count)
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         """Creates an interator over elements of the domain
 
         Each domain implementation should override this method.
         """
         raise NotImplementedError()
 
-    def create_skip_iter(self, step=0):
+    def _make_skip_iter(self, step):
         """Create a skip iterator over elements of the domain
 
         Each (potentially) filtered domain implementation should override this
@@ -209,11 +206,14 @@ class Domain(object):
         """
         raise NotImplementedError()
 
-    def create_step_iter(self, step):
+    def create_iter(self, step=0):
+        return self._make_iter(step)
+
+    def create_skip_iter(self, step=0):
         if self.filtered:
-            return self.create_skip_iter(step)
+            return self._make_skip_iter(step)
         else:
-            return self.create_iter(step)
+            return self._make_iter(step)
 
     def __iter__(self):
         return self.create_iter()
@@ -398,11 +398,11 @@ class TransformedDomain(Domain):
 
     def create_skip_iter(self, step=0):
         return self.transformation.transform_skip_iter(
-            self.parent.create_step_iter(step))
+            self.parent.create_skip_iter(step))
 
     def _make_pipeline(self, method):
         pipeline = self.parent._make_pipeline(method)
-        return pipeline.add_transformation(self.transformation)
+        return pipeline._add_transformation(self.transformation)
 
     """ For debugging purpose now disabled
     def generate_one(self):

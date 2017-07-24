@@ -74,7 +74,7 @@ class Range(Domain):
         else:
             return randint(0, self.size - 1) * self.step
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         return iter(xrange(self.start + step * self.step, self.end, self.step))
 
     def create_cn_iter(self):

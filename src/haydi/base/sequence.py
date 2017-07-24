@@ -41,7 +41,7 @@ class Sequences(Domain):
         for item in canonical_builder(domain, (), make_fn, None):
             yield item
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         return self.helper.create_iter(step)
 
     def generate_one(self):
