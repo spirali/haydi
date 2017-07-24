@@ -310,7 +310,7 @@ def NamedProduct(named_domains,
     domain = Product([d for n, d in named_domains],
                      unordered=unordered)
     domain = domain.map(make_instance)
-    domain.set_name(name)
+    domain._name = name
     del n
     del d
     return domain

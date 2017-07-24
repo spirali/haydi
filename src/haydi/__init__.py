@@ -22,7 +22,8 @@ from .base.values import Values, CnfValues  # noqa
 from .base.system import System  # noqa
 from .base.lts import DLTS, DLTSProduct, dlts_from_dict  # noqa
 
-# Context
+# Pipeline
+from .base.pipeline import Pipeline  # noqa
 from .base.runtime.distributedcontext import DistributedContext  # noqa
 
 # Canonical forms

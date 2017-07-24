@@ -12,22 +12,9 @@ Domains
     CnfValues
     Join
     Mappings
+    NoneDomain
     Product
     Range
     Sequences
     Subsets
     Values
-
-
-Basic objects
-=============
-
-.. currentmodule:: haydi
-
-.. autosummary::
-    :toctree: _autosummary
-    :template: class.rst
-
-    Set
-    Map
-    Atom

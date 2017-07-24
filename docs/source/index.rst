@@ -26,5 +26,7 @@ Haydi
    :caption: Reference guide
 
    api-domains
+   api-btypes
+   api-pipeline
    api-lts
    api-ext-xenv

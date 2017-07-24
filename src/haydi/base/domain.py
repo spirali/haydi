@@ -1,4 +1,5 @@
 import utils
+from copy import copy
 
 
 class Domain(object):
@@ -16,6 +17,7 @@ class Domain(object):
 
     @property
     def name(self):
+        """ Name of domain. Serves only for debugging """
         if self._name:
             return self._name
         else:
@@ -23,6 +25,13 @@ class Domain(object):
 
     @property
     def size(self):
+        """Number of elements in domain.
+
+        If the size is ``None`` then number of elements cannot be determined.
+        If the domain is non-filtered and the size is int then it is the exact
+        number of elements. If the domain is filtered and the size is int then
+        it is an upper bound for the number of elements.
+        """
         s = self._size
         if s == -1:
             s = self._compute_size()
@@ -30,9 +39,20 @@ class Domain(object):
         return s
 
     def set_name(self, name):
-        self._name = name
+        """
+        Creates a copy of domain with changed name.
+        """
+        domain = copy(self)
+        domain._name = name
+        return domain
 
     def _compute_size(self):
+        """Computes the size of domain
+
+        Each domain where size can be determined should implement this
+        method.
+
+        """
         return None
 
     def __mul__(self, other):
@@ -52,6 +72,21 @@ class Domain(object):
         return Join((self, other))
 
     def iterate_steps(self, start, end):
+        """Create iterator over a given range of steps
+
+        It internally calls ``create_step_iter()`` and ignores StepSkips.
+
+        Args:
+            start (int): Index of first step
+            end (int): Index of the last step
+
+        Examples:
+
+            >>> list(hd.Range(10).iterate_steps(1, 7))
+            [1, 2, 3, 4, 5, 6]
+            >>> list(hd.Range(10).filter(lambda x: x % 3 == 0).iterate_steps(1, 7))
+            [3, 6]
+        """
         i = start
         it = self.create_step_iter(start)
         while i < end:
@@ -78,19 +113,25 @@ class Domain(object):
 
     def max(self, key_fn=None, size=None):
         """
-        Action: Get all maximal elements from domain
+        Shortcut for ``.iterate().max(...)``
         """
         return self.iterate().max(key_fn, size)
 
     def groups(self, key_fn, max_items_per_group=None):
+        """
+        Shortcut for ``.iterate().groups(...)``
+        """
         return self.iterate().groups(key_fn, max_items_per_group)
 
     def groups_counts(self, key_fn, max_items_per_group):
+        """
+        Shortcut for ``.iterate().group_counts(...)``
+        """
         return self.iterate().groups_counts(key_fn, max_items_per_group)
 
     def collect(self):
         """
-        The method is shortcut for ``.iterate().collect()``
+        Shortcut for ``.iterate().collect()``
 
         Example:
             >>> hd.Range(4).collect().run()
@@ -99,15 +140,22 @@ class Domain(object):
         return self.iterate().collect()
 
     def reduce(self, reduce_fn, init_value=0, associative=True):
+        """
+        Shortcut for ``.iterate().reduce(...)``
+        """
         return self.iterate().reduce(reduce_fn, init_value, associative)
 
-    # Prefixes
-
     def take(self, count):
+        """
+        Shortcut for ``.iterate().take(count)``
+        """
         return self.iterate().take(count)
 
     def first(self, default=None):
-        return self.make_pipeline("iterate").first(default)
+        """
+        Shortcut for ``.iterate().first(default)``
+        """
+        return self._make_pipeline("iterate").first(default)
 
     # Transformations
 
@@ -147,10 +195,18 @@ class Domain(object):
     #     return transform.iterate().take(count)
 
     def create_iter(self, step=0):
-        """Creates an interator over all elements of domain"""
+        """Creates an interator over elements of the domain
+
+        Each domain implementation should override this method.
+        """
         raise NotImplementedError()
 
     def create_skip_iter(self, step=0):
+        """Create a skip iterator over elements of the domain
+
+        Each (potentially) filtered domain implementation should override this
+        method.
+        """
         raise NotImplementedError()
 
     def create_step_iter(self, step):
@@ -162,7 +218,7 @@ class Domain(object):
     def __iter__(self):
         return self.create_iter()
 
-    def make_pipeline(self, method):
+    def _make_pipeline(self, method):
         return Pipeline(self, method)
 
     def generate_one(self):
@@ -171,24 +227,71 @@ class Domain(object):
                         .format(type(self).__name__))
 
     def iterate(self):
-        return self.make_pipeline("iterate")
+        """Create a pipeline that iterates over all elements in the domain
+
+        The method returns instance of :class:`haydi.Pipeline` with "iterate"
+        method.
+        """
+        return self._make_pipeline("iterate")
 
     def generate(self, count=None):
-        pipeline = self.make_pipeline("generate")
+        """Create a pipeline that generates random element from the domain
+
+        The method returns instance of :class:`haydi.Pipeline` with "generate"
+        method.
+
+        Args:
+            count (int or None): The number of generated elements in the
+                                 pipeline, if ``count`` is ``None`` then the
+                                 pipeline generates an infinite number of
+                                 elements.
+        """
+
+        pipeline = self._make_pipeline("generate")
         if count is None:
             return pipeline
         else:
             return pipeline.take(count)
 
     def cnfs(self):
-        return self.make_pipeline("cnfs")
+        """Create a pipeline iterating over canonical elements in the domain
+
+        The method returns instance of :class:`haydi.Pipeline` with "cnfs"
+        method.
+
+        This works only for *strict* domains. If called on a non-strict domain,
+        then an exception is thrown.
+        """
+        return self._make_pipeline("cnfs")
 
     def to_values(self, max_size=None):
+        """Materialize the domain (or its subdomains)
+
+        This method serves as an optimization for caching elements of
+        heavily-used small domains.
+
+        If the argument ``max_size`` is ``None`` or ``self.size`` is at most
+        ``max_size`` then the call is equivalent to ``hd.Values(tuple(self))``.
+        Otherwise the method is applied on subdomains recursively.
+
+        Example:
+
+        >>> p = hd.Range(3) * hd.Range(5) * hd.Range(6)
+        >>> q = p.to_values(5)
+
+        ``q`` is the same as writing::
+
+        >>> hd.Values((0, 1, 2)) * hd.Values((0, 1, 2, 3, 4)) * hd.Range(6)
+
+        Args:
+            max_size (int or None): The size limit for materialization
+
+        """
         if max_size is None:
             max_size = self.size
 
         if self.size <= max_size:
-            return Values(tuple(iter(self)))
+            return Values(tuple(self.create_iter()))
         else:
             return self._remap_domains(lambda d: d.to_values(max_size))
 
@@ -201,12 +304,17 @@ class Domain(object):
         else:
             return self._remap_domains(lambda d: d.to_cnfs_values(max_size))
 
-    def _remap_domains(self, transformation):
+    def _remap_domains(self, fn):
         """
-        Should return a instance of the current domain with subdomains
+        Returns a instance of the current domain with subdomains
         transformed with the given transformation.
-        :param transformation: callable
-        :return: haydi.Domain
+
+        Domains with subdomains should override this method.
+
+        Args:
+            fn (callable): A function called on each subdomains
+        Returns:
+            An instance of :class:`haydi.Domain`
         """
         return self
 
@@ -292,8 +400,8 @@ class TransformedDomain(Domain):
         return self.transformation.transform_skip_iter(
             self.parent.create_step_iter(step))
 
-    def make_pipeline(self, method):
-        pipeline = self.parent.make_pipeline(method)
+    def _make_pipeline(self, method):
+        pipeline = self.parent._make_pipeline(method)
         return pipeline.add_transformation(self.transformation)
 
     """ For debugging purpose now disabled
