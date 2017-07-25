@@ -1,7 +1,4 @@
-from testutils import init
-init()
-
-import haydi as hd # noqa
+import haydi as hd
 
 
 def test_permutations_iterate():
@@ -10,8 +7,8 @@ def test_permutations_iterate():
     assert p.size == 6
 
     result = set(p)
-    expected = set([('A', 'B', 'C'), ('A', 'C', 'B'), ('B', 'A', 'C'),
-                    ('B', 'C', 'A'), ('C', 'A', 'B'), ('C', 'B', 'A')])
+    expected = {('A', 'B', 'C'), ('A', 'C', 'B'), ('B', 'A', 'C'),
+                ('B', 'C', 'A'), ('C', 'A', 'B'), ('C', 'B', 'A')}
     assert result == expected
 
 

@@ -1,7 +1,4 @@
-from testutils import init
-init()
-
-import haydi as hd # noqa
+import haydi as hd
 
 
 def test_join_range_iterate():
@@ -67,7 +64,7 @@ def test_join_int_generate3():
     j = hd.Join((r1, r2, r3), ratios=(1, 0, 1))
 
     result = list(j.generate().take(1000))
-    assert set(result) == set((0, 1, 4, 5))
+    assert set(result) == {0, 1, 4, 5}
 
 
 def test_join_iter_set():

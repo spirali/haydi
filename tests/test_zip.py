@@ -1,10 +1,7 @@
 import itertools
 import pytest
 
-from testutils import init
-init()
-
-import haydi as hd # noqa
+import haydi as hd
 from haydi.base.exception import HaydiException
 
 

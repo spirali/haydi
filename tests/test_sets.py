@@ -1,7 +1,4 @@
-from testutils import init
-init()
-
-import haydi as hd # noqa
+import haydi as hd
 
 
 def test_sets_strict():
@@ -83,8 +80,8 @@ def test_sets_set_class():
     s = hd.Subsets(r, set_class=frozenset)
     assert not s.strict
     result = set(s)
-    expected = set([frozenset(), frozenset((0,)),
-                    frozenset((1,)), frozenset((0, 1))])
+    expected = {frozenset(), frozenset((0,)), frozenset((1,)),
+                frozenset((0, 1))}
     assert result == expected
 
 

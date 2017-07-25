@@ -1,15 +1,9 @@
 from datetime import timedelta
-
 import pytest
 import random
 
-from testutils import init, slow
-
-init()
-
-from haydi import Range   # noqa
-from haydi.base.runtime.distributedcontext import DistributedContext  # noqa
-import haydi as hd  # noqa
+from haydi.base.runtime.distributedcontext import DistributedContext
+import haydi as hd
 
 
 class DCluster(object):
@@ -45,18 +39,25 @@ def cluster4():
     c.stop()
 
 
-@slow
+@pytest.mark.slow
 def test_dist_map(cluster4):
     count = 10000
-    x = Range(count)
+    x = hd.Range(count)
     result = x.map(lambda x: x + 1).collect().run(cluster4.ctx)
 
     assert result == [item + 1 for item in xrange(count)]
 
 
-@slow
+@pytest.mark.slow
+def test_dist_simple_take(cluster4):
+    x = hd.Range(10).take(3)
+    result = x.run(cluster4.ctx)
+    assert result == [0, 1, 2]
+
+
+@pytest.mark.slow
 def test_dist_filter(cluster4):
-    x = Range(211)
+    x = hd.Range(211)
     y = x * x
     i = y.map(lambda x: x * 10).filter(lambda x: x < 600)
     result = i.run(cluster4.ctx)
@@ -64,30 +65,23 @@ def test_dist_filter(cluster4):
     assert result == expect
 
 
-@slow
-def test_dist_simple_take(cluster4):
-    x = Range(10).take(3)
-    result = x.run(cluster4.ctx)
-    assert result == [0, 1, 2]
-
-
-@slow
+@pytest.mark.slow
 def test_dist_take_filter(cluster4):
-    x = Range(10).filter(lambda x: x > 5).take(3)
+    x = hd.Range(10).filter(lambda x: x > 5).take(3)
     result = x.run(cluster4.ctx)
     assert result == [6, 7, 8]
 
 
-@slow
+@pytest.mark.slow
 def test_dist_generate(cluster4):
-    x = Range(10).generate(100)
+    x = hd.Range(10).generate(100)
     result = x.run(cluster4.ctx)
     assert len(result) == 100
     for i in result:
         assert 0 <= i < 10
 
 
-@slow
+@pytest.mark.slow
 def test_dist_samples(cluster4):
     a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
     random.shuffle(a)
@@ -117,7 +111,7 @@ def test_dist_samples(cluster4):
     assert result == expected
 
 
-@slow
+@pytest.mark.slow
 def test_dist_samples_and_counts(cluster4):
     a = ["A"] * 200 + ["B"] * 100 + ["C"] * 3 + ["D"] * 10
     random.shuffle(a)
@@ -148,7 +142,7 @@ def test_dist_samples_and_counts(cluster4):
     assert result == expected
 
 
-@slow
+@pytest.mark.slow
 def test_dist_timeout(cluster4):
     r = hd.Range(100000)
 
@@ -161,7 +155,7 @@ def test_dist_timeout(cluster4):
     assert result > 0
 
 
-@slow
+@pytest.mark.slow
 def test_dist_precompute(cluster4):
     states = hd.ASet(2, "q")
     alphabet = hd.ASet(2, "a")

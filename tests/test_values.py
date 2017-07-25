@@ -1,8 +1,5 @@
-from testutils import init
-init()
-
 import pytest
-import haydi as hd  # noqa
+import haydi as hd
 
 
 def test_values_flags():

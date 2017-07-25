@@ -1,9 +1,4 @@
-
-from testutils import init
-init()
-
-import haydi as hd # noqa
-import itertools  # noqa
+import haydi as hd
 
 
 def test_sequence_flags():
@@ -39,7 +34,7 @@ def test_sequence_iterate():
     result = list(s)
     assert set(result) == set(expected)
     assert len(result) == len(expected)
-    s.size == len(expected)
+    assert s.size == len(expected)
 
 
 def test_sequence_iterate_empty():

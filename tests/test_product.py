@@ -1,8 +1,5 @@
-from testutils import init
-init()
-
-import haydi as hd # noqa
-import itertools  # noqa
+import haydi as hd
+import itertools
 
 
 def test_product_flags():

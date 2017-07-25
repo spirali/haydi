@@ -1,7 +1,4 @@
-from testutils import init
-init()
-
-import haydi as hd # noqa
+import haydi as hd
 
 
 def test_lts_basic():
@@ -24,11 +21,11 @@ def test_lts_basic():
     assert result == [10]
 
     result = list(s.bfs(10, 1))
-    assert set(result) == set([10, 100, -10])
+    assert set(result) == {10, 100, -10}
 
     result = list(s.bfs(11, 2))
-    assert set(result) == set([11, 110, 12, 13, -11, -110, -10,
-                               -9, 130, 14, 15, -13, 120, -12, 1100])
+    assert set(result) == {11, 110, 12, 13, -11, -110, -10, -9, 130, 14,
+                           15, -13, 120, -12, 1100}
 
 
 def test_lts_product1():

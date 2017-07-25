@@ -1,7 +1,4 @@
-from testutils import init
-init()
-
-import haydi as hd # noqa
+import haydi as hd
 
 
 def test_domain_map():
@@ -18,9 +15,8 @@ def test_domain_map():
         assert x in [10, 20, 30, 40, 50]
 
     result = list(hd.Product((d, d), unordered=True))
-    assert set(result) == set(((20, 10), (30, 10), (40, 10), (50, 10),
-                               (30, 20), (40, 20), (50, 20),
-                               (40, 30), (50, 30), (50, 40)))
+    assert set(result) == {(20, 10), (30, 10), (40, 10), (50, 10), (30, 20),
+                           (40, 20), (50, 20), (40, 30), (50, 30), (50, 40)}
     assert d.size == 5
     assert not d.filtered
     assert d.step_jumps
@@ -47,7 +43,7 @@ def test_domain_filter():
 
     p = d * d
     result = list(p)
-    assert set(result) == set(((3, 3), (4, 3), (3, 4), (4, 4)))
+    assert set(result) == {(3, 3), (4, 3), (3, 4), (4, 4)}
 
     assert p.filtered
     assert not (r * r).filtered
@@ -63,7 +59,7 @@ def test_domain_filter():
     assert not hd.Product((r, r), unordered=True).filtered
 
     result = list(hd.Product((d, d), unordered=True))
-    assert set(result) == set(((4, 3),))
+    assert set(result) == {(4, 3)}
 
 
 def test_domain_repr():

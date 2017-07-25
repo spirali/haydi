@@ -50,7 +50,8 @@ class Zip(Domain):
 
     def generate_one(self):
         if self.filtered:
-            raise HaydiException("Filtered zip doesn't support random generation")
+            raise HaydiException("Filtered zip doesn't support random "
+                                 "generation")
 
         index = random.randint(0, self.size - 1)
         return tuple(d.create_iter(index).next() for d in self.domains)

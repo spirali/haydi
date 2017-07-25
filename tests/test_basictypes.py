@@ -1,8 +1,5 @@
-from testutils import init
-init()
-
-from haydi.base import basictypes as hdt  # noqa
-from haydi import ASet  # noqa
+from haydi.base import basictypes as hdt
+from haydi import ASet
 
 
 def test_aset_flags():
@@ -202,8 +199,8 @@ def test_collect_atoms():
 
     a = ax.get(0)
     b = ax.get(1)
-    assert set((a,)) == set(hdt.collect_atoms(((a,), (a, a))))
-    assert set((a, b)) == set(hdt.collect_atoms(((b,), (b, a))))
+    assert {a} == set(hdt.collect_atoms(((a,), (a, a))))
+    assert {a, b} == set(hdt.collect_atoms(((b,), (b, a))))
     assert set() == set(hdt.collect_atoms((1, 2, 3)))
 
 

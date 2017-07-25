@@ -10,7 +10,7 @@ class Range(Domain):
     The domain of integers in a given range. The interface is similar to
     :func:`xrange`.
 
-    
+
     It may be called only just as ``Range(stop)`` that behaves like ``Range(0,
     stop, 1).``
 

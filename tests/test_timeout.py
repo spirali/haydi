@@ -1,11 +1,9 @@
+import pytest
 from datetime import timedelta
-
-from testutils import init
-init()
-
-import haydi as hd  # noqa
+import haydi as hd
 
 
+@pytest.mark.slow
 def test_maxall_timeout():
     r = hd.Range(1000000)
 

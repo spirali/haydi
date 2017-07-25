@@ -1,7 +1,4 @@
-from testutils import init
-init()
-
-import haydi.base.graph  # noqa
+import haydi.base.graph
 
 
 def test_graph_merge_args():

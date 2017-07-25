@@ -167,7 +167,7 @@ class Pipeline(object):
 
         Args:
             ctx(haydi.Context or None): Context of execution.
-                                        If ``None`` then the serial context is used.
+                If ``None`` then the serial context is used.
             timeout(float or timedelta): Time limit for the computation.
             otf_trace(bool): Write tracing log in OTF format.
         """

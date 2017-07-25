@@ -94,7 +94,8 @@ class Domain(object):
 
             >>> list(hd.Range(10).iterate_steps(1, 7))
             [1, 2, 3, 4, 5, 6]
-            >>> list(hd.Range(10).filter(lambda x: x % 3 == 0).iterate_steps(1, 7))
+            >>> list(hd.Range(10).filter(lambda x: x % 3 == 0)
+            >>>                  .iterate_steps(1, 7))
             [3, 6]
         """
         i = start
@@ -306,7 +307,8 @@ class Domain(object):
         if self.size <= max_size:
             return Values(tuple(self.create_iter()))
         else:
-            return self._remap_domains(cache_transform(lambda d: d.to_values(max_size)))
+            return self._remap_domains(
+                cache_transform(lambda d: d.to_values(max_size)))
 
     def to_cnf_values(self, max_size=None):
         if max_size is None:
@@ -315,7 +317,8 @@ class Domain(object):
         if self.size <= max_size:
             return CnfValues(tuple(self.cnfs()), _check=False)
         else:
-            return self._remap_domains(cache_transform(lambda d: d.to_cnfs_values(max_size)))
+            return self._remap_domains(
+                cache_transform(lambda d: d.to_cnfs_values(max_size)))
 
     def _remap_domains(self, fn):
         """

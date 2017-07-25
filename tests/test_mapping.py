@@ -1,7 +1,4 @@
-from testutils import init
-init()
-
-import haydi as hd # noqa
+import haydi as hd
 
 
 def test_mapping_strict():
@@ -93,12 +90,9 @@ def test_mappings_map_class():
     m = hd.Mappings(r, r, map_class=tuple)
     assert m.strict
     result = set(m)
-    expected = set([((0, 0), (1, 0)),
-                    ((0, 0), (1, 1)),
-                    ((0, 1), (1, 0)),
-                    ((0, 1), (1, 1))])
+    expected = {((0, 0), (1, 0)), ((0, 0), (1, 1)), ((0, 1), (1, 0)),
+                ((0, 1), (1, 1))}
     assert result == expected
 
     m = hd.Mappings(r, r, map_class=dict)
     assert not m.strict
-

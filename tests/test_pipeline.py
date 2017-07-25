@@ -1,7 +1,4 @@
 import pytest
-from testutils import init
-init()
-
 import haydi as hd # noqa
 
 

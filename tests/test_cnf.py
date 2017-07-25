@@ -1,10 +1,7 @@
-from testutils import init
-init()
-
-import haydi as hd  # noqa
-from haydi.base import cnf as hdc  # noqa
-from haydi.base import basictypes as hdt  # noqa
-from haydi import ASet  # noqa
+import haydi as hd
+from haydi.base import cnf as hdc
+from haydi.base import basictypes as hdt
+from haydi import ASet
 
 
 def test_atom_is_canonical():
@@ -101,28 +98,23 @@ def test_candidates():
     assert list(result) == [(a0, a1), (a1, a0)]
 
     result = hdc.create_candidates((a0, a1), {ax: 1})
-    assert set(result) == set([(a0, a1), (a1, a0),
-                               (a1, a2), (a2, a1)])
+    assert set(result) == {(a0, a1), (a1, a0), (a1, a2), (a2, a1)}
 
     result = hdc.create_candidates((a1, a2), {ax: 2})
-    assert set(result) == set([(a0, a1), (a1, a0),
-                               (a0, a2), (a2, a0),
-                               (a1, a2), (a2, a1)])
+    assert set(result) == {(a0, a1), (a1, a0), (a0, a2), (a2, a0), (a1, a2),
+                           (a2, a1)}
 
     result = hdc.create_candidates((a1, a2), {ax: 3})
-    assert set(result) == set([(a0, a1), (a1, a0),
-                               (a0, a2), (a2, a0),
-                               (a1, a2), (a2, a1)])
+    assert set(result) == {(a0, a1), (a1, a0), (a0, a2), (a2, a0), (a1, a2),
+                           (a2, a1)}
 
     result = hdc.create_candidates((b0, b1), {bx: 2})
-    assert set(result) == set([(b0, b1), (b0, b1), (b0, b2),
-                               (b1, b0), (b1, b2),
-                               (b2, b0), (b2, b1),
-                               (b2, b3), (b3, b2)])
+    assert set(result) == {(b0, b1), (b0, b1), (b0, b2), (b1, b0), (b1, b2),
+                           (b2, b0), (b2, b1), (b2, b3), (b3, b2)}
 
     result = hdc.create_candidates((a0, b0), {ax: 1, bx: 2})
-    assert set(result) == set([(a0, b0), (a0, b1), (a0, b2),
-                               (a1, b0), (a1, b1), (a1, b2)])
+    assert set(result) == {(a0, b0), (a0, b1), (a0, b2), (a1, b0), (a1, b1),
+                           (a1, b2)}
 
 
 def test_canonical_product():
@@ -288,15 +280,15 @@ def test_expand():
     assert hd.expand(10) == [10]
     ax = ASet(3, "a")
     a0, a1, a2 = ax
-    assert set(hd.expand(a0)) == set((a1, a2, a0))
-    assert set(hd.expand(a1)) == set((a1, a2, a0))
-    assert set(hd.expand(a2)) == set((a1, a2, a0))
+    assert set(hd.expand(a0)) == {a1, a2, a0}
+    assert set(hd.expand(a1)) == {a1, a2, a0}
+    assert set(hd.expand(a2)) == {a1, a2, a0}
 
-    assert set(hd.expand((a1, a1))) == set(((a0, a0), (a1, a1), (a2, a2)))
-    assert set(hd.expand((a0, a0))) == set(((a0, a0), (a1, a1), (a2, a2)))
+    assert set(hd.expand((a1, a1))) == {(a0, a0), (a1, a1), (a2, a2)}
+    assert set(hd.expand((a0, a0))) == {(a0, a0), (a1, a1), (a2, a2)}
 
-    assert set(hd.expand((a1, a2))) == set(((a0, a1), (a0, a2), (a1, a0),
-                                            (a1, a2), (a2, a0), (a2, a1)))
+    assert set(hd.expand((a1, a2))) == {(a0, a1), (a0, a2), (a1, a0), (a1, a2),
+                                        (a2, a0), (a2, a1)}
 
 
 def test_is_isomoprhic():

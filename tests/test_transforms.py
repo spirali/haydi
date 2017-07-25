@@ -1,11 +1,8 @@
-from testutils import init
-init()
-
-import haydi as hd  # noqa
+import pytest
+import haydi as hd
 
 
-"""
-DISABLED
+@pytest.mark.skipif(True, reason="Take is not a transformation yet")
 def test_take():
     r = hd.Range(10)
 
@@ -18,7 +15,6 @@ def test_take():
 
     assert range(10) == list(r.take(100))
     assert range(5) == list(r.take(5))
-"""
 
 
 def test_map():
