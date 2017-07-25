@@ -18,3 +18,4 @@ Domains
     Sequences
     Subsets
     Values
+    Zip

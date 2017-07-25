@@ -75,7 +75,7 @@ The product can be created on more than two domains::
     >>> hd.Product((a, b, hd.Values["x", "y"]))
     <Product size=12{(0, 'a', 'x'), (0, 'a', 'y'), (0, 'b', 'x'), ...}>
 
-    >>> a * b * hd.Values["x", "y"])
+    >>> a * b * hd.Values(["x", "y"])
     <Product size=12{(0, 'a', 'x'), (0, 'a', 'y'), (0, 'b', 'x'), ...}>
 
 
@@ -152,7 +152,7 @@ domain::
 Join :math:`(A \uplus B)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Join operations creates a new domain that contains elements of all given
+:class:`Join` operation creates a new domain that contains elements of all given
 domains (disjoint union)::
 
   >>> import haydi as hd
@@ -168,7 +168,7 @@ The same behavior can be also achieved by `+` operator on domains::
   >>> a + b + c
   <Join size=6 {0, 1, 'abc', 'ikl', ...}>
 
-Note that Join does not collapse the same elements in the joined domains::
+Note that :class:`Join` does not collapse the same elements in the joined domains::
 
   >>> a = hd.Range(2)
   >>> b = hd.Range(3)
@@ -177,6 +177,20 @@ Note that Join does not collapse the same elements in the joined domains::
 
 
 TODO example & note on probability distributions
+
+
+Zip
+~~~
+
+:class:`Zip` creates a new domain that contains tuples of consecutive elements from the given
+domains::
+
+  >>> import haydi as hd
+  >>> a = hd.Range(3)
+  >>> b = hd.Values(["a", "b", "c"])
+
+  >>> hd.Zip((a, b))
+  <Zip size=3 {(0, 'a'), (1, 'b'), (2, 'c')}>
 
 
 Laziness of domains

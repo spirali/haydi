@@ -2,6 +2,22 @@ from .domain import Domain
 
 
 class Zip(Domain):
+    """
+    Zip of domains.
+
+    Produces tuples of consecutive elements from the given domains.
+    The size of this domain is set to the smallest size of the given domains.
+
+    Args:
+        domains (sequence of Domains): Domains that will be zipped.
+        name (str or None): Name of the domain
+
+    Examples:
+        >>> a = hd.Range(3)
+        >>> b = hd.Values(("a", "b"))
+        >>> hd.Zip((a, b))
+        <Zip size=2 {(0, 'a'), (1, 'b')}>
+    """
 
     def __init__(self, domains, name=None):
         super(Zip, self).__init__(name)
