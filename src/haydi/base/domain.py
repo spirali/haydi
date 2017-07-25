@@ -405,11 +405,11 @@ class TransformedDomain(Domain):
     def _compute_size(self):
         return self.transformation.size_of_transformed_domain(self.parent.size)
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         return self.transformation.transform_iter(
             self.parent.create_iter(step))
 
-    def create_skip_iter(self, step=0):
+    def _make_skip_iter(self, step):
         return self.transformation.transform_skip_iter(
             self.parent.create_skip_iter(step))
 
@@ -417,10 +417,10 @@ class TransformedDomain(Domain):
         pipeline = self.parent._make_pipeline(method)
         return pipeline._add_transformation(self.transformation)
 
-    """ For debugging purpose now disabled
     def generate_one(self):
-        return self.generate().first().run()
-    """
+        pipeline = self.parent.generate()._add_transformation(
+            self.transformation)
+        return pipeline.first().run()
 
 
 skip1 = StepSkip(1)

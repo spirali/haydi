@@ -100,3 +100,14 @@ def test_domain_repr():
 
     domain = hd.Values([], name="MyName")
     assert repr(domain) == "<MyName size=0 {}>"
+
+
+def test_generate_one_transformed_domain():
+    r1 = hd.Range(10).filter(lambda x: x == 7 or x == 1)
+    r2 = hd.Range(3).map(lambda x: x * 10)
+    p = r1 * r2
+    expected = set([(1, 0), (1, 10), (1, 20), (7, 0), (7, 10), (7, 20)])
+    assert set(p) == expected
+
+    result = p.generate(160)
+    assert set(result) == expected
