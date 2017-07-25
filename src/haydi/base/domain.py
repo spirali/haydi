@@ -300,7 +300,7 @@ class Domain(object):
             max_size = self.size
 
         if self.size <= max_size:
-            return CnfValues(tuple(self.cnfs()))
+            return CnfValues(tuple(self.cnfs()), _check=False)
         else:
             return self._remap_domains(lambda d: d.to_cnfs_values(max_size))
 

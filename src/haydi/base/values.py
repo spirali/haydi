@@ -1,5 +1,5 @@
 from .domain import Domain
-from .cnf import expand
+from .cnf import expand, is_canonical
 
 import random
 
@@ -42,9 +42,12 @@ class Values(Domain):
 
 class CnfValues(Domain):
 
-    def __init__(self, values, name=None):
+    def __init__(self, values, name=None, _check=True):
         super(CnfValues, self).__init__(name)
         values = tuple(values)
+        if _check:
+            if not all(is_canonical(value) for value in values):
+                raise Exception("CnfValues accepts only canonical values")
         self.values = values
 
     def _compute_size(self):

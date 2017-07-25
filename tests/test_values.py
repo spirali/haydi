@@ -1,6 +1,7 @@
 from testutils import init
 init()
 
+import pytest
 import haydi as hd  # noqa
 
 
@@ -72,3 +73,14 @@ def test_cnfs_to_cnf_values():
 
     c = hd.CnfValues((a0,))
     assert c == c.to_cnf_values()
+
+
+def test_cnfs_invalid_values():
+    ax = hd.ASet(3, "a")
+    a0, a1, a2 = ax
+
+    with pytest.raises(Exception):
+        hd.CnfValues((a0, a1))
+
+    with pytest.raises(Exception):
+        hd.CnfValues([(a2, a2)])
