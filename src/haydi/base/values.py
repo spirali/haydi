@@ -6,7 +6,7 @@ import random
 
 class Values(Domain):
     """
-    A domain created from a collection.
+    A domain created from a collection of Python objects.
 
     Args:
         values (collection): A collection of items that is
@@ -41,6 +41,26 @@ class Values(Domain):
 
 
 class CnfValues(Domain):
+    """
+    A domain defined by canonical elements.
+
+    The domain is automatically filled with all isomorphic elements.
+
+    Args:
+        values (collection): A collection of canonical items
+        name (string): Name of domain
+
+    Examples:
+
+        >>> a = hd.ASet(3, "a")
+        >>> a0, a1, a2 = a
+
+        >>> list(hd.CnfValues((a0, "x")))
+        [a0, a1, a2, 'x']
+
+        >>> list(hd.CnfValues((a0, "x")).cnfs())
+        [a0, 'x']
+    """
 
     strict = True
 

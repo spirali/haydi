@@ -8,6 +8,38 @@ from collections import namedtuple
 
 
 class Product(Domain):
+    """Cartesian product of domains.
+
+    Args:
+        domains (sequence of Domains): Domains that are used in
+            the cartesian product.
+        name (str or None): Name of the domain
+        unordered (bool): Optimization when (a, b) = (b, a)
+             (Not finished, do not use if you do not know what you are doing)
+        cache_size (int): Size of internal cache when random elements
+                          are generated;
+                          usually number between 100-1000 is ok.
+
+    Examples:
+
+        >>> a = hd.Range(3)
+        >>> b = hd.Values(("a", "b")
+        >>> hd.Product((a, b))
+        <Product size=6 {(0, 'a'), (0, 'b'), (1, 'a'), (1, 'b'), ...}>
+
+    It can be also written as:
+
+        >>> a * b
+        <Product size=6 {(0, 'a'), (0, 'b'), (1, 'a'), (1, 'b'), ...}>
+
+    Generally, ``a * b`` equals to ``hd.Product((a, b))``. However, there is
+    one exception when ``a`` is also product. The expression ``hd.Product((x,
+    y)) * b`` is equal to ``hd.Product((x, y, b))`` (not
+    ``hd.Product(hd.Product(x, y), b)``). The reason is to enable definining
+    n-ary tuples by multiplication. If you want to avoid this behavior and
+    define "product in product", then explicitly use ``hd.Product`` instead of
+    ``*``.
+    """
 
     _generator_cache = None
 

@@ -266,13 +266,13 @@ elements)::
 
     >>> aset = hd.ASet(3, "a")
     >>> a0, a1, a2 = aset
-    >>> domain = hd.CnfValues((a0, (a0, a1), 123))
+    >>> domain = hd.CnfValues((a0, (a0, a1), "x"))
 
     >>> list(domain.cnfs())
-    [a0, (a0, a1), 123]
+    [a0, (a0, a1), 'x']
 
     >>> list(domain.iterate())
-    [a0, a1, a2, (a0, a1), (a0, a2), (a1, a0), (a1, a2), (a2, a0), (a2, a1), 123]
+    [a0, a1, a2, (a0, a1), (a0, a2), (a1, a0), (a1, a2), (a2, a0), (a2, a1), 'x']
 
 
 Public functions

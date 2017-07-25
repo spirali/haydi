@@ -7,6 +7,31 @@ from .cnf import canonical_builder
 
 class Sequences(Domain):
 
+    """Sequences over a domain
+
+    When two arguments are provided, the resulting domain contains
+    sequences of a given length:
+
+    Args:
+        domain (Domain): Input domain
+        length (int): Size of sequences
+
+    When three arguments are provided, the resulting domain contains
+    sequences of a length in a given range:
+
+    Args:
+        domain (Domain): Input domain
+        min_size (int): Minimum length of the sequences
+        max_size (int): Maximum length of the sequences
+
+    Examples:
+        >>> a = hd.Range(3)
+        >>> hd.Sequences(a, 2)
+        <Sequences size=9 {(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), ...}>
+        >>> hd.Sequences(a, 0, 2)
+        <Sequences size=13 {(), (0,), (1,), (2,), (0, 0), ...}>
+    """
+
     def __init__(self, domain, min_length, max_length=None, name=None):
         if max_length is None:
             max_length = min_length

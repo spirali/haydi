@@ -6,6 +6,38 @@ import random
 
 
 class Subsets(Domain):
+    """Domain of subsets of a domain
+
+    When a single argument is provided, the resulting domain contains all
+    subsets:
+
+    Args:
+        domain (Domain): Input domain
+
+    When two arguments are provided, the resulting domain contains
+    subsets of a given size:
+
+    Args:
+        domain (Domain): Input domain
+        size (int): Size of subsets
+
+    When three arguments are provided, the resulting domain contains
+    subsets of a size in a given range:
+
+    Args:
+        domain (Domain): Input domain
+        min_size (int): Minimum size of the subsets
+        max_size (int): Max size of the subsets
+
+    Examples:
+        >>> a = hd.Range(3)
+        >>> hd.Subsets(a)
+        <Subsets size=8 {{}, {0}, {0, 1}, {0, 1, 2}, {0, 2}, ...}>
+        >>> hd.Subsets(a, 2)
+        <Subsets size=3 {{0, 1}, {0, 2}, {1, 2}}>
+        >>> hd.Subsets(a, 0, 1)
+        <Subsets size=4 {{}, {0}, {1}, {2}}>
+    """
 
     def __init__(self,
                  domain,
