@@ -2,6 +2,19 @@ import utils
 from copy import copy
 
 
+def cache_transform(transformation):
+    cache = {}
+
+    def fn(domain):
+        cached = cache.get(domain)
+        if cached is None:
+            cached = transformation(domain)
+            cache[domain] = cached
+        return cached
+
+    return fn
+
+
 class Domain(object):
     """
     Base class for domains
@@ -293,7 +306,7 @@ class Domain(object):
         if self.size <= max_size:
             return Values(tuple(self.create_iter()))
         else:
-            return self._remap_domains(lambda d: d.to_values(max_size))
+            return self._remap_domains(cache_transform(lambda d: d.to_values(max_size)))
 
     def to_cnf_values(self, max_size=None):
         if max_size is None:
@@ -302,17 +315,17 @@ class Domain(object):
         if self.size <= max_size:
             return CnfValues(tuple(self.cnfs()), _check=False)
         else:
-            return self._remap_domains(lambda d: d.to_cnfs_values(max_size))
+            return self._remap_domains(cache_transform(lambda d: d.to_cnfs_values(max_size)))
 
     def _remap_domains(self, fn):
         """
-        Returns a instance of the current domain with subdomains
+        Returns an instance of the current domain with subdomains
         transformed with the given transformation.
 
         Domains with subdomains should override this method.
 
         Args:
-            fn (callable): A function called on each subdomains
+            fn (callable): A function called on each subdomain
         Returns:
             An instance of :class:`haydi.Domain`
         """
