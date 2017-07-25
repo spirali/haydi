@@ -9,7 +9,7 @@ class Boolean(Values):
         >>> hd.Boolean()
         <Boolean size=2 {False, True}>
         >>> list(hd.Boolean())
-        [True, False]
+        [False, True]
 
     """
     def __init__(self):

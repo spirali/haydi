@@ -95,6 +95,11 @@ or sequences with a length in a given range::
      >>> hd.Sequences(a, 0, 2)  # Sequences of length 0 to 2
      <Sequences size=7 {(), (0,), (1,), (0, 0), ...}>
 
+Sequence can also be created by the `**` operator on a domain::
+
+      >>> hd.Range(2) ** 3
+      <Sequences size=8 {(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), ...>
+
 
 Subsets :math:`(\mathcal{P}(A))`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

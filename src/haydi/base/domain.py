@@ -81,6 +81,9 @@ class Domain(object):
         """
         return Join((self, other))
 
+    def __pow__(self, exponent):
+        return Sequences(self, exponent)
+
     def iterate_steps(self, start, end):
         """Create iterator over a given range of steps
 
@@ -95,7 +98,7 @@ class Domain(object):
             >>> list(hd.Range(10).iterate_steps(1, 7))
             [1, 2, 3, 4, 5, 6]
             >>> list(hd.Range(10).filter(lambda x: x % 3 == 0)
-            >>>                  .iterate_steps(1, 7))
+            ...                  .iterate_steps(1, 7))
             [3, 6]
         """
         i = start
@@ -434,3 +437,4 @@ from .join import Join  # noqa
 from . import transform  # noqa
 from .pipeline import Pipeline  # noqa
 from .values import Values, CnfValues  # noqa
+from .sequence import Sequences  # noqa

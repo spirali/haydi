@@ -87,3 +87,12 @@ def test_sequence_to_values_maxsize():
     assert isinstance(v, hd.Sequences)
     assert isinstance(v.domain, hd.Values)
     assert list(s) == list(v)
+
+
+def test_sequence_operator():
+    r = hd.Range(3)
+
+    s1 = hd.Sequences(r, 4)
+    s2 = r ** 4
+
+    assert list(s1) == list(s2)
