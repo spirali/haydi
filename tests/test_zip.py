@@ -1,9 +1,11 @@
 import itertools
+import pytest
 
 from testutils import init
 init()
 
 import haydi as hd # noqa
+from haydi.base.exception import HaydiException
 
 
 def test_zip_range_iterate():
@@ -20,12 +22,21 @@ def test_zip_range_generate():
     d1 = hd.Range(1, 10)
     d2 = hd.Range(20, 30)
 
-    result = list(hd.Zip((d1, d2)).generate(10))
+    result = list(hd.Zip((d1, d2)).generate(100))
     for v in result:
         assert v[0] >= 1
         assert v[0] < 10
         assert v[1] >= 20
         assert v[1] < 30
+        assert v[0] + 19 == v[1]
+
+
+def test_zip_range_filtered_generate():
+    d1 = hd.Range(1, 10).filter(lambda x: x % 2 == 0)
+    d2 = hd.Range(20, 30)
+
+    with pytest.raises(HaydiException):
+        list(hd.Zip((d1, d2)).generate(100))
 
 
 def test_zip_range_size():

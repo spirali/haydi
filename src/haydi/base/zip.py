@@ -1,3 +1,6 @@
+import random
+
+from .exception import HaydiException
 from .domain import Domain
 
 
@@ -40,11 +43,14 @@ class Zip(Domain):
         if not self.domains:
             return
 
-        iters = tuple(map(lambda d: d.create_iter(step), self.domains))
+        iters = tuple(d.create_iter(step) for d in self.domains)
 
         while True:
-            values = tuple(map(lambda i: i.next(), iters))
-            yield values
+            yield tuple(map(lambda i: i.next(), iters))
 
     def generate_one(self):
-        return tuple(map(lambda d: d.generate_one(), self.domains))
+        if self.filtered:
+            raise HaydiException("Filtered zip doesn't support random generation")
+
+        index = random.randint(0, self.size - 1)
+        return tuple(d.create_iter(index).next() for d in self.domains)
