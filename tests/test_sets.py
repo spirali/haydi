@@ -102,3 +102,9 @@ def test_sets_generate():
                          ((), (0,), (1,), (2,),
                           (0, 1), (0, 2), (1, 2),
                           (0, 1, 2)))
+
+
+def test_sets_invalid():
+    r = hd.Range(3)
+    s = hd.Subsets(r, 10)
+    assert list(s) == []
