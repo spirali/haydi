@@ -4,22 +4,23 @@ Domains
 
 .. currentmodule:: haydi
 
-This section introduces the core structure of *Haydi*: *domains* and basic operations on
-them. Advanced domains and canonical forms are covered in a separate section:
-:doc:`cnfs`.
+This section introduces the core structure of *Haydi*: *domains* and basic
+operations with them. Advanced domains and canonical forms are covered in a
+separate section: :doc:`cnfs`.
 
 
 Elementary Domains
 ------------------
 
 One of basic structures in Haydi is :class:`Domain` that represents a generic
-collection of arbitrary objects. Elements in the domain can be iterated or
-randomly generated.
+collection of arbitrary objects. The main operation with domains is to provide a
+method for iteration and random generation of elements in domain. Domains are
+composable, i.e. more complex domains can be created from the simpler ones.
 
 There are five *elementary domains* shipped with Haydi: :class:`Range` (range of
 integers), :class:`Values` (domain of explicitly listed Python objects),
 :class:`ASet` (set of atoms), :class:`Boolean` (two-element domain),
-and :class:`NoneDomain` (domain containing only one element: ``None``).
+and :class:`NoneDomain` (a domain containing only one element: ``None``).
 
 Examples::
 
@@ -42,22 +43,21 @@ Examples::
 
 
 :class:`ASet` is a little bit special and it is designed for enumerating
-non-isomorphic structures. It is covered in :doc:`cnfs`, we will not use it in
-this section. For more information about each elementary domain, see their API
-documentations.
+non-isomorphic structures. It is covered in :doc:`cnfs`, it is not used it in
+this section.
 
 
 Composition
 -----------
 
 New domains can be created by composing existing ones. There are the following
-compositions: *product*, *sequences*, *subsets*, *mappings*, and *join*.
+compositions: *product*, *sequences*, *subsets*, *mappings*, *join*, and *zip*.
 
 
 Cartesian product :math:`(A \times B)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`Product` creates a domain of all ordered tuples, for example::
+:class:`Product` creates a domain of all ordered tuples; for example::
 
     >>> import haydi as hd
     >>> a = hd.Range(2)
@@ -78,6 +78,14 @@ The product can be created on more than two domains::
     >>> a * b * hd.Values(["x", "y"])
     <Product size=12{(0, 'a', 'x'), (0, 'a', 'y'), (0, 'b', 'x'), ...}>
 
+.. note::
+
+   Generally, ``a * b`` equals to ``hd.Product((a, b))``. However, there is one
+   exception when ``a`` is also product. The expression ``hd.Product((x, y)) *
+   b`` is equal to ``hd.Product((x, y, b))`` (not ``hd.Product(hd.Product(x, y),
+   b)``). The reason is to enable definining n-ary tuples by multiplication. If
+   you want to avoid this behavior and define "product in product", then
+   explicitly use ``hd.Product`` instead of ``*``.
 
 Sequences :math:`(A^n)`
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -95,7 +103,8 @@ or sequences with a length in a given range::
      >>> hd.Sequences(a, 0, 2)  # Sequences of length 0 to 2
      <Sequences size=7 {(), (0,), (1,), (0, 0), ...}>
 
-Sequence can also be created by the `**` operator on a domain::
+Sequences of a fixed length can also be created by the `**` operator on a
+domain::
 
       >>> hd.Range(2) ** 3
       <Sequences size=8 {(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), ...>
@@ -104,14 +113,15 @@ Sequence can also be created by the `**` operator on a domain::
 Subsets :math:`(\mathcal{P}(A))`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :class:`Subsets` domain creates sets of elements of a given domain;
+The :class:`Subsets` contains subsets from elements of a given domain;
 the following example creates the power set::
 
       >>> import haydi as hd
       >>> hd.Subsets(hd.Range(2))
       <Subsets size=4 {{}, {0}, {0, 1}, {1}}>
 
-When one argument is provided, it is used to limit subsets to a given size::
+When a single argument is provided, it is used to limit subsets to a given
+size::
 
       >>> hd.Subsets(hd.Range(3), 2)  # Subsets of size 2
       <Subsets size=3 {{0, 1}, {0, 2}, {1, 2}}>
@@ -134,7 +144,7 @@ Two arguments limit the subsets to a size in a given range::
 Mappings :math:`(A \rightarrow B)`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The domain :class:`Mappings` creates all mappings from a domain to another
+The domain :class:`Mappings` contains all mappings from a domain to another
 domain::
 
      >>> import haydi as hd
@@ -173,22 +183,42 @@ The same behavior can be also achieved by `+` operator on domains::
   >>> a + b + c
   <Join size=6 {0, 1, 'abc', 'ikl', ...}>
 
-Note that :class:`Join` does not collapse the same elements in the joined domains::
+Note that :class:`Join` does not collapse the same elements in the joined
+domains::
 
   >>> a = hd.Range(2)
   >>> b = hd.Range(3)
   >>> a + b
   <Join size=5 {0, 1, 0, 1, 2}>
 
+Let us make now a small detour: Each domain can create a random element by
+calling ``generate_one()``::
 
-TODO example & note on probability distributions
+  >>> a = hd.Range(2)
+  >>> b = hd.Values(["abc", "ikl", "xyz"])
+  >>> c = hd.Values([123])
+  >>> d = a + b + c
+  >>> d.generate_one()
+  "ikl"
+
+By default, domains return each element with the same probability and
+:class:`Join` is not an exception. Therefore, each element of ``d`` has
+probablity 1/6 to be returned by ``generate_one()`` (``d`` has six elements).
+
+This can be changed by ``ratios`` argument::
+
+  >>> d2 = hd.Join((a, b, c), ratios=(1, 1, 1))
+
+First, we choose with the same probability (1:1:1) from which subdomain we want
+to pick an element and ``generate_one()`` is called on the selected domain.
+Therefore 123 will occur with probability 1/3; "ikl" has probability 1/9.
 
 
 Zip
 ~~~
 
-:class:`Zip` creates a new domain that contains tuples of consecutive elements from the given
-domains::
+:class:`Zip` creates a new domain that contains tuples of consecutive elements
+from the given domains::
 
   >>> import haydi as hd
   >>> a = hd.Range(3)
@@ -201,16 +231,17 @@ domains::
 Laziness of domains
 -------------------
 
-A domain is generally a lazy object that does not eagerly construct its elements.
-Therefore if we use code like this::
+A domain is generally a lazy object that does not eagerly construct its
+elements. Therefore if we use code like this::
 
     >>> import haydi as hd
     >>> a = hd.Range(1000000)
     >>> a * a * a
     <Product size=1000000000000000000 {(0, 0, 0), (0, 0, 1), (0, 0, 2), (0, 0, 3), ...}>
 
-we obtain the result instantly, it just instantiates first few objects for the
-repr string. The ways how to instantiate a domain is explained in :doc:`pipeline`.
+we obtain the result instantly, it only instantiates first few objects for the
+repr string. The ways how to instantiate elements from a domain is explained in
+:doc:`pipeline`.
 
 
 Transformations
@@ -260,7 +291,8 @@ and obtain::
     >>> list(a)
     [6, 8]
 
-Let us show that the 'filtered' flag is propaged during the composition::
+The 'filtered' flag is propaged during the composition of domains. When a domain
+is created by composing at least one filtered domain, it is also filtered::
 
     >>> p = a * a
     <Product size=100 filtered>
