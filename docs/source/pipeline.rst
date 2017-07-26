@@ -67,7 +67,7 @@ the pipeline, we need to call ``run()`` method::
    >>> domain.iterate().run()
    [(0, 0), (0, 1), (1, 0), (1, 1)]
 
-The ``iterate()`` method iterates through all elements in domain. It is
+The ``iterate()`` method iterates through all elements in the domain. It is
 guaranteed that each element in the domain occurs in the stream in the same
 number of occurrences as in the domain. The actual order of elements in the
 stream is *not* guaranteed.
@@ -76,7 +76,7 @@ stream is *not* guaranteed.
 Canonical forms
 ~~~~~~~~~~~~~~~
 
-Iterating over canonical elements is a little bit special, hence there is a
+Iterating over canonical elements is a more complex operation, hence there is a
 dedicated section about this topic: :doc:`cnfs`.
 
 
@@ -91,9 +91,8 @@ number of generated elements::
    >>> domain.generate(5)
    [(0, 1), (0, 0), (1, 0), (0, 0), (1, 1)]
 
-By default, all elements are generated with the same probability, however in
-several places, it can be configured. See the API documentation for
-:class:`Join`.
+By default, all elements are generated with the same probability, however it can
+be configured in some places. See the API documentation for :class:`Join`.
 
 When the argument of ``generate`` is ``None``, then we obtain an infinite
 pipeline of random instances. It usually makes sense in combination with a
@@ -222,10 +221,10 @@ Max
 Action *max* gathers maximal elements in the stream, optionally it can take a
 function that extracts a value from the element that is used for comparison. The
 second optional argument specifies the limit of maximal elements. No more than
-the limit number of elements is returned, the rest of maximal elements is thrown
+the limit number of elements is returned; the rest of maximal elements is thrown
 away. Which maximal elements are thrown away and what are returned is not
-specified. If the value of the argument is ``None`` (default) then all maximal
-elements are gathered::
+specified. If the value of the second argument is ``None`` (default) then all
+maximal elements are returned::
 
   >>> domain = hd.Range(5) * hd.Range(5)
 
@@ -259,23 +258,29 @@ the group are thrown away and what are returned is not specified.
 Groups_counts
 ~~~~~~~~~~~~~
 
-SIMPLE TODO
+This is an extension of Groups action that also returns the total number of
+elements including the elements that was thrown away. The total number of
+elements is returned at the first index of the lists::
 
+   >>> hd.Range(10).groups_counts(lambda x: x % 3, 2).run()
+   {0: [4, 0, 3], 1: [3, 1, 4], 2: [3, 2, 5]}
 
 
 Run
 ---
 
 The ``run(ctx=None, timeout=None, otf_trace=False)`` method invokes the
-pipeline. By default it creates a executes a sequential computation without any
-time limit. This can be changed by parameters.
+pipeline. By default, it creates and executes a sequential computation without
+any time limit. This can be changed by arguments.
 
-The ``ctx`` parameter defines a context that is used to run the computation on
-the pipeline. Using this parameter you can run a parallelized :doc:`distributed
-computation <distributed>`. Argument ``timeout`` expects an ``float`` (number of
-seconds) or a ``timedelta`` object. This controls the maximum permitted time of
-the computation. If the allocated time runs out, the computation is stopped and
-a partial result is returned.
+The ``ctx`` parameter defines a context used for the execution of the the
+pipeline. Providing an instance of a distributed context,
+makes the pipeline parallel and distributed, see :doc:`distributed
+computation <distributed>`.
+
+Parameter ``timeout`` expects ``float`` (a number of seconds) or a ``timedelta``
+object. This defines the maximum time of the computation. If the allocated time
+runs out, the computation is stopped and a partial result is returned.
 
 
 Shortcuts
@@ -290,10 +295,10 @@ pipeline:
 * Run: ``run()``
 
 Therefore, we can call ``.run()`` directly on domain and obtain the same results
-as using ``.iterate().collect().run()``. It automatically creates a default
+as using ``.iterate().collect().run()``. It automatically creates the default
 pipeline.
 
-In the same manner we can also directly call actions on a domain. It creates a
+In the same manner, we can also directly call actions on a domain. It creates a
 pipeline with ``iterate()`` method.
 
 Examples::
