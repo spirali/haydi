@@ -51,7 +51,7 @@ class Graph(object):
         return len(self.nodes)
 
     def has_node(self, key):
-        return key, self.nodes
+        return key in self.nodes
 
     def node_check(self, key):
         node = self.nodes.get(key)
