@@ -17,10 +17,15 @@ collection of arbitrary objects. The main operation with domains is to provide a
 method for iteration and random generation of elements in domain. Domains are
 composable, i.e. more complex domains can be created from the simpler ones.
 
-There are five *elementary domains* shipped with Haydi: :class:`Range` (range of
+There are six *elementary domains* shipped with Haydi: :class:`Range` (range of
 integers), :class:`Values` (domain of explicitly listed Python objects),
-:class:`ASet` (set of atoms), :class:`Boolean` (two-element domain),
-and :class:`NoneDomain` (a domain containing only one element: ``None``).
+:class:`Boolean` (two-element domain), and :class:`NoneDomain` (a domain
+containing only one element: ``None``), :class:`ASet`, and :class:`CnfValues`.
+
+Domains :class:`ASet` and :class:`CnfValues` are little bit special and they are
+designed for enumerating non-isomorphic structures. The topic is covered in
+:doc:`cnfs`; these domains are not used in this section.
+
 
 Examples::
 
@@ -32,19 +37,12 @@ Examples::
   >>> hd.Values(["Haystack", "diver"])
   <Values size=2 {'Haystack', 'diver'}>
 
-  >>> hd.ASet(3, "a")  # A set of three atoms
-  <ASet id=1 size=3 name=a>
-
   >>> hd.Boolean()
   <Boolean size=2 {False, True}>
 
   >>> hd.NoneDomain()
   <NoneDomain size=1 {None}>
 
-
-:class:`ASet` is a little bit special and it is designed for enumerating
-non-isomorphic structures. It is covered in :doc:`cnfs`, it is not used it in
-this section.
 
 
 Composition

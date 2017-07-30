@@ -6,11 +6,14 @@ Canonical forms
 .. currentmodule:: haydi
 
 This section covers a feature that serves to iterate only non-isomorphic
-elements in a domain. It is based on iterating over canonical elements -- one
-element for each equivalence class of isomorphism.
+elements in a domain. It is based on iterating over `canonical forms`_ -- one
+element for each equivalence class of isomorphism_.
 
 Basic building blocks for the whole machinery are *Atoms* and *ASets*, that
 allows to define bijections between elements.
+
+.. _`canonical forms`: https://en.wikipedia.org/wiki/Canonical_form
+.. _isomorphism: https://en.wikipedia.org/wiki/Isomorphism
 
 
 Atoms and ASets
@@ -34,7 +37,7 @@ index number and parent ASet that created it::
     <ASet id=1 size=3 name=a>
 
 
-From perspective of pipeline methods ``iterate()`` and ``generate()``, ASet
+From the perspective of pipeline methods ``iterate()`` and ``generate()``, ASet
 behaves as a kind of fancy :class:`Range` that wraps numbers into special
 objects.
 
@@ -85,7 +88,7 @@ color.
     False  # Map containing a0 -> b0 is not allowed
 
     >>> hd.is_isomorphic((a0, b1), (a1, b0))  # doctest: +SKIP
-    True  # There is the bijection: a0 -> a1; a1 -> a0; b0 -> b1; b1 -> b0
+    True  # There is bijection: a0 -> a1; a1 -> a0; b0 -> b1; b1 -> b0
 
 The bijection in the second case is correct, since each atom has an image from
 its parent ASet.
@@ -100,9 +103,9 @@ its parent ASet.
 Basic objects
 -------------
 
-So far, we have seen atoms and tuples of atoms in the examples. However, the whole
-machinery around isomorphisms is implemented for objects that we call *basic
-objects* and are inductively defined as follows:
+So far, we have seen atoms and tuples of atoms in the examples. However, the
+whole machinery around isomorphisms is implemented for objects that we call
+*basic objects*; they are inductively defined as follows:
 
 * atoms, integers, strings, True, False, and None are basic objects
 * a tuple of basic objects is a basic object
@@ -122,9 +125,6 @@ Examples::
    >>> hd.is_isomorphic(hd.Set((a0, a1)), hd.Set((a2, a0)))
    True  # Bijection: a0 -> a0; a1 -> a2; a2 -> a1
 
-In Haydi, there there is a fixed linear ordering of all basic objects defined by
-:func:`haydi.compare`, that is crucial for definition of canonical forms.
-
 
 Canonical forms
 ---------------
@@ -132,9 +132,12 @@ Canonical forms
 Since we are interested only in finite (basic) objects, they contain only
 finitely many atoms, so there are only finitely many bijections (recall that
 ASets are finite). Therefore, each class of equivalence induced by
-isomorphism is also finite. Together with the linear ordering defined by
-:func:`haydi.compare`, each equivalence class has the smallest element. We call
-this element a *canonical form* of the class.
+isomorphism is also finite.
+
+In Haydi, there there is a fixed linear ordering of all basic objects defined by
+:func:`haydi.compare`. Since each isomorphic class is finite, hence each class
+has the smallest element according this ordering. We call this element as a
+*canonical form* of the class.
 
 The pipeline method ``cnfs()`` iterates only through canonical elements in a
 domain; therefore, we obtain only one element for each equivalence class.
@@ -182,17 +185,18 @@ Strict domains
 The pipeline method ``cnfs()`` is allowed only for *strict* domains. *Strict
 domain* is a domain that contains only basic objects and is closed under
 isomorphism (if it contains an element, it contains also all isomorphic ones).
-However, it is usually not a problem to fulfill these criteria in practice.
+We call it "strict", but it is usually not a problem to fulfill these criteria
+in practice.
 
-All elementary domains :class:`Range` and :class:`ASet` are always strict. (For
-more information about :class:`Values` in context of this section see
+All elementary domains except :class:`Values` are always strict. (Domain
+:class:`CnfValues` is a counter-part of :class:`Values` for canonical forms; see
 :ref:`cnf-values`). The strictness of a domain can be checked by reading its
 attribute ``strict``::
 
   >>> hd.Range(10).strict
   True
 
-All basic domain compositions preserve strictness if all inner
+All basic domain compositions preserve strictness if and only if all their inner
 domains are also strict, e.g.::
 
   >>> domain = hd.Subsets(hd.Range(5) * hd.ASet(2))
@@ -253,10 +257,12 @@ is strict, then the resulting domain is still strict.
 Domain :class:`CnfValues`
 -------------------------
 
-Domain :class:`Values` creates a non-strict domain, since we cannot assure
-that all invariants are valid. If you want to create a strict domain from
-explicit elements, you can use :class:`CnfValues`. The difference is that
-:class:`CnfValues` takes **only** canonical elements::
+Domain :class:`Values` creates a non-strict domain, since we cannot assure that
+all invariants are valid. If you want to create a strict domain from explicit
+elements, you can use :class:`CnfValues`. The difference is that
+:class:`CnfValues` is constructed from canonical elements and it automatically
+add necessary objects to the domain to make it strict (all elements isomorphic
+elements)::
 
     >>> aset = hd.ASet(3, "a")
     >>> a0, a1, a2 = aset
@@ -269,16 +275,16 @@ explicit elements, you can use :class:`CnfValues`. The difference is that
     [a0, a1, a2, (a0, a1), (a0, a2), (a1, a0), (a1, a2), (a2, a0), (a2, a1), 123]
 
 
+Public functions
+----------------
 
-Other methods
--------------
-
-TODO:
-
-* is_canonical
-* :func:`haydi.expand`
-* :func:`haydi.compare`
-* sort
+This is list of public methods that may be useful
+when you are working with canonical forms:
 
 
-TODO: Links to wikipedia for bijection & etc
+* :finc:`is_canonical` -- returns ``True`` if and only if a given is in canonical form.
+* :func:`haydi.expand` -- returns a list of isomorphic objects to a given objects.
+* :func:`haydi.compare` -- defines a linear ordering between two objects. The
+  exact ordering is left is unspecified, but it is guaranteed that for basic
+  objects it stays fixed even between separated executions.
+* :sort:`haydi.sort` -- sorts object according `hayd.compare`.
