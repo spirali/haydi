@@ -72,6 +72,12 @@ def test_cnfs_to_cnf_values():
     assert c == c.to_cnf_values()
 
 
+def test_cnfs_strict():
+    ax = hd.ASet(3, "a")
+    a0, a1, a2 = ax
+    assert hd.CnfValues((a0, 123, "a")).strict
+
+
 def test_cnfs_invalid_values():
     ax = hd.ASet(3, "a")
     a0, a1, a2 = ax

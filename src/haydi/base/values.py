@@ -42,6 +42,8 @@ class Values(Domain):
 
 class CnfValues(Domain):
 
+    strict = True
+
     def __init__(self, values, name=None, _check=True):
         super(CnfValues, self).__init__(name)
         values = tuple(values)
