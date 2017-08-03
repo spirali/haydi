@@ -105,3 +105,14 @@ def test_sets_invalid():
     r = hd.Range(3)
     s = hd.Subsets(r, 10)
     assert list(s) == []
+
+
+def test_sets_in_sets():
+    s = hd.Subsets(hd.Subsets(hd.Range(1), set_class=frozenset),
+                   set_class=frozenset)
+    assert set(s) == set([
+        frozenset(),
+        frozenset([frozenset()]),
+        frozenset([frozenset(), frozenset([0])]),
+        frozenset([frozenset([0])]),
+    ])

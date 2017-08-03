@@ -72,6 +72,9 @@ class Subsets(Domain):
                    for i in xrange(self.min_size, self.max_size+1))
 
     def _get_cache(self):
+        # Since Subsets domain is exponentially larger than the inner
+        # domain, this means that the inner domain is isually very small
+        # so we are going to cache to it.
         if self._cache is not None:
             return self._cache
         else:
@@ -80,7 +83,7 @@ class Subsets(Domain):
 
     def _make_iter(self, step):
         assert step == 0  # sets not yet implemented
-        domain = self.domain
+        cache = self._get_cache()
         min_size = self.min_size
         max_size = self.max_size
 
@@ -92,29 +95,29 @@ class Subsets(Domain):
         if max_size == 0:
             return
 
-        iters = [None] * max_size
-        iters[0] = domain.create_iter()
         indices = [0] * max_size
-        values = [None] * max_size
+        values = [cache[0]] * max_size
         i = 0
         last = max_size - 1
+        size = len(cache)
         while i >= 0:
             if i == last:
-                for v in domain.create_iter(indices[i]):
-                    values[i] = v
+                for index in xrange(indices[i], size):
+                    values[i] = cache[index]
                     yield set_class(values)
                 i -= 1
                 continue
-            try:
-                values[i] = iters[i].next()
+
+            ii = indices[i]
+            if ii < size:
+                values[i] = cache[ii]
                 indices[i] += 1
-                ii = indices[i]
+                ii += 1
                 i += 1
                 indices[i] = ii
-                iters[i] = domain.create_iter(ii)
                 if i >= min_size:
                     yield set_class(values[:i])
-            except StopIteration:
+            else:
                 i -= 1
 
     def generate_one(self):
