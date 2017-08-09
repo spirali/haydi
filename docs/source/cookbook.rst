@@ -17,6 +17,16 @@ Undirected graphs::
   >>> nodes = hd.ASet(3, "n")
   >>> graphs = hd.Subsets(Subsets(nodes, 2))
 
+Directed graphs with labeled arcs by "x" or "y"::
+
+  >>> nodes = hd.ASet(3, "n")
+  >>> graphs = hd.Subsets(nodes * nodes * hd.Values(("x", "y"))
+
+Undirected graphs with 2 "red" and 3 "blue" vertices::
+
+  >>> nodes = hd.ASet(2, "red") + hd.ASet(3, "blue")
+  >>> graphs = hd.Subsets(Subsets(nodes, 2))
+
 
 Automata
 --------
