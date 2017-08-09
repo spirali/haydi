@@ -2,14 +2,17 @@
 Overview
 ========
 
-Haydi (Haystack diver) is a **framework for generating discrete structures**.
+Haydi (Haystack diver) is a **framework for generating discrete structures**. It
+provides a way to define a structure from basic building blocks (e.g. Cartesian
+product, mappings) and then enumerate all elements, all non-isomorphic elements,
+or generate random elements.
 
 * Pure Python implementation (Python 2.7+, PyPy supported)
 * MIT license
 * Sequential or distributed computation (via `dask/distributed`_)
 
-
 .. _`dask/distributed`: https://github.com/dask/distributed
+
 
 Example of usage
 ----------------
