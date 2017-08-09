@@ -1,5 +1,0 @@
-
-Labelled transition systems
-===========================
-
-TODO

@@ -45,7 +45,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
-    'sphinx.ext.autosummary'
 ]
 
 doctest_path = [SRC_DIR]

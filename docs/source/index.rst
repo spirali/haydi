@@ -19,14 +19,3 @@ Haydi
    distributed
    cookbook
    perftips
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Reference guide
-
-   api-domains
-   api-btypes
-   api-pipeline
-   api-lts
-   api-ext-xenv
