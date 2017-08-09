@@ -49,7 +49,7 @@ Composition
 -----------
 
 New domains can be created by composing existing ones. There are the following
-compositions: *product*, *sequences*, *subsets*, *mappings*, *join*, and *zip*.
+compositions: *product*, *sequences*, *subsets*, *mappings*, and *join*.
 
 
 Cartesian product :math:`(A \times B)`
@@ -210,20 +210,6 @@ This can be changed by ``ratios`` argument::
 First, we choose with the same probability (1:1:1) from which subdomain we want
 to pick an element and ``generate_one()`` is called on the selected domain.
 Therefore 123 will occur with probability 1/3; "ikl" has probability 1/9.
-
-
-Zip
-~~~
-
-:class:`Zip` creates a new domain that contains tuples of consecutive elements
-from the given domains::
-
-  >>> import haydi as hd
-  >>> a = hd.Range(3)
-  >>> b = hd.Values(["a", "b", "c"])
-
-  >>> hd.Zip((a, b))
-  <Zip size=3 {(0, 'a'), (1, 'b'), (2, 'c')}>
 
 
 Laziness of domains

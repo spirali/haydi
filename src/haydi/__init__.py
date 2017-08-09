@@ -9,7 +9,6 @@ from .base.join import Join  # noqa
 from .base.mapping import Mappings  # noqa
 from .base.subsets import Subsets  # noqa
 from .base.permutations import Permutations  # noqa
-from .base.zip import Zip  # noqa
 
 # Elementary domains
 from .base.boolean import Boolean  # noqa
