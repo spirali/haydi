@@ -261,8 +261,8 @@ Domain :class:`Values` creates a non-strict domain, since we cannot assure that
 all invariants are valid. If you want to create a strict domain from explicit
 elements, you can use :class:`CnfValues`. The difference is that
 :class:`CnfValues` is constructed from canonical elements and it automatically
-add necessary objects to the domain to make it strict (all elements isomorphic
-elements)::
+adds necessary objects into the domain to make it strict (i.e. it adds all
+elements isomorphic to the given canonical elements)::
 
     >>> aset = hd.ASet(3, "a")
     >>> a0, a1, a2 = aset
@@ -282,9 +282,9 @@ This is list of public methods that may be useful
 when you are working with canonical forms:
 
 
-* :finc:`is_canonical` -- returns ``True`` if and only if a given is in canonical form.
+* :func:`is_canonical` -- returns ``True`` if and only if a given is in canonical form.
 * :func:`haydi.expand` -- returns a list of isomorphic objects to a given objects.
 * :func:`haydi.compare` -- defines a linear ordering between two objects. The
   exact ordering is left is unspecified, but it is guaranteed that for basic
   objects it stays fixed even between separated executions.
-* :sort:`haydi.sort` -- sorts object according `hayd.compare`.
+* :func:`haydi.sort` -- sorts object according `hayd.compare`.
