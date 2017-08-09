@@ -1,3 +1,7 @@
+
+# This programs goes over finite state automata of a given
+# size and verifies Cerny conjuncture
+
 import haydi as hd
 from haydi.ext.xenv import ExperimentEnv
 

@@ -10,6 +10,10 @@ except:
 
 class ExperimentEnv(object):
 
+    """A class for common experiment execution. It handles argument parsing and
+    executes a pipeline.
+    """
+
     def __init__(self, name, config_dict, config_names):
         assert all(name in config_dict for name in config_names)
         self.name = name

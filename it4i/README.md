@@ -1,3 +1,6 @@
+This directory contains script for running Haydi on Salomon cluster at
+It4Innovations (National Super Computing Center).
+
 #####Install distributed
 `pip install --user git+git://github.com/dask/distributed.git@master`
 
