@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/spirali/haydi.svg?branch=master)](https://travis-ci.org/spirali/haydi)
+
+
 # Haystack Diver
 
 Haydi (Haystack diver) is a **framework for generating discrete structures**. It
