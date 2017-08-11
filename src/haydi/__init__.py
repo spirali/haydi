@@ -27,3 +27,6 @@ from .base.runtime.distributedcontext import DistributedContext  # noqa
 
 # Canonical forms
 from .base.cnf import canonize, expand, is_isomorphic, compare, sort  # noqa
+
+# Algorithms
+import algorithms  # noqa
