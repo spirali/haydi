@@ -321,7 +321,7 @@ class Domain(object):
             return CnfValues(tuple(self.cnfs()), _check=False)
         else:
             return self._remap_domains(
-                cache_transform(lambda d: d.to_cnfs_values(max_size)))
+                cache_transform(lambda d: d.to_cnf_values(max_size)))
 
     def _remap_domains(self, fn):
         """
