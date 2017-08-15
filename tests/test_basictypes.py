@@ -70,14 +70,14 @@ def test_compare_consts():
     assert hdt.compare(2, 2) == 0
     assert hdt.compare(3, 2) == 1
 
-    assert hdt.compare("a", "AAA") == -1
+    assert hdt.compare("AAA", "a") == -1
     assert hdt.compare("z", "z") == 0
     assert hdt.compare("z", "a") == 1
 
-    assert hdt.compare(True, False) == -1
+    assert hdt.compare(True, False) == 1
     assert hdt.compare(True, True) == 0
     assert hdt.compare(False, False) == 0
-    assert hdt.compare(False, True) == 1
+    assert hdt.compare(False, True) == -1
 
     assert hdt.compare(None, None) == 0
 
