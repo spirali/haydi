@@ -2,5 +2,10 @@ language: python
 python:
   - "2.7"
   - "pypy-5.4.1"
-install: "pip install -r requirements.txt"
-script: py.test tests --runslow
+install:
+  - pip install -r requirements.txt
+  - pip install flake8
+before_script:
+  flake8 .
+script:
+  py.test tests --runslow

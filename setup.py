@@ -14,6 +14,7 @@ from conf import version  # noqa
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
     name="haydi",
     version=str(version),
