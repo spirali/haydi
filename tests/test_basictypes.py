@@ -66,20 +66,20 @@ def test_compare_lists():
 
 
 def test_compare_consts():
-    hdt.compare(1, 2) == -1
-    hdt.compare(2, 2) == 0
-    hdt.compare(3, 2) == 1
+    assert hdt.compare(1, 2) == -1
+    assert hdt.compare(2, 2) == 0
+    assert hdt.compare(3, 2) == 1
 
-    hdt.compare("a", "AAA") == -1
-    hdt.compare("z", "z") == 0
-    hdt.compare("z", "a") == 1
+    assert hdt.compare("a", "AAA") == -1
+    assert hdt.compare("z", "z") == 0
+    assert hdt.compare("z", "a") == 1
 
-    hdt.compare(True, False) == -1
-    hdt.compare(True, True) == 0
-    hdt.compare(False, False) == 0
-    hdt.compare(False, True) == 1
+    assert hdt.compare(True, False) == -1
+    assert hdt.compare(True, True) == 0
+    assert hdt.compare(False, False) == 0
+    assert hdt.compare(False, True) == 1
 
-    hdt.compare(None, None) == 0
+    assert hdt.compare(None, None) == 0
 
 
 def test_compare_maps():
