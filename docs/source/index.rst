@@ -20,3 +20,4 @@ Haydi
    distributed
    cookbook
    perftips
+   contact

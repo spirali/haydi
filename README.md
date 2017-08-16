@@ -70,3 +70,9 @@ Full documentation is available at: https://haydi.readthedocs.io/en/latest/
     >>> context = DistributedContext("hostname", 1234)
     >>> op.run(ctx=context)
 ```
+
+## Authors
+
+  * Stanislav Böhm <stanislav.bohm at vsb.cz>
+  * Jakub Beránek <berykubik at gmail.com>
+  * Martin Šurkovský <martin.surkovsky at gmail.com>
