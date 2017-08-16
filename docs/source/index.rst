@@ -11,6 +11,7 @@ Haydi
    :caption: User guide
 
    overview
+   example
    install
    domains
    pipeline
