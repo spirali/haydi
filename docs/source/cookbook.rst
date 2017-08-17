@@ -7,12 +7,12 @@ Cookbook of Haydi snippets for commonly occurring patterns:
 Graphs
 ------
 
-Directed graphs::
+Directed graphs (subsets of pair of nodes)::
 
   >>> nodes = hd.ASet(3, "n")
   >>> graphs = hd.Subsets(nodes * nodes)
 
-Undirected graphs::
+Undirected graphs (subsets of two-element sets)::
 
   >>> nodes = hd.ASet(3, "n")
   >>> graphs = hd.Subsets(Subsets(nodes, 2))
