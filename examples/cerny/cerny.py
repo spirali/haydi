@@ -10,7 +10,7 @@ from haydi.algorithms import search
 
 def main():
 
-    n_states = 4   # Number of states
+    n_states = 6   # Number of states
     n_symbols = 2  # Number of symbols in alphabet
 
     states = hd.ASet(n_states, "q")  # set of states q0, q1, ..., q_{n_states}
