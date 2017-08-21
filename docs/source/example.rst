@@ -45,7 +45,7 @@ and finds maximum among lengths of their minimal reset word::
 
 The function ``check_automaton`` takes an automaton (as a transition function)
 and returns the length the minimal reset word or 0 when there is no such word.
-It is just a simple bread-first search on set of states::
+It is just a simple breath-first search on the set of states::
 
     from haydi.algorithms import search
 
