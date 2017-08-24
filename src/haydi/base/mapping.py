@@ -31,7 +31,7 @@ class Mappings(Domain):
     def _compute_size(self):
         return self.product.size
 
-    def create_iter(self, step=0):
+    def _make_iter(self, step):
         keys = self.keys
         if keys is None:
             keys = tuple(sorted(self.key_domain, cmp=compare))
