@@ -1,9 +1,9 @@
 
-Example: Černy's conjuncture
-============================
+Example: Černy's conjecture
+===========================
 
-The following example shows how to use Haydi for verifying Černy's conjuncture
-on bounded instances. The conjuncture states that the length of a minimal reset
+The following example shows how to use Haydi for verifying Černy's conjecture
+on bounded instances. The conjecture states that the length of a minimal reset
 word is bounded by :math:`(n-1)^2` where :math:`n` is the number of states of
 the automaton. The reset word is a word that send all states of the automaton to
 a unique state.
@@ -14,9 +14,9 @@ repository.
 
 The following approach is a simple one, just a few lines of code, without any
 sophisticated optimization. It takes around two minutes (in PyPy) in the
-sequential mode to verify the conjuncture for automata with five states. It
+sequential mode to verify the conjecture for automata with five states. It
 probably needs many hours to check automata with six states. The state of the
-art result is verifying the conjuncture for automata for more than 14 states,
+art result is verifying the conjecture for automata for more than 14 states,
 but it needs some clever optimizations that are out of scope of this example.
 
 First, we describe deterministic automata by their transition functions
