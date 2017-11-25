@@ -19,9 +19,10 @@ def identity(x):
 
 def limit_string_length(string, length):
     assert length > 5
-    l = len(string)
-    if l <= length:
+    strlen = len(string)
+    if strlen <= length:
         return string
 
     half = length / 2
-    return string[:half - 2] + " ... " + string[l - half + 3 - length % 2:]
+    return (string[:half - 2] + " ... " +
+            string[strlen - half + 3 - length % 2:])

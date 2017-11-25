@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 try:
     import cPickle as pickle
-except:
+except ImportError:
     import pickle
 
 

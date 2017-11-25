@@ -7,11 +7,12 @@ import time
 from Queue import Empty
 from datetime import timedelta
 
+from haydi.base.exception import HaydiException, TimeoutException
+
 try:
     from distributed import Client, LocalCluster
     from distributed.http import HTTPScheduler
 
-    from haydi.base.exception import HaydiException, TimeoutException
     from .strategy import StepStrategy, PrecomputeStrategy, GeneratorStrategy
     from .trace import OTFTracer, Tracer
 
@@ -19,7 +20,7 @@ try:
     from .util import haydi_logger, ProgressLogger, TimeoutManager
 
     package_import_error = None
-except Exception as e:
+except ImportError as e:
     package_import_error = e
 
 

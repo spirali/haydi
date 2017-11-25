@@ -49,9 +49,9 @@ def test_iter_set():
     b = []
     for i in xrange(40):
         it = r.create_skip_iter(i)
-        l = list(it)
-        if l:
-            b.append(l[0])
+        result = list(it)
+        if result:
+            b.append(result[0])
     assert a == b
 
 

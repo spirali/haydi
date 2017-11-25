@@ -217,11 +217,11 @@ def test_lts_empty_product():
 
 
 def test_dlts_from_dict():
-    l = hd.dlts_from_dict({(0, "a"): 1,
-                           (0, "b"): 0,
-                           (1, "a"): 0},
-                          ("a", "b"))
-    g = l.make_graph(0)
+    result = hd.dlts_from_dict({(0, "a"): 1,
+                                (0, "b"): 0,
+                                (1, "a"): 0},
+                               ("a", "b"))
+    g = result.make_graph(0)
     assert g.size == 2
     assert g.has_node(0)
     assert g.has_node(1)

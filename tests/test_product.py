@@ -71,9 +71,9 @@ def test_product_skip_iter():
     b = []
     for i in xrange(40):
         it = p.create_skip_iter(i)
-        l = list(it)
-        if l:
-            b.append(l[0])
+        result = list(it)
+        if result:
+            b.append(result[0])
     assert a == b
 
 
@@ -82,28 +82,17 @@ def test_uproduct_iterate():
     p = hd.Product((r1, r1), unordered=True)
 
     result = list(p)
-    assert set(result) == set(
-        [(1, 0),
-         (2, 0),
-         (3, 0),
-         (2, 1),
-         (3, 1),
-         (3, 2)])
+    assert set(result) == {(1, 0), (2, 0), (3, 0), (2, 1), (3, 1), (3, 2)}
     assert len(result) == p.size
 
     p = hd.Product((r1, r1, r1), unordered=True)
     result = list(p)
-    assert set(result) == set(
-        [(2, 1, 0),
-         (3, 1, 0),
-         (3, 2, 0),
-         (3, 2, 1),
-         ])
+    assert set(result) == {(2, 1, 0), (3, 1, 0), (3, 2, 0), (3, 2, 1)}
     assert len(result) == p.size
 
     p = hd.Product((r1, r1, r1, r1), unordered=True)
     result = list(p)
-    assert set(result) == set([(3, 2, 1, 0)])
+    assert set(result) == {(3, 2, 1, 0)}
     assert len(result) == p.size
 
 
@@ -114,8 +103,8 @@ def test_uproduct_iter_set():
     a = list(p)
     for i in xrange(p.size):
         it = p.create_iter(i)
-        l = list(it)
-        assert a[i:] == l
+        result = list(it)
+        assert a[i:] == result
 
     r = hd.Range(899)
     p = hd.Product((r, r), unordered=True)
