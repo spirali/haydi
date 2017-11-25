@@ -11,7 +11,6 @@ from haydi.base.exception import HaydiException, TimeoutException
 
 try:
     from distributed import Client, LocalCluster
-    from distributed.http import HTTPScheduler
 
     from .strategy import StepStrategy, PrecomputeStrategy, GeneratorStrategy
     from .trace import OTFTracer, Tracer
@@ -100,12 +99,9 @@ class DistributedContext(object):
         if spawn_workers > 0:
             self.cluster = LocalCluster(ip=ip,
                                         scheduler_port=port,
+                                        diagnostics_port=port + 1,
                                         n_workers=spawn_workers,
-                                        threads_per_worker=1,
-                                        diagnostics_port=None,
-                                        services={
-                                            ("http", port + 1): HTTPScheduler
-                                        })
+                                        threads_per_worker=1)
             self.executor = Client(self.cluster)
         else:
             self.executor = Client((ip, port))
