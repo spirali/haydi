@@ -157,8 +157,8 @@ def test_dist_timeout(cluster4):
 
 @pytest.mark.slow
 def test_dist_precompute(cluster4):
-    states = hd.ASet(2, "q")
-    alphabet = hd.ASet(2, "a")
+    states = hd.USet(2, "q")
+    alphabet = hd.USet(2, "a")
 
     delta = hd.Mappings(states * alphabet, states)
     r1 = delta.cnfs().run()

@@ -2,7 +2,7 @@ import haydi as hd
 
 
 def test_sequence_flags():
-    a = hd.ASet(4, "a")
+    a = hd.USet(4, "a")
     f = a.filter(lambda x: True)
     m = a.map(lambda x: True)
 

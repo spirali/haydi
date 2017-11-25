@@ -24,7 +24,7 @@ Full documentation is available at: https://haydi.readthedocs.io/en/latest/
 
 ```python
     >>> import haydi as hd
-    >>> nodes = hd.ASet(2, "n")  # A two-element set with (anonymous) elements {n0, n1}
+    >>> nodes = hd.USet(2, "n")  # A two-element set with (unlabeled) elements {n0, n1}
     >>> graphs = hd.Subsets(nodes * nodes)  # Subsets of a cartesian product
 ```
 

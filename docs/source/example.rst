@@ -26,8 +26,8 @@ First, we describe deterministic automata by their transition functions
     >>> n_states = 4   # Number of states
     >>> n_symbols = 2  # Number of symbols in alphabet
 
-    >>> states = hd.ASet(n_states, "q")  # set of states q0, q1, ..., q_{n_states-1}
-    >>> alphabet = hd.ASet(n_symbols, "a")  # set of symbols a0, ..., a_{a_symbols-1}
+    >>> states = hd.USet(n_states, "q")  # set of states q0, q1, ..., q_{n_states-1}
+    >>> alphabet = hd.USet(n_symbols, "a")  # set of symbols a0, ..., a_{a_symbols-1}
 
     # All Mappings (states * alphabet) -> states
     >>> delta = hd.Mappings(states * alphabet, states)

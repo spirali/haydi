@@ -52,7 +52,7 @@ class CnfValues(Domain):
 
     Examples:
 
-        >>> a = hd.ASet(3, "a")
+        >>> a = hd.USet(3, "a")
         >>> a0, a1, a2 = a
 
         >>> list(hd.CnfValues((a0, "x")))

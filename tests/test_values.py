@@ -37,7 +37,7 @@ def test_values_name():
 
 
 def test_cnfs_values():
-    ax = hd.ASet(3, "a")
+    ax = hd.USet(3, "a")
     a0, a1, a2 = ax
     assert list(hd.CnfValues((a0,)).create_cn_iter()) == [a0]
     assert list(hd.CnfValues((a0,))) == [a0, a1, a2]
@@ -54,7 +54,7 @@ def test_values_to_values():
 
 
 def test_cnfs_to_values():
-    ax = hd.ASet(3, "a")
+    ax = hd.USet(3, "a")
     a0, a1, a2 = ax
 
     c = hd.CnfValues((a0, ))
@@ -65,7 +65,7 @@ def test_cnfs_to_values():
 
 
 def test_cnfs_to_cnf_values():
-    ax = hd.ASet(3, "a")
+    ax = hd.USet(3, "a")
     a0, a1, a2 = ax
 
     c = hd.CnfValues((a0,))
@@ -73,13 +73,13 @@ def test_cnfs_to_cnf_values():
 
 
 def test_cnfs_strict():
-    ax = hd.ASet(3, "a")
+    ax = hd.USet(3, "a")
     a0, a1, a2 = ax
     assert hd.CnfValues((a0, 123, "a")).strict
 
 
 def test_cnfs_invalid_values():
-    ax = hd.ASet(3, "a")
+    ax = hd.USet(3, "a")
     a0, a1, a2 = ax
 
     with pytest.raises(Exception):

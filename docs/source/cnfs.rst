@@ -9,39 +9,39 @@ This section covers a feature that serves to iterate only non-isomorphic
 elements in a domain. It is based on iterating over `canonical forms`_ -- one
 element for each equivalence class of isomorphism_.
 
-Basic building blocks for the whole machinery are *Atoms* and *ASets*, that
+Basic building blocks for the whole machinery are *Atoms* and *USets*, that
 allows to define bijections between elements.
 
 .. _`canonical forms`: https://en.wikipedia.org/wiki/Canonical_form
 .. _isomorphism: https://en.wikipedia.org/wiki/Isomorphism
 
 
-Atoms and ASets
+Atoms and USets
 ---------------
 
-Domain :class:`ASet` contains a finite number of instances of class
-:class:`Atom`. When a new ASet is created a number of atoms and a name have to
-be specified. With a new ASet new atoms are created. Each atom remembers its
-index number and parent ASet that created it::
+Domain :class:`USet` contains a finite number of instances of class
+:class:`Atom`. When a new USet is created a number of atoms and a name have to
+be specified. With a new USet new atoms are created. Each atom remembers its
+index number and parent USet that created it::
 
     >>> import haydi as hd
-    >>> aset = hd.ASet(3, "a")  # Create a new Aset
-    >>> aset
-    <ASet id=1 size=3 name=a>
-    >>> list(aset)               # Atoms in aset
+    >>> uset = hd.USet(3, "a")  # Create a new USet
+    >>> uset
+    <USet id=1 size=3 name=a>
+    >>> list(uset)               # Atoms in uset
     [a0, a1, a2]
-    >>> a0, a1, a2 = list(aset)
+    >>> a0, a1, a2 = list(uset)
     >>> a0.index
     0
-    >>> a0.parent                # Each Atom remembers its parent ASet
-    <ASet id=1 size=3 name=a>
+    >>> a0.parent                # Each Atom remembers its parent USet
+    <USet id=1 size=3 name=a>
 
 
-From the perspective of pipeline methods ``iterate()`` and ``generate()``, ASet
+From the perspective of pipeline methods ``iterate()`` and ``generate()``, USet
 behaves as a kind of fancy :class:`Range` that wraps numbers into special
 objects.
 
-The main difference between :class:`Range` and :class:`ASet` arises when we
+The main difference between :class:`Range` and :class:`USet` arises when we
 introduce *isomorphism*. Let us remind that two (discrete) objects are
 *isomorphic* if there exits a *bijection* between them that preserves the
 structure.
@@ -53,7 +53,7 @@ the bijection.
 Let us show some examples that use :func:`haydi.is_isomorphic` which checks
 isomorphism::
 
-    >>> a0, a1, a2 = hd.ASet(3, "a")
+    >>> a0, a1, a2 = hd.USet(3, "a")
 
     >>> hd.is_isomorphic(a0, a1)
     True  # Because there is bijection: a0 -> a1; a1 -> a0; a2 -> a2
@@ -70,19 +70,19 @@ isomorphism::
 The bijection between objects in the last case cannot exists. The first tuple
 represents a pair of the same object and "renaming" a0 to anything else
 preserves this property. The second one represents a pair of two different atoms
-(even from the same ASet) and any renaming cannot achieve the property of the
+(even from the same USet) and any renaming cannot achieve the property of the
 first one (any mapping containing ``a0 -> a0; a1 -> a0`` is not bijective)
 
 
-Atoms from different ASets
+Atoms from different USets
 --------------------------
 
-Two atoms from different ASets cannot be renamed to each other; i.e. they are
-never isomorphic. It can be seen as each ASet and its atoms have a different
+Two atoms from different USets cannot be renamed to each other; i.e. they are
+never isomorphic. It can be seen as each USet and its atoms have a different
 color.
 
-    >>> a0, a1 = hd.ASet(2, "a")
-    >>> b0, b1 = hd.ASet(2, "b")
+    >>> a0, a1 = hd.USet(2, "a")
+    >>> b0, b1 = hd.USet(2, "b")
 
     >>> hd.is_isomorphic(a0, b0)  # doctest: +SKIP
     False  # Map containing a0 -> b0 is not allowed
@@ -91,12 +91,12 @@ color.
     True  # There is bijection: a0 -> a1; a1 -> a0; b0 -> b1; b1 -> b0
 
 The bijection in the second case is correct, since each atom has an image from
-its parent ASet.
+its parent USet.
 
 .. note::
 
-   The name of an ASet serves only for the debugging purpose and has no impact
-   on behavior. Creating two ASets with the same name still creates two disjoint
+   The name of an USet serves only for the debugging purpose and has no impact
+   on behavior. Creating two USets with the same name still creates two disjoint
    sets of atoms with their own parents.
 
 
@@ -114,7 +114,7 @@ whole machinery around isomorphisms is implemented for objects that we call
 
 Examples::
 
-   >>> a0, a1, a2 = hd.ASet(3, "a")
+   >>> a0, a1, a2 = hd.USet(3, "a")
 
    >>> hd.is_isomorphic((a0, 1), (a0, 2))
    False  # Renaming is defined only for atoms, not for other objects
@@ -131,7 +131,7 @@ Canonical forms
 
 Since we are interested only in finite (basic) objects, they contain only
 finitely many atoms, so there are only finitely many bijections (recall that
-ASets are finite). Therefore, each class of equivalence induced by
+USets are finite). Therefore, each class of equivalence induced by
 isomorphism is also finite.
 
 In Haydi, there there is a fixed linear ordering of all basic objects defined by
@@ -144,22 +144,22 @@ domain; therefore, we obtain only one element for each equivalence class.
 
 Let us show some examples::
 
-  >>> aset = hd.ASet(3, "a")
-  >>> bset = hd.ASet(3, "b")
+  >>> uset = hd.USet(3, "a")
+  >>> bset = hd.USet(3, "b")
 
-  >>> list(aset)  # All elements
+  >>> list(uset)  # All elements
   [a0, a1, a2]
 
-  >>> list(aset.cnfs())  # Canonical forms
+  >>> list(uset.cnfs())  # Canonical forms
   [a0]
 
-  >>> list(aset + bset)  # All elements
+  >>> list(uset + bset)  # All elements
   [a0, a1, a2, b0, b1, b2]
 
-  >>> list((aset + bset).cnfs())  # Canonical forms
+  >>> list((uset + bset).cnfs())  # Canonical forms
   [a0, b0]
 
-  >>> p = aset * aset
+  >>> p = uset * uset
   >>> list(p)  # All elements
   [(a0, a0), (a0, a1), (a0, a2),(a1, a0), (a1, a1),
    (a1, a2), (a2, a0), (a2, a1), (a2, a2)]
@@ -168,7 +168,7 @@ Let us show some examples::
   [(a0, a0), (a0, a1)]
 
 
-  >>> s = hd.Subsets(aset + bset, 2)
+  >>> s = hd.Subsets(uset + bset, 2)
   >>> list(s)  # All elements
   [{a0, a1}, {a0, a2}, {a0, b0}, {a0, b1}, {a0, b2}, {a1, a2}, {a1, b0},
    {a1, b1}, {a1, b2}, {a2, b0}, {a2, b1}, {a2, b2}, {b0, b1}, {b0, b2}, {b1, b2}]
@@ -199,7 +199,7 @@ attribute ``strict``::
 All basic domain compositions preserve strictness if and only if all their inner
 domains are also strict, e.g.::
 
-  >>> domain = hd.Subsets(hd.Range(5) * hd.ASet(2))
+  >>> domain = hd.Subsets(hd.Range(5) * hd.USet(2))
   >>> domain.strict
   True
 
@@ -219,7 +219,7 @@ In most cases, when we want to use ``cnfs()`` while applying a transformation,
 we can simply move the transformation into the pipeline, where are no such
 restrictions, since in the pipeline we do not create a new domain::
 
-   >>> domain = hd.ASet(3, "a") * hd.Range(4)
+   >>> domain = hd.USet(3, "a") * hd.Range(4)
 
    >>> list(domain.cnfs())  # This is Ok
    >>> new_domain = domain.map(lambda x: SomeMyClass(x))
@@ -234,7 +234,7 @@ restrictions, since in the pipeline we do not create a new domain::
 If we really need to create a new strict domain by applying a transformation, it
 is now possible only with filter by the following way:
 
-   >>> domain = hd.ASet(3, "a") * hd.Range(4)
+   >>> domain = hd.USet(3, "a") * hd.Range(4)
    >>> new_domain = domain.filter(lambda x: x[1] != 2, strict=True)
    >>> new_domain.strict
    True
@@ -264,8 +264,8 @@ elements, you can use :class:`CnfValues`. The difference is that
 adds necessary objects into the domain to make it strict (i.e. it adds all
 elements isomorphic to the given canonical elements)::
 
-    >>> aset = hd.ASet(3, "a")
-    >>> a0, a1, a2 = aset
+    >>> uset = hd.USet(3, "a")
+    >>> a0, a1, a2 = uset
     >>> domain = hd.CnfValues((a0, (a0, a1), "x"))
 
     >>> list(domain.cnfs())

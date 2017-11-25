@@ -20,9 +20,9 @@ composable, i.e. more complex domains can be created from the simpler ones.
 There are six *elementary domains* shipped with Haydi: :class:`Range` (range of
 integers), :class:`Values` (domain of explicitly listed Python objects),
 :class:`Boolean` (two-element domain), and :class:`NoneDomain` (a domain
-containing only one element: ``None``), :class:`ASet`, and :class:`CnfValues`.
+containing only one element: ``None``), :class:`USet`, and :class:`CnfValues`.
 
-Domains :class:`ASet` and :class:`CnfValues` are little bit special and they are
+Domains :class:`USet` and :class:`CnfValues` are little bit special and they are
 designed for enumerating non-isomorphic structures. The topic is covered in
 :doc:`cnfs`; these domains are not used in this section.
 

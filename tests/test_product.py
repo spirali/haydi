@@ -3,7 +3,7 @@ import itertools
 
 
 def test_product_flags():
-    a = hd.ASet(4, "a")
+    a = hd.USet(4, "a")
     f = a.filter(lambda x: True)
     m = a.map(lambda x: True)
 

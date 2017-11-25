@@ -1,17 +1,17 @@
 from haydi.base import basictypes as hdt
-from haydi import ASet
+from haydi import USet
 
 
-def test_aset_flags():
-    ax = ASet(3, "a")
+def test_uset_flags():
+    ax = USet(3, "a")
     assert not ax.filtered
     assert ax.step_jumps
     assert ax.strict
 
 
 def test_compare_atoms():
-    ax = ASet(3, "a")
-    bx = ASet(5, "b")
+    ax = USet(3, "a")
+    bx = USet(5, "b")
 
     a1, a2, a3 = ax.all()
     b3 = bx.get(3)
@@ -39,8 +39,8 @@ def test_compare_atoms():
 
 
 def test_compare_lists():
-    ax = ASet(3, "a")
-    bx = ASet(5, "b")
+    ax = USet(3, "a")
+    bx = USet(5, "b")
 
     a1, a2, a3 = ax.all()
     b3 = bx.get(3)
@@ -83,8 +83,8 @@ def test_compare_consts():
 
 
 def test_compare_maps():
-    ax = ASet(3, "a")
-    bx = ASet(5, "b")
+    ax = USet(3, "a")
+    bx = USet(5, "b")
 
     a1, a2, a3 = ax.all()
     b3 = bx.get(3)
@@ -120,7 +120,7 @@ def test_compare_maps():
 
 
 def test_compare2_atoms():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
 
     a1, a2, a3 = ax.all()
 
@@ -132,8 +132,8 @@ def test_compare2_atoms():
 
 
 def test_compare2_tuples():
-    ax = ASet(3, "a")
-    bx = ASet(2, "b")
+    ax = USet(3, "a")
+    bx = USet(2, "b")
 
     a1, a2, a3 = ax.all()
     b1, b2 = bx.all()
@@ -145,8 +145,8 @@ def test_compare2_tuples():
 
 
 def test_compare2_maps():
-    ax = ASet(3, "a")
-    bx = ASet(2, "b")
+    ax = USet(3, "a")
+    bx = USet(2, "b")
 
     a1, a2, a3 = ax.all()
     b1, b2 = bx.all()
@@ -165,7 +165,7 @@ def test_compare2_maps():
 
 
 def test_compare_types():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
     a1 = ax.get(1)
 
     class X(object):
@@ -195,7 +195,7 @@ def test_compare_types():
 
 
 def test_collect_atoms():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
 
     a = ax.get(0)
     b = ax.get(1)
@@ -205,7 +205,7 @@ def test_collect_atoms():
 
 
 def test_replace_atoms():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
 
     a, b, c = ax.all()
     assert ((b,), (b, b)) == hdt.replace_atoms([[a], [a, a]], lambda x: b)
@@ -215,7 +215,7 @@ def test_replace_atoms():
 
 
 def test_map_hash():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
     m1 = hdt.Map((
         (ax.get(2), 11), ("b", 12)
     ))
@@ -227,7 +227,7 @@ def test_map_hash():
 
 
 def test_set_hash():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
     m1 = hdt.Set((ax.get(2), 11))
     m2 = hdt.Set((ax.get(2), 11))
     assert m1 == m2

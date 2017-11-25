@@ -123,7 +123,7 @@ def compare(item1, item2):
         if item1.parent == item2.parent:
             return cmp(item1.index, item2.index)
         else:
-            return cmp(item1.parent.aset_id, item2.parent.aset_id)
+            return cmp(item1.parent.uset_id, item2.parent.uset_id)
 
     if type1 == tuple:
         return compare_sequence(item1, item2)
@@ -173,7 +173,7 @@ def compare2(item1, perm1, item2, perm2):
         if item1.parent == item2.parent:
             return cmp(item1.index, item2.index)
         else:
-            return cmp(item1.parent.aset_id, item2.parent.aset_id)
+            return cmp(item1.parent.uset_id, item2.parent.uset_id)
 
     if type1 == tuple:
         return compare2_sequence(item1, perm1, item2, perm2)

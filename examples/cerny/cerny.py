@@ -13,8 +13,8 @@ def main():
     n_states = 6   # Number of states
     n_symbols = 2  # Number of symbols in alphabet
 
-    states = hd.ASet(n_states, "q")  # set of states q0, q1, ..., q_{n_states}
-    alphabet = hd.ASet(n_symbols, "a")  # set of symbols a0, ..., a_{a_symbols}
+    states = hd.USet(n_states, "q")  # set of states q0, q1, ..., q_{n_states}
+    alphabet = hd.USet(n_symbols, "a")  # set of symbols a0, ..., a_{a_symbols}
 
     # Mappings (states * alphabet) -> states
     delta = hd.Mappings(states * alphabet, states)

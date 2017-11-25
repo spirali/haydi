@@ -13,7 +13,7 @@ from .base.permutations import Permutations  # noqa
 # Elementary domains
 from .base.boolean import Boolean  # noqa
 from .base.nonedomain import NoneDomain  # noqa
-from .base.aset import ASet  # noqa
+from .base.uset import USet  # noqa
 from .base.range import Range  # noqa
 from .base.values import Values, CnfValues  # noqa
 

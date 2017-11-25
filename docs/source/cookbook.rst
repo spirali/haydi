@@ -9,22 +9,22 @@ Graphs
 
 Directed graphs (subsets of pair of nodes)::
 
-  >>> nodes = hd.ASet(3, "n")
+  >>> nodes = hd.USet(3, "n")
   >>> graphs = hd.Subsets(nodes * nodes)
 
 Undirected graphs (subsets of two-element sets)::
 
-  >>> nodes = hd.ASet(3, "n")
+  >>> nodes = hd.USet(3, "n")
   >>> graphs = hd.Subsets(Subsets(nodes, 2))
 
 Directed graphs with labeled arcs by "x" or "y"::
 
-  >>> nodes = hd.ASet(3, "n")
+  >>> nodes = hd.USet(3, "n")
   >>> graphs = hd.Subsets(nodes * nodes * hd.Values(("x", "y"))
 
 Undirected graphs with 2 "red" and 3 "blue" vertices::
 
-  >>> nodes = hd.ASet(2, "red") + hd.ASet(3, "blue")
+  >>> nodes = hd.USet(2, "red") + hd.USet(3, "blue")
   >>> graphs = hd.Subsets(Subsets(nodes, 2))
 
 

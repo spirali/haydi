@@ -13,8 +13,8 @@ def test_cnfs():
     x = hd.Range(10)
     assert list(x.cnfs()) == range(10)
 
-    ax = hd.ASet(4, "a")
-    bx = hd.ASet(2, "b")
+    ax = hd.USet(4, "a")
+    bx = hd.USet(2, "b")
 
     result = (ax * (ax + bx)).cnfs().filter(lambda x: x[1].parent == bx).run()
     assert result == [(ax.get(0), bx.get(0))]

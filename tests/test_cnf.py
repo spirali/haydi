@@ -1,11 +1,11 @@
 import haydi as hd
 from haydi.base import cnf as hdc
 from haydi.base import basictypes as hdt
-from haydi import ASet
+from haydi import USet
 
 
 def test_atom_is_canonical():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
 
     c = [a for a in ax.all() if hdc.is_canonical(a)]
     assert c == [ax.get(0)]
@@ -27,9 +27,9 @@ def test_const_is_canonical():
 
 def test_product_is_canonical():
 
-    ax = ASet(5, "a")
-    bx = ASet(2, "b")
-    cx = ASet(1, "c")
+    ax = USet(5, "a")
+    bx = USet(2, "b")
+    cx = USet(1, "c")
 
     a1 = ax.get(0)
     a2 = ax.get(1)
@@ -50,9 +50,9 @@ def test_product_is_canonical():
 
 
 def test_map_is_canonical():
-    ax = ASet(2, "a")
+    ax = USet(2, "a")
     a1, a2 = ax.all()
-    bx = ASet(2, "b")
+    bx = USet(2, "b")
     b1, b2 = bx.all()
 
     ms = hd.Mappings(ax, bx)
@@ -71,9 +71,9 @@ def test_map_is_canonical():
 
 
 def test_candidates():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
     a0, a1, a2 = ax.all()
-    bx = ASet(5, "b")
+    bx = USet(5, "b")
     b0, b1, b2, b3, b5 = bx.all()
 
     result = hdc.create_candidates(a0, {})
@@ -118,10 +118,10 @@ def test_candidates():
 
 
 def test_canonical_product():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
     a0, a1, a2 = ax.all()
 
-    bx = ASet(2, "b")
+    bx = USet(2, "b")
     b0, b1 = bx.all()
 
     result = list(hd.Product((ax,)).create_cn_iter())
@@ -143,10 +143,10 @@ def test_canonical_product():
 
 
 def test_canonical_mapping():
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
     a0, a1, a2 = ax.all()
 
-    bx = ASet(2, "b")
+    bx = USet(2, "b")
     b0, b1 = bx.all()
 
     m1 = hd.Map([(b0, b0), (b1, b0)])
@@ -180,8 +180,8 @@ def bf_check(domain):
 
 
 def test_cannonical_prod_map():
-    ax = ASet(3, "a")
-    bx = ASet(2, "b")
+    ax = USet(3, "a")
+    bx = USet(2, "b")
 
     pb = bx * bx
     pab = ax * bx
@@ -200,9 +200,9 @@ def test_cannonical_prod_map():
 
 
 def test_canonical_map_prod():
-    ax = ASet(3, "a")
-    bx = ASet(2, "b")
-    cx = ASet(1, "b")
+    ax = USet(3, "a")
+    bx = USet(2, "b")
+    cx = USet(1, "b")
 
     m1 = hd.Mappings(bx, cx)
     m2 = hd.Mappings(ax, ax)
@@ -220,8 +220,8 @@ def test_canonical_map_prod():
 
 
 def test_canonical_map_map():
-    ax = ASet(2, "a")
-    bx = ASet(2, "b")
+    ax = USet(2, "a")
+    bx = USet(2, "b")
 
     m1 = hd.Mappings(ax, bx)
     m2 = hd.Mappings(ax, ax)
@@ -237,7 +237,7 @@ def test_canonical_map_map():
 
 
 def test_canonical_sequence():
-    ax = ASet(2, "a")
+    ax = USet(2, "a")
 
     s = hd.Sequences(ax, 0, 4)
     bf_check(s)
@@ -247,7 +247,7 @@ def test_canonical_sequence():
 
 
 def test_canonical_sets():
-    ax = ASet(4, "a")
+    ax = USet(4, "a")
     s = hd.Subsets(ax, 2)
     bf_check(s)
     s = hd.Subsets(ax, 0, 2)
@@ -255,13 +255,13 @@ def test_canonical_sets():
 
 
 def test_canonize():
-    ax = ASet(1000, "a")
+    ax = USet(1000, "a")
     a0 = ax.get(0)
     a1 = ax.get(1)
     a2 = ax.get(2)
     a900 = ax.get(900)
 
-    bx = ASet(2, "b")
+    bx = USet(2, "b")
     b0 = bx.get(0)
     b1 = bx.get(1)
 
@@ -278,7 +278,7 @@ def test_canonize():
 
 def test_expand():
     assert hd.expand(10) == [10]
-    ax = ASet(3, "a")
+    ax = USet(3, "a")
     a0, a1, a2 = ax
     assert set(hd.expand(a0)) == {a1, a2, a0}
     assert set(hd.expand(a1)) == {a1, a2, a0}
@@ -297,8 +297,8 @@ def test_is_isomoprhic():
     assert not hd.is_isomorphic(0, 1)
     assert not hd.is_isomorphic("a", 1)
 
-    a0, a1 = ASet(2, "a")
-    b0, b1 = ASet(2, "b")
+    a0, a1 = USet(2, "a")
+    b0, b1 = USet(2, "b")
 
     assert not hd.is_isomorphic(a0, b0)
     assert not hd.is_isomorphic(a1, b0)

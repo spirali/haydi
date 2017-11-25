@@ -2,16 +2,16 @@ import itertools
 from .basictypes import sort, collect_atoms, compare, replace_atoms, compare2
 
 
-def aset_permutations_bounded(aset_and_bounds):
+def uset_permutations_bounded(uset_and_bounds):
     return itertools.product(
-        *(tuple(itertools.permutations(aset.all()[:bound], bound))
-          for aset, bound in aset_and_bounds))
+        *(tuple(itertools.permutations(uset.all()[:bound], bound))
+          for uset, bound in uset_and_bounds))
 
 
-def aset_permutations_all(aset_and_bounds):
+def uset_permutations_all(uset_and_bounds):
     return itertools.product(
-        *(tuple(itertools.permutations(aset.all(), bound))
-          for aset, bound in aset_and_bounds))
+        *(tuple(itertools.permutations(uset.all(), bound))
+          for uset, bound in uset_and_bounds))
 
 
 def apply_permutation(item, perm):
@@ -22,15 +22,15 @@ def apply_permutation_with_gaps(item, perm):
     return replace_atoms(item, lambda x: perm.get(x, x))
 
 
-def make_permutations_all(asets_and_bounds):
+def make_permutations_all(usets_and_bounds):
     permutations = []
-    asets = [aset for aset, bound in asets_and_bounds]
-    it = aset_permutations_all(asets_and_bounds)
+    usets = [uset for uset, bound in usets_and_bounds]
+    it = uset_permutations_all(usets_and_bounds)
     next(it)  # Remove identity
     for perm in it:
         result = {}
-        for i in xrange(len(asets)):
-            a = asets[i].all()
+        for i in xrange(len(usets)):
+            a = usets[i].all()
             p = perm[i]
             for j in xrange(len(p)):
                 result[a[j]] = p[j]
@@ -38,15 +38,15 @@ def make_permutations_all(asets_and_bounds):
     return permutations
 
 
-def make_permutations_bounded(asets_and_bounds):
+def make_permutations_bounded(usets_and_bounds):
     permutations = []
-    asets = [aset for aset, bound in asets_and_bounds]
-    it = aset_permutations_bounded(asets_and_bounds)
+    usets = [uset for uset, bound in usets_and_bounds]
+    it = uset_permutations_bounded(usets_and_bounds)
     next(it)  # Remove identity
     for perm in it:
         result = {}
-        for i in xrange(len(asets)):
-            a = asets[i].all()
+        for i in xrange(len(usets)):
+            a = usets[i].all()
             p = perm[i]
             for j in xrange(len(p)):
                 result[a[j]] = p[j]
@@ -145,20 +145,20 @@ def is_canonical(item):
 def create_candidate_permutations(item, bounds):
     item_bounds = get_bounds(item)
     groups = []
-    for aset in item_bounds:
-        item_bound = item_bounds[aset]
-        global_bound = bounds.get(aset, 0)
-        bound = min(item_bound + global_bound, aset.size)
+    for uset in item_bounds:
+        item_bound = item_bounds[uset]
+        global_bound = bounds.get(uset, 0)
+        bound = min(item_bound + global_bound, uset.size)
         group = []
         groups.append(group)
         for p in itertools.permutations(range(bound), item_bound):
             if all(i in p for i in range(global_bound, max(p))):
-                group.append([aset.get(i) for i in p])
+                group.append([uset.get(i) for i in p])
 
     for group_values in itertools.product(*groups):
         result = {}
-        for aset, values in zip(item_bounds, group_values):
-            for k, v in zip(aset.all(), values):
+        for uset, values in zip(item_bounds, group_values):
+            for k, v in zip(uset.all(), values):
                 result[k] = v
         yield result
 

@@ -2,11 +2,11 @@ from .basictypes import Atom
 from .domain import Domain
 
 
-class ASet(Domain):
+class USet(Domain):
     """
-    A domain of anonymous objects.
+    A domain of unlabeled objects.
 
-    ASet is a domain of :class:``haydi.Atom``. It is a basic block for
+    USet is a domain of :class:``haydi.Atom``. It is a basic block for
     canonical forms. See section TODO ref.
     """
 
@@ -18,9 +18,9 @@ class ASet(Domain):
     def __init__(self, size, name):
         Domain.__init__(self, name)
         self._size = size
-        self.aset_id = ASet.counter
+        self.uset_id = USet.counter
         self.cache = tuple(Atom(self, i) for i in xrange(size))
-        ASet.counter += 1
+        USet.counter += 1
 
     def get(self, index):
         assert index >= 0 and index < self._size
@@ -42,5 +42,5 @@ class ASet(Domain):
         yield self.cache[0]
 
     def __repr__(self):
-        return "<ASet id={} size={} name={}>".format(
-            self.aset_id, self._size, self.name)
+        return "<USet id={} size={} name={}>".format(
+            self.uset_id, self._size, self.name)
