@@ -79,7 +79,7 @@ author = u'Haydi team'
 # built documents.
 #
 # The short X.Y version.
-version = u'0.2'
+version = u'1.0'
 # The full version, including alpha/beta/rc tags.
 release = version
 
